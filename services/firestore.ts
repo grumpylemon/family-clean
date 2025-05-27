@@ -349,14 +349,32 @@ export const deleteChore = async (choreId: string) => {
       return true;
     }
     
+    console.log(`Attempting to delete chore ${choreId}`);
+    
+    // First, verify the chore exists
+    const choreDoc = await getDoc(doc(getChoresCollection(), choreId));
+    if (!choreDoc.exists()) {
+      console.error(`Chore ${choreId} does not exist`);
+      return false;
+    }
+    
     console.log(`Marking chore ${choreId} as deleted`);
     
     // Instead of actually deleting, mark as deleted
     await setDoc(doc(getChoresCollection(), choreId), { deleted: true }, { merge: true });
     
-    return true;
+    // Verify the deletion
+    const verifyDoc = await getDoc(doc(getChoresCollection(), choreId));
+    if (verifyDoc.exists() && verifyDoc.data()?.deleted === true) {
+      console.log(`Successfully marked chore ${choreId} as deleted`);
+      return true;
+    } else {
+      console.error(`Failed to verify deletion of chore ${choreId}`);
+      return false;
+    }
   } catch (error) {
     console.error('Error deleting chore:', error);
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
     return false;
   }
 };

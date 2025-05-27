@@ -4,7 +4,6 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  View,
   TextInput,
   Alert,
   ActivityIndicator,
@@ -135,9 +134,13 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
           onPress: async () => {
             setLoading(true);
             try {
-              await deleteChore(chore.id!);
-              Alert.alert('Success', 'Chore deleted successfully');
-              await loadChores();
+              const success = await deleteChore(chore.id!);
+              if (success) {
+                Alert.alert('Success', 'Chore deleted successfully');
+                await loadChores();
+              } else {
+                Alert.alert('Error', 'Failed to delete chore');
+              }
             } catch (error) {
               Alert.alert('Error', 'Failed to delete chore');
               console.error('Error deleting chore:', error);
@@ -348,7 +351,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                     value={dueDate}
                     mode="date"
                     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={(event, selectedDate) => {
+                    onChange={(_event, selectedDate) => {
                       setShowDatePicker(Platform.OS === 'android');
                       if (selectedDate) {
                         setDueDate(selectedDate);
