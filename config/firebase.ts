@@ -66,15 +66,14 @@ export class MockCollectionReference implements MockCollection {
 // Version to confirm updates (v8)
 console.log("Firebase config version: v8");
 
-// Firebase configuration - replace with your own values
-// The key here is just a placeholder. It needs to be replaced with a valid API key.
+// Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyDIdq5ePKlc4qA3PCQaYoI_l_yW0-cFrBI", // Replace with your real Firebase API key if needed
-  authDomain: "family-fun-app.firebaseapp.com",
-  projectId: "family-fun-app",
-  storageBucket: "family-fun-app.firebasestorage.app",
-  messagingSenderId: "255617289303",
-  appId: "1:255617289303:web:d30de0d48c84d3949a2712"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "",
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "",
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || ""
 };
 
 // Mock user data for testing
