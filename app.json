@@ -13,7 +13,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.grumpylemon.familyfun",
       "buildNumber": "1",
-      "googleServicesFile": "./ios/GoogleService-Info.plist",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to scan QR codes for family invites.",
         "NSPhotoLibraryUsageDescription": "This app accesses your photos to set profile pictures.",

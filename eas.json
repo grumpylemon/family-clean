@@ -21,6 +21,9 @@
       "ios": {
         "simulator": true,
         "resourceClass": "m-medium"
+      },
+      "env": {
+        "GOOGLE_SERVICE_INFO_PLIST": "@file:GOOGLE_SERVICE_INFO_PLIST"
       }
     },
     "production": {

@@ -1,0 +1,619 @@
+
+# Product Requirements Document: Family Chore App
+
+## 1. Overview
+The Family Chore App is an engaging, organized system designed for families to manage chores and responsibilities through gamification and collaboration. It aims to solve the common household problem of fairly distributing tasks, building good habits, and fostering accountability among family members. The app is for any family unit looking to streamline chore management, make it more fun, and encourage participation from all members, especially children and teenagers. Its value lies in transforming mundane tasks into an interactive experience with tangible rewards and recognition, promoting teamwork and responsibility.
+
+## 2. Core Features
+
+### 2.1. Family & User Management
+*   **Family Creation**: A single family unit per app instance. The first user sets up the family and becomes the default Admin.
+*   **User Roles**:
+    *   `Admin`: Typically a parent. Manages family settings, members, chores, pets, rewards, and has override capabilities. Can set chore urgency.
+    *   `Member`: Typically a child or other family member. Completes assigned chores, interacts with gamification features, redeems rewards, can request help, and propose/accept trades.
+*   **Family Roles**: Descriptive roles (Parent, Child, Other) for better contextual understanding within the family.
+*   **User Profiles**: Each user has a profile storing their name, roles, points, balances, streaks, level, XP, achievements, and money goals.
+*   **Join Code**: A unique code for the family (currently conceptual, as it's a single-family instance).
+*   **Initial Setup**: Guided process for the first Admin to set up the family name and their profile. Subsequent member additions are managed by the Admin.
+*   **Member Exclusion**: Admins can temporarily exclude members from chore rotations with an end date.
+
+### 2.2. Chore Management
+*   **Chore Creation & Editing (Admin)**:
+    *   Attributes: Name, description, points, monetary value (if system enabled), difficulty (Easy, Medium, Hard for XP), type, cooldown hours, associated pet (if Pet chore), shared space participants.
+*   **Chore Types**:
+    *   `Individual`: Assigned to a single member by an Admin.
+    *   `Family`: Rotates among active family members.
+    *   `Pet`:
+        *   **Default System Pet Chores**: Auto-generated based on pets in the family (e.g., "Walk Dogs," "Feed Cats"). Some are "Claimable" by any active member, others are rotatable. Names are dynamically generated. Admins can "delete" (mark as manually deleted) default chores if not applicable. The system reconciles these based on present pets and manual deletions.
+        *   **Custom Pet Chores**: Specific to a pet, assigned like Family chores (rotates).
+    *   `SharedSpace`: Assigned to specific participants who share a space (e.g., a bathroom or room). Rotates among the active participants of that specific space.
+*   **Chore Assignment**:
+    *   `Family` & non-claimable `Pet` chores: Automatically rotate based on `memberRotationOrder` and `nextFamilyChoreAssigneeIndex`. The rotation order is shuffled once upon first assignment needing it.
+    *   `SharedSpace` chores: Rotate based on `sharedSpaceParticipants` and `nextSharedSpaceAssigneeIndex`.
+    *   `Individual` chores: Manually assigned by Admin.
+    *   Admin can manually assign or re-assign most non-claimable chores.
+*   **Chore Completion**:
+    *   Users mark their assigned chores as complete.
+    *   Triggers point/XP/money gain, streak updates, achievement checks.
+    *   Chore enters a cooldown period (`lockedUntil`).
+*   **Cooldown Mechanism**: After completion, a chore is locked for a configurable duration. It becomes available for reassignment/claiming after the cooldown.
+*   **Recurring Chores**: All chores are implicitly recurring through the assignment/cooldown cycle.
+
+### 2.3. Pet Management (Admin)
+*   **Add, Edit, Delete Pets**: Admins can manage family pets (name, kind).
+*   **Impact on Chores**: Adding/removing pets of certain kinds (Dog, Cat, Other) automatically adds/removes corresponding default system pet chores unless manually deleted by an admin.
+
+### 2.4. Reward System
+*   **Reward Creation (Admin)**: Name, points cost, optional image URL.
+*   **Reward Redemption (Member)**: Users can spend their `currentPointBalance` to redeem available rewards.
+*   **Visual Store**: Rewards displayed in a store-like interface.
+
+### 2.5. Gamification
+*   **Points System**:
+    *   `WeeklyPoints`: Resets weekly (conceptual, manual reset by Admin).
+    *   `LifetimePoints`: Total points ever earned, used for All-Time Legends leaderboard. Not affected by reward redemption.
+    *   `CurrentPointBalance`: Spendable points. Decreases when rewards are redeemed.
+*   **Streaks & Multipliers**:
+    *   Daily chore completion streak.
+    *   Streak maintained by completing at least one chore on consecutive days.
+    *   Point multiplier increases by +0.1 for each full week of the streak (e.g., 7 days = x1.1, 14 days = x1.2).
+    *   Losing streak resets multiplier to x1.0.
+*   **Levels & XP**:
+    *   Users earn XP by completing chores (Easy: 5XP, Medium: 10XP, Hard: 15XP) and unlocking achievements.
+    *   XP accumulates towards levels. XP needed to level up starts at 50 (Lvl 1 to 2) and doubles each level.
+    *   Each level has a `LevelTitle` (e.g., "Rookie," "Expert").
+    *   XP progress bar displayed.
+*   **Achievements**:
+    *   Predefined list of achievements for various milestones (chore completions, streaks, points, levels, special actions like early bird, helping, stealing).
+    *   Each achievement grants a one-time XP reward upon unlocking.
+    *   Unlocked achievements are tracked per user.
+    *   Dedicated "Achievements" page.
+*   **Leaderboards**:
+    *   Collapsible sections for:
+        *   `Weekly Champions`: Based on `weeklyPoints`.
+        *   `All-Time Legends`: Based on `lifetimePoints`.
+        *   `Most Consistent`: Based on `currentStreak`.
+    *   Displays rank, member name, level title, and relevant score/streak.
+
+### 2.6. Monetary System (Optional)
+*   **Enable/Disable (Admin)**: Family setting.
+*   **Chore Monetary Value (Admin)**: Assign a monetary value to chores.
+*   **Money Balance (User)**: Users accumulate money from completed chores.
+*   **Money Goal (User)**: Users can set a personal money goal (description, amount) with a progress bar.
+*   **Currency Symbol (Admin)**: Configurable (e.g., $, €).
+
+### 2.7. Collaboration Features
+*   **Help Feature**:
+    *   A user can mark their assigned chore as "Need Help."
+    *   The chore appears on others' dashboards.
+    *   Another user can "Offer Help & Complete."
+    *   Rewards (points, XP, money) are split 50/50 between the original assignee and the helper. Both users' streaks are updated.
+*   **Trade Feature**:
+    *   Users can propose to trade one of their currently assigned (open, non-claimable, non-urgent) chores for one of another user's eligible chores.
+    *   Trade proposals appear on the target user's dashboard for acceptance/rejection. Proposer can cancel.
+    *   If accepted, `assignedTo` fields are swapped for the current cycle. Chores are marked `isCurrentlyTraded` with `originalAssigneeBeforeTrade` stored.
+    *   Help requests on traded chores are cancelled.
+    *   Upon completion, rotation proceeds based on `originalAssigneeBeforeTrade`.
+*   **Urgency/Stealing Feature**:
+    *   Admins can mark an assigned chore as "Urgent," setting a countdown (default or custom duration).
+    *   If the assigned user doesn't complete it before the `urgencyEndsAt` timer runs out, the chore becomes "Stealable."
+    *   Any other eligible user can then "Steal & Complete" the chore for full rewards.
+    *   The original assignee (for rotation purposes) is recorded. Rotation proceeds based on this original assignee.
+    *   Urgent chores cannot be part of help requests or trades. Making a chore urgent cancels existing help/trade proposals.
+
+### 2.8. Settings & Customization
+*   **Family Settings (Admin)**: Default chore points, cooldown, week start day (conceptual), point transfer allowance, monetary system toggle, currency symbol, default urgency duration.
+*   **Theme Customization (Admin)**: Select from presets or customize primary, secondary, accent, background, card, and text colors. Theme is applied globally.
+*   **User Settings (User)**: Update own name, set/edit money goal.
+
+### 2.9. Admin Panel
+*   Dedicated sections for:
+    *   Chore Management: View all, add, edit, delete, manually assign, set urgency.
+    *   Member Management: View all, add, edit (roles, shared spaces, exclusion), remove.
+    *   Pet Management: View all, add, edit, delete.
+    *   Reward Management: View all, add, edit, delete.
+    *   Family Settings: Configure all family-level options.
+
+### 2.10. Gemini API Integration (Conceptual/Mock)
+*   Provides suggestions for chore and reward ideas based on prompts.
+*   Relies on `process.env.API_KEY`. If not present, uses mock responses.
+
+## 3. User Experience (UX)
+
+### 3.1. User Personas
+*   **Admin (e.g., Parent - "Sarah")**: Tech-savvy, wants to organize family chores efficiently, motivate kids, and reduce nagging. Needs control over settings and assignments. Values fairness and transparency.
+*   **Member (e.g., Child - "Alex", 10 y/o)**: Wants chores to be less boring, motivated by points, rewards, and friendly competition. Values clear tasks and a sense of accomplishment.
+*   **Member (e.g., Teenager - "Mia", 15 y/o)**: Understands responsibility but appreciates flexibility (trading) and earning tangible rewards (money or privileges). Might engage with advanced gamification like streaks and achievements.
+
+### 3.2. Key User Flows
+*   **Initial Setup**:
+    1. New Admin enters their name.
+    2. Family is created, Admin is set.
+    3. Admin is prompted to add other family members (name, roles).
+    4. Default pet chores are auto-generated if pets are added.
+*   **Daily User Login & Chore Cycle**:
+    1. User logs in (selects profile).
+    2. Views Dashboard: Sees assigned open chores, chores in cooldown, stats (points, level, streak), money goal, help requests, trade offers.
+    3. Navigates to "Chores" page: Can filter chores (All, My, Claimable, by Type).
+    4. Completes an assigned/claimed chore.
+    5. Chore goes into cooldown, user receives rewards.
+    6. (Optional) Requests help for a chore.
+    7. (Optional) Offers to trade a chore.
+    8. (Optional) Responds to trade offers.
+    9. (Optional) Steals an overdue urgent chore.
+*   **Reward Redemption**:
+    1. User navigates to "Rewards" page.
+    2. Browses available rewards and their point costs.
+    3. If sufficient `currentPointBalance`, redeems a reward.
+    4. Points are deducted.
+*   **Admin Management**:
+    1. Admin navigates to "Admin" panel.
+    2. Selects a management section (Chores, Members, Pets, Rewards, Settings).
+    3. Performs CRUD operations or updates settings.
+    4. Sets a chore as urgent.
+*   **Achievement Tracking**:
+    1. User navigates to "Achievements" page.
+    2. Views overall level progress.
+    3. Sees list of all achievements, categorized, with locked/unlocked status and XP reward.
+
+### 3.3. UI/UX Considerations
+*   **Responsive Design**: App should work well on various screen sizes (desktop, tablet, mobile).
+*   **Accessibility**: Use ARIA attributes, ensure sufficient color contrast, keyboard navigability.
+*   **Engaging Visuals**: Fun, friendly theme. Use icons effectively. Gamification elements (progress bars, streak fires, achievement badges) should be visually appealing.
+*   **Clear Feedback**: Immediate visual feedback for actions (chore completion, reward redemption, errors).
+*   **Simplicity**: Despite many features, strive for an intuitive interface, especially for younger users.
+*   **Notifications (Future)**: For trade offers, help requests, urgent chore alerts, achievements unlocked.
+
+## 4. Technical Architecture
+
+### 4.1. System Components
+*   **Frontend**: Single Page Application (SPA) built with React and TypeScript.
+    *   **UI Components**: Reusable components for buttons, modals, cards, inputs, etc., styled with TailwindCSS.
+    *   **State Management**: `AppContext` (React Context API) for global state management (family data, current user, settings).
+    *   **Routing**: `react-router-dom` (HashRouter) for navigation.
+*   **Backend/Data Persistence**:
+    *   `localStorage`: Currently used for all data persistence. Data is serialized/deserialized JSON. This is suitable for single-device, single-family use but not scalable for multi-user or cloud sync.
+*   **Third-Party Services**:
+    *   `@google/genai`: For Gemini API integration (chore/reward ideas). Requires `API_KEY`.
+
+### 4.2. Data Models
+(Key interfaces from `types.ts`)
+*   **`User`**: id, name, role (Admin/Member), familyRole (Parent/Child/Other), points (weekly, lifetime, currentBalance), moneyBalance, shared spaces, exclusion status, streak data, level/XP, unlockedAchievements, moneyGoal.
+*   **`Chore`**: id, name, description, type (Individual/Family/Pet/Shared), points, monetaryValue, difficulty, assignment details (assignedTo, currentAssignees, lastCompletedBy), completion status, cooldown info (lockedUntil, cooldownHours), petId, defaultChoreType, sharedSpaceParticipants, help request status, trade status, urgency status.
+*   **`Pet`**: id, name, kind (Dog/Cat/etc.), familyId.
+*   **`Reward`**: id, name, pointsCost, familyId, imageUrl.
+*   **`FamilySettings`**: Default values, feature toggles (monetarySystem, pointTransfers), themeColors, defaultUrgencyDurationMinutes.
+*   **`ChoreCompletionRecord`**: Tracks individual chore completions with details like who, when, rewards earned, help/steal info.
+*   **`TradeProposal`**: Stores details of pending/completed trade offers.
+*   **`Achievement`**: Definition of an achievement (id, name, description, XP, icon, category, eligibility check function).
+*   **`Family`**: Central object holding all members, chores, pets, rewards, settings, history, rotation orders, trade proposals.
+
+### 4.3. APIs and Integrations
+*   **Internal API (AppContext)**: Functions within `AppContext` act as the service layer for all application logic and data manipulation.
+*   **Gemini API**: Used via `@google/genai` SDK for content generation.
+    *   `generateChoreIdeas(prompt)`
+    *   `generateRewardIdeas(currentPoints)`
+*   **LocalStorage API**: Standard browser API for data storage.
+
+### 4.4. Infrastructure Requirements
+*   Modern web browser with JavaScript enabled.
+*   Internet connection for initial asset loading (TailwindCSS, Google Fonts, ES Modules from esm.sh) and Gemini API calls.
+*   (Conceptual for Gemini) `API_KEY` for Gemini API needs to be available as `process.env.API_KEY` in the execution environment.
+
+## 5. Development Roadmap
+
+### MVP (Already Achieved & Surpassed)
+*   Basic family and user creation.
+*   Core chore creation, assignment (manual/simple rotation), and completion.
+*   Basic points system.
+*   LocalStorage for data persistence.
+
+### Phase 1: Core Gamification & Enhanced Chores (Largely Achieved)
+*   **Streaks & Multipliers**: Implemented.
+*   **Levels & XP**: Implemented with chore difficulty.
+*   **Basic Achievements**: Implemented, with `checkEligibility` logic.
+*   **Leaderboards**: Weekly & All-Time points leaderboards implemented.
+*   **Advanced Chore Types**:
+    *   Default Pet Chores (Claimable & Rotational): Implemented with reconciliation logic.
+    *   Shared Space Chores: Implemented with participant-based rotation.
+*   **Reward System**: Creation and redemption implemented.
+
+### Phase 2: Monetary System & UI Polish (Largely Achieved)
+*   **Monetary System**: Toggle, chore monetary value, user money balance. Implemented.
+*   **Money Goals**: User-settable money goals with progress. Implemented.
+*   **Theme Customization**: Implemented.
+*   **UI/UX Improvements**: Ongoing, with consistent component library.
+
+### Phase 3: Advanced Collaboration & Urgency (Implemented)
+*   **Help Feature**: Implemented.
+*   **Trade Feature**: Implemented.
+*   **Urgency/Stealing Feature**: Implemented.
+*   **Leaderboard Enhancements**: "Most Consistent" (streaks) added.
+*   **Admin Panel**: Comprehensive admin sections for all entities.
+
+### Future Enhancements (Post-Current Scope)
+*   **Real-time Notifications**: For trade offers, help requests, urgent chore alerts, achievements. (Requires backend/WebSocket).
+*   **Cloud Backend**: Replace localStorage with a proper backend (e.g., Firebase, Supabase, custom Node.js) for multi-user, multi-device sync, and data security.
+*   **Advanced Gemini Features**: More sophisticated suggestions, potentially image generation for reward icons/avatars.
+*   **User Avatars**: Customizable user avatars (potentially with Gemini).
+*   **Calendar View**: Visualizing chore schedules.
+*   **Reporting/Analytics (Admin)**: Insights into chore completion rates, points distribution.
+*   **Customizable Achievement Creation (Admin)**.
+*   **More Granular Permissions (Admin)**.
+*   **Automated Weekly Point Reset**.
+*   **Public API for Integrations (Optional)**.
+
+## 6. Logical Dependency Chain (Reflecting Current State's Build-up)
+1.  **Foundation**:
+    *   Family/User data structures and creation (`User`, `Family`, `FamilySettings`).
+    *   Basic chore definition (`Chore`) and CRUD operations.
+    *   `AppContext` for state management.
+    *   `localStorage` for persistence.
+2.  **Core Chore Mechanics**:
+    *   Chore completion logic.
+    *   Cooldown system.
+    *   Basic rotation for Family chores.
+3.  **Points & Rewards**:
+    *   Point calculation and storage (`weeklyPoints`, `lifetimePoints`, `currentPointBalance`).
+    *   Reward definition and redemption.
+4.  **Gamification Layer 1**:
+    *   Streaks and point multipliers based on chore completion.
+    *   XP system based on chore difficulty.
+    *   Leveling system based on XP.
+    *   Achievements based on various user actions and stats.
+    *   Leaderboards.
+5.  **Advanced Chore Types & Monetary System**:
+    *   Default Pet Chores (including claimable logic).
+    *   Shared Space Chores.
+    *   Monetary system (optional toggle, monetary value on chores, money balance).
+    *   Money Goals.
+6.  **Collaboration Features**:
+    *   Help Feature (builds on assigned chores, modifies reward distribution).
+    *   Trade Feature (modifies chore assignment temporarily, interacts with rotation).
+    *   Urgency/Stealing Feature (modifies chore availability, impacts rewards and rotation).
+7.  **Admin & UI**:
+    *   Comprehensive Admin Panel for managing all entities.
+    *   Theme customization.
+    *   Refined UI components and user flows for each feature.
+
+## 7. Risks and Mitigations
+
+*   **`AppContext.tsx` Complexity**:
+    *   **Risk**: The main context file is very large and handles a vast amount of logic, making it hard to maintain and debug.
+    *   **Mitigation**: Plan for future refactoring into smaller, more focused custom hooks or services. Break down logic by domain (chores, users, gamification).
+*   **`localStorage` Limitations**:
+    *   **Risk**: Data loss if browser data is cleared, no multi-device sync, no true multi-user capabilities (current app is single-family instance), storage limits.
+    *   **Mitigation**: Clearly communicate this is for single-device/family use. Plan for a cloud backend in future iterations for wider usability.
+*   **Gemini API Key Management**:
+    *   **Risk**: `process.env.API_KEY` is not typically accessible directly in client-side browser environments without build-time injection or a backend proxy. This can lead to the API not working for end-users.
+    *   **Mitigation**: Current mock response fallback is good. For real usage, a backend proxy for API calls would be necessary to protect the API key.
+*   **UI/UX for Complex Features**:
+    *   **Risk**: Features like trading, help, and urgency can become confusing if not presented clearly.
+    *   **Mitigation**: Iterative UI design. Seek user feedback if possible. Ensure clear visual cues and simple flows.
+*   **Performance with Large Data**:
+    *   **Risk**: As chore history, number of chores/users grows, `localStorage` operations and frontend computations in `AppContext` might slow down.
+    *   **Mitigation**: Optimize expensive computations (e.g., filtering, sorting) with `useMemo`. A backend solution would alleviate most of this.
+*   **State Management Edge Cases**:
+    *   **Risk**: Interactions between features (e.g., a traded chore becoming urgent) can lead to unexpected states.
+    *   **Mitigation**: Thorough testing of feature interactions. Clear state transition diagrams for complex features during development.
+
+## 8. Appendix
+*   **Data Structures**: Refer to `types.ts` for detailed interface definitions.
+*   **Gamification Constants**: Refer to `constants.ts` for specific values related to XP, levels, achievement criteria, etc.
+*   **Theme Colors**: Default themes are defined in `constants.ts`.
+*   **Default Pet Chore Logic**: Specific configurations for default pet chores are in `AppContext.tsx` and `constants.ts`.
+```
+XML content for docs/FamilyChoresApp_PRD.txt has been prepared.
+```
+
+I have drafted a comprehensive PRD document based on the provided application code. It details the app's overview, core features (including user management, various chore types, gamification elements like points, streaks, levels, achievements, and collaboration tools like help, trade, and stealing), user experience considerations, technical architecture (frontend-focused with localStorage), a potential development roadmap (acknowledging most features are already implemented), and risks with mitigations. This document should serve as a good reference for the app's current state and potential future direction.
+
+I will now output this as a new file: `docs/FamilyChoresApp_PRD.txt`.```xml
+<changes>
+  <change>
+    <file>docs/FamilyChoresApp_PRD.txt</file>
+    <description>Create a detailed Product Requirements Document (PRD) for the Family Chore App, outlining its features, user experience, technical architecture, and future roadmap.</description>
+    <content><![CDATA[
+# Product Requirements Document: Family Chore App
+
+## 1. Overview
+The Family Chore App is an engaging, organized system designed for families to manage chores and responsibilities through gamification and collaboration. It aims to solve the common household problem of fairly distributing tasks, building good habits, and fostering accountability among family members. The app is for any family unit looking to streamline chore management, make it more fun, and encourage participation from all members, especially children and teenagers. Its value lies in transforming mundane tasks into an interactive experience with tangible rewards and recognition, promoting teamwork and responsibility.
+
+## 2. Core Features
+
+### 2.1. Family & User Management
+*   **Family Creation**: A single family unit per app instance. The first user sets up the family and becomes the default Admin.
+*   **User Roles**:
+    *   `Admin`: Typically a parent. Manages family settings, members, chores, pets, rewards, and has override capabilities. Can set chore urgency.
+    *   `Member`: Typically a child or other family member. Completes assigned chores, interacts with gamification features, redeems rewards, can request help, and propose/accept trades.
+*   **Family Roles**: Descriptive roles (Parent, Child, Other) for better contextual understanding within the family.
+*   **User Profiles**: Each user has a profile storing their name, roles, points, balances, streaks, level, XP, achievements, and money goals.
+*   **Join Code**: A unique code for the family (currently conceptual, as it's a single-family instance).
+*   **Initial Setup**: Guided process for the first Admin to set up the family name and their profile. Subsequent member additions are managed by the Admin.
+*   **Member Exclusion**: Admins can temporarily exclude members from chore rotations with an end date.
+
+### 2.2. Chore Management
+*   **Chore Creation & Editing (Admin)**:
+    *   Attributes: Name, description, points, monetary value (if system enabled), difficulty (Easy, Medium, Hard for XP), type, cooldown hours, associated pet (if Pet chore), shared space participants.
+*   **Chore Types**:
+    *   `Individual`: Assigned to a single member by an Admin.
+    *   `Family`: Rotates among active family members.
+    *   `Pet`:
+        *   **Default System Pet Chores**: Auto-generated based on pets in the family (e.g., "Walk Dogs," "Feed Cats"). Some are "Claimable" by any active member, others are rotatable. Names are dynamically generated. Admins can "delete" (mark as manually deleted) default chores if not applicable. The system reconciles these based on present pets and manual deletions.
+        *   **Custom Pet Chores**: Specific to a pet, assigned like Family chores (rotates).
+    *   `SharedSpace`: Assigned to specific participants who share a space (e.g., a bathroom or room). Rotates among the active participants of that specific space.
+*   **Chore Assignment**:
+    *   `Family` & non-claimable `Pet` chores: Automatically rotate based on `memberRotationOrder` and `nextFamilyChoreAssigneeIndex`. The rotation order is shuffled once upon first assignment needing it.
+    *   `SharedSpace` chores: Rotate based on `sharedSpaceParticipants` and `nextSharedSpaceAssigneeIndex`.
+    *   `Individual` chores: Manually assigned by Admin.
+    *   Admin can manually assign or re-assign most non-claimable chores.
+*   **Chore Completion**:
+    *   Users mark their assigned chores as complete.
+    *   Triggers point/XP/money gain, streak updates, achievement checks.
+    *   Chore enters a cooldown period (`lockedUntil`).
+*   **Cooldown Mechanism**: After completion, a chore is locked for a configurable duration. It becomes available for reassignment/claiming after the cooldown.
+*   **Recurring Chores**: All chores are implicitly recurring through the assignment/cooldown cycle.
+
+### 2.3. Pet Management (Admin)
+*   **Add, Edit, Delete Pets**: Admins can manage family pets (name, kind).
+*   **Impact on Chores**: Adding/removing pets of certain kinds (Dog, Cat, Other) automatically adds/removes corresponding default system pet chores unless manually deleted by an admin.
+
+### 2.4. Reward System
+*   **Reward Creation (Admin)**: Name, points cost, optional image URL.
+*   **Reward Redemption (Member)**: Users can spend their `currentPointBalance` to redeem available rewards.
+*   **Visual Store**: Rewards displayed in a store-like interface.
+
+### 2.5. Gamification
+*   **Points System**:
+    *   `WeeklyPoints`: Resets weekly (conceptual, manual reset by Admin).
+    *   `LifetimePoints`: Total points ever earned, used for All-Time Legends leaderboard. Not affected by reward redemption.
+    *   `CurrentPointBalance`: Spendable points. Decreases when rewards are redeemed.
+*   **Streaks & Multipliers**:
+    *   Daily chore completion streak.
+    *   Streak maintained by completing at least one chore on consecutive days.
+    *   Point multiplier increases by +0.1 for each full week of the streak (e.g., 7 days = x1.1, 14 days = x1.2).
+    *   Losing streak resets multiplier to x1.0.
+*   **Levels & XP**:
+    *   Users earn XP by completing chores (Easy: 5XP, Medium: 10XP, Hard: 15XP) and unlocking achievements.
+    *   XP accumulates towards levels. XP needed to level up starts at 50 (Lvl 1 to 2) and doubles each level.
+    *   Each level has a `LevelTitle` (e.g., "Rookie," "Expert").
+    *   XP progress bar displayed.
+*   **Achievements**:
+    *   Predefined list of achievements for various milestones (chore completions, streaks, points, levels, special actions like early bird, helping, stealing).
+    *   Each achievement grants a one-time XP reward upon unlocking.
+    *   Unlocked achievements are tracked per user.
+    *   Dedicated "Achievements" page.
+*   **Leaderboards**:
+    *   Collapsible sections for:
+        *   `Weekly Champions`: Based on `weeklyPoints`.
+        *   `All-Time Legends`: Based on `lifetimePoints`.
+        *   `Most Consistent`: Based on `currentStreak`.
+    *   Displays rank, member name, level title, and relevant score/streak.
+
+### 2.6. Monetary System (Optional)
+*   **Enable/Disable (Admin)**: Family setting.
+*   **Chore Monetary Value (Admin)**: Assign a monetary value to chores.
+*   **Money Balance (User)**: Users accumulate money from completed chores.
+*   **Money Goal (User)**: Users can set a personal money goal (description, amount) with a progress bar.
+*   **Currency Symbol (Admin)**: Configurable (e.g., $, €).
+
+### 2.7. Collaboration Features
+*   **Help Feature**:
+    *   A user can mark their assigned chore as "Need Help."
+    *   The chore appears on others' dashboards.
+    *   Another user can "Offer Help & Complete."
+    *   Rewards (points, XP, money) are split 50/50 between the original assignee and the helper. Both users' streaks are updated.
+*   **Trade Feature**:
+    *   Users can propose to trade one of their currently assigned (open, non-claimable, non-urgent) chores for one of another user's eligible chores.
+    *   Trade proposals appear on the target user's dashboard for acceptance/rejection. Proposer can cancel.
+    *   If accepted, `assignedTo` fields are swapped for the current cycle. Chores are marked `isCurrentlyTraded` with `originalAssigneeBeforeTrade` stored.
+    *   Help requests on traded chores are cancelled.
+    *   Upon completion, rotation proceeds based on `originalAssigneeBeforeTrade`.
+*   **Urgency/Stealing Feature**:
+    *   Admins can mark an assigned chore as "Urgent," setting a countdown (default or custom duration).
+    *   If the assigned user doesn't complete it before the `urgencyEndsAt` timer runs out, the chore becomes "Stealable."
+    *   Any other eligible user can then "Steal & Complete" the chore for full rewards.
+    *   The original assignee (for rotation purposes) is recorded. Rotation proceeds based on this original assignee.
+    *   Urgent chores cannot be part of help requests or trades. Making a chore urgent cancels existing help/trade proposals.
+
+### 2.8. Settings & Customization
+*   **Family Settings (Admin)**: Default chore points, cooldown, week start day (conceptual), point transfer allowance, monetary system toggle, currency symbol, default urgency duration.
+*   **Theme Customization (Admin)**: Select from presets or customize primary, secondary, accent, background, card, and text colors. Theme is applied globally.
+*   **User Settings (User)**: Update own name, set/edit money goal.
+
+### 2.9. Admin Panel
+*   Dedicated sections for:
+    *   Chore Management: View all, add, edit, delete, manually assign, set urgency.
+    *   Member Management: View all, add, edit (roles, shared spaces, exclusion), remove.
+    *   Pet Management: View all, add, edit, delete.
+    *   Reward Management: View all, add, edit, delete.
+    *   Family Settings: Configure all family-level options.
+
+### 2.10. Gemini API Integration (Conceptual/Mock)
+*   Provides suggestions for chore and reward ideas based on prompts.
+*   Relies on `process.env.API_KEY`. If not present, uses mock responses.
+
+## 3. User Experience (UX)
+
+### 3.1. User Personas
+*   **Admin (e.g., Parent - "Sarah")**: Tech-savvy, wants to organize family chores efficiently, motivate kids, and reduce nagging. Needs control over settings and assignments. Values fairness and transparency.
+*   **Member (e.g., Child - "Alex", 10 y/o)**: Wants chores to be less boring, motivated by points, rewards, and friendly competition. Values clear tasks and a sense of accomplishment.
+*   **Member (e.g., Teenager - "Mia", 15 y/o)**: Understands responsibility but appreciates flexibility (trading) and earning tangible rewards (money or privileges). Might engage with advanced gamification like streaks and achievements.
+
+### 3.2. Key User Flows
+*   **Initial Setup**:
+    1. New Admin enters their name.
+    2. Family is created, Admin is set.
+    3. Admin is prompted to add other family members (name, roles).
+    4. Default pet chores are auto-generated if pets are added.
+*   **Daily User Login & Chore Cycle**:
+    1. User logs in (selects profile).
+    2. Views Dashboard: Sees assigned open chores, chores in cooldown, stats (points, level, streak), money goal, help requests, trade offers.
+    3. Navigates to "Chores" page: Can filter chores (All, My, Claimable, by Type).
+    4. Completes an assigned/claimed chore.
+    5. Chore goes into cooldown, user receives rewards.
+    6. (Optional) Requests help for a chore.
+    7. (Optional) Offers to trade a chore.
+    8. (Optional) Responds to trade offers.
+    9. (Optional) Steals an overdue urgent chore.
+*   **Reward Redemption**:
+    1. User navigates to "Rewards" page.
+    2. Browses available rewards and their point costs.
+    3. If sufficient `currentPointBalance`, redeems a reward.
+    4. Points are deducted.
+*   **Admin Management**:
+    1. Admin navigates to "Admin" panel.
+    2. Selects a management section (Chores, Members, Pets, Rewards, Settings).
+    3. Performs CRUD operations or updates settings.
+    4. Sets a chore as urgent.
+*   **Achievement Tracking**:
+    1. User navigates to "Achievements" page.
+    2. Views overall level progress.
+    3. Sees list of all achievements, categorized, with locked/unlocked status and XP reward.
+
+### 3.3. UI/UX Considerations
+*   **Responsive Design**: App should work well on various screen sizes (desktop, tablet, mobile).
+*   **Accessibility**: Use ARIA attributes, ensure sufficient color contrast, keyboard navigability.
+*   **Engaging Visuals**: Fun, friendly theme. Use icons effectively. Gamification elements (progress bars, streak fires, achievement badges) should be visually appealing.
+*   **Clear Feedback**: Immediate visual feedback for actions (chore completion, reward redemption, errors).
+*   **Simplicity**: Despite many features, strive for an intuitive interface, especially for younger users.
+*   **Notifications (Future)**: For trade offers, help requests, urgent chore alerts, achievements unlocked.
+
+## 4. Technical Architecture
+
+### 4.1. System Components
+*   **Frontend**: Single Page Application (SPA) built with React and TypeScript.
+    *   **UI Components**: Reusable components for buttons, modals, cards, inputs, etc., styled with TailwindCSS.
+    *   **State Management**: `AppContext` (React Context API) for global state management (family data, current user, settings).
+    *   **Routing**: `react-router-dom` (HashRouter) for navigation.
+*   **Backend/Data Persistence**:
+    *   `localStorage`: Currently used for all data persistence. Data is serialized/deserialized JSON. This is suitable for single-device, single-family use but not scalable for multi-user or cloud sync.
+*   **Third-Party Services**:
+    *   `@google/genai`: For Gemini API integration (chore/reward ideas). Requires `API_KEY`.
+
+### 4.2. Data Models
+(Key interfaces from `types.ts`)
+*   **`User`**: id, name, role (Admin/Member), familyRole (Parent/Child/Other), points (weekly, lifetime, currentBalance), moneyBalance, shared spaces, exclusion status, streak data, level/XP, unlockedAchievements, moneyGoal.
+*   **`Chore`**: id, name, description, type (Individual/Family/Pet/Shared), points, monetaryValue, difficulty, assignment details (assignedTo, currentAssignees, lastCompletedBy), completion status, cooldown info (lockedUntil, cooldownHours), petId, defaultChoreType, sharedSpaceParticipants, help request status, trade status, urgency status.
+*   **`Pet`**: id, name, kind (Dog/Cat/etc.), familyId.
+*   **`Reward`**: id, name, pointsCost, familyId, imageUrl.
+*   **`FamilySettings`**: Default values, feature toggles (monetarySystem, pointTransfers), themeColors, defaultUrgencyDurationMinutes.
+*   **`ChoreCompletionRecord`**: Tracks individual chore completions with details like who, when, rewards earned, help/steal info.
+*   **`TradeProposal`**: Stores details of pending/completed trade offers.
+*   **`Achievement`**: Definition of an achievement (id, name, description, XP, icon, category, eligibility check function).
+*   **`Family`**: Central object holding all members, chores, pets, rewards, settings, history, rotation orders, trade proposals.
+
+### 4.3. APIs and Integrations
+*   **Internal API (AppContext)**: Functions within `AppContext` act as the service layer for all application logic and data manipulation.
+*   **Gemini API**: Used via `@google/genai` SDK for content generation.
+    *   `generateChoreIdeas(prompt)`
+    *   `generateRewardIdeas(currentPoints)`
+*   **LocalStorage API**: Standard browser API for data storage.
+
+### 4.4. Infrastructure Requirements
+*   Modern web browser with JavaScript enabled.
+*   Internet connection for initial asset loading (TailwindCSS, Google Fonts, ES Modules from esm.sh) and Gemini API calls.
+*   (Conceptual for Gemini) `API_KEY` for Gemini API needs to be available as `process.env.API_KEY` in the execution environment.
+
+## 5. Development Roadmap
+
+### MVP (Already Achieved & Surpassed)
+*   Basic family and user creation.
+*   Core chore creation, assignment (manual/simple rotation), and completion.
+*   Basic points system.
+*   LocalStorage for data persistence.
+
+### Phase 1: Core Gamification & Enhanced Chores (Largely Achieved)
+*   **Streaks & Multipliers**: Implemented.
+*   **Levels & XP**: Implemented with chore difficulty.
+*   **Basic Achievements**: Implemented, with `checkEligibility` logic.
+*   **Leaderboards**: Weekly & All-Time points leaderboards implemented.
+*   **Advanced Chore Types**:
+    *   Default Pet Chores (Claimable & Rotational): Implemented with reconciliation logic.
+    *   Shared Space Chores: Implemented with participant-based rotation.
+*   **Reward System**: Creation and redemption implemented.
+
+### Phase 2: Monetary System & UI Polish (Largely Achieved)
+*   **Monetary System**: Toggle, chore monetary value, user money balance. Implemented.
+*   **Money Goals**: User-settable money goals with progress. Implemented.
+*   **Theme Customization**: Implemented.
+*   **UI/UX Improvements**: Ongoing, with consistent component library.
+
+### Phase 3: Advanced Collaboration & Urgency (Implemented)
+*   **Help Feature**: Implemented.
+*   **Trade Feature**: Implemented.
+*   **Urgency/Stealing Feature**: Implemented.
+*   **Leaderboard Enhancements**: "Most Consistent" (streaks) added.
+*   **Admin Panel**: Comprehensive admin sections for all entities.
+
+### Future Enhancements (Post-Current Scope)
+*   **Real-time Notifications**: For trade offers, help requests, urgent chore alerts, achievements. (Requires backend/WebSocket).
+*   **Cloud Backend**: Replace localStorage with a proper backend (e.g., Firebase, Supabase, custom Node.js) for multi-user, multi-device sync, and data security.
+*   **Advanced Gemini Features**: More sophisticated suggestions, potentially image generation for reward icons/avatars.
+*   **User Avatars**: Customizable user avatars (potentially with Gemini).
+*   **Calendar View**: Visualizing chore schedules.
+*   **Reporting/Analytics (Admin)**: Insights into chore completion rates, points distribution.
+*   **Customizable Achievement Creation (Admin)**.
+*   **More Granular Permissions (Admin)**.
+*   **Automated Weekly Point Reset**.
+*   **Public API for Integrations (Optional)**.
+
+## 6. Logical Dependency Chain (Reflecting Current State's Build-up)
+1.  **Foundation**:
+    *   Family/User data structures and creation (`User`, `Family`, `FamilySettings`).
+    *   Basic chore definition (`Chore`) and CRUD operations.
+    *   `AppContext` for state management.
+    *   `localStorage` for persistence.
+2.  **Core Chore Mechanics**:
+    *   Chore completion logic.
+    *   Cooldown system.
+    *   Basic rotation for Family chores.
+3.  **Points & Rewards**:
+    *   Point calculation and storage (`weeklyPoints`, `lifetimePoints`, `currentPointBalance`).
+    *   Reward definition and redemption.
+4.  **Gamification Layer 1**:
+    *   Streaks and point multipliers based on chore completion.
+    *   XP system based on chore difficulty.
+    *   Leveling system based on XP.
+    *   Achievements based on various user actions and stats.
+    *   Leaderboards.
+5.  **Advanced Chore Types & Monetary System**:
+    *   Default Pet Chores (including claimable logic).
+    *   Shared Space Chores.
+    *   Monetary system (optional toggle, monetary value on chores, money balance).
+    *   Money Goals.
+6.  **Collaboration Features**:
+    *   Help Feature (builds on assigned chores, modifies reward distribution).
+    *   Trade Feature (modifies chore assignment temporarily, interacts with rotation).
+    *   Urgency/Stealing Feature (modifies chore availability, impacts rewards and rotation).
+7.  **Admin & UI**:
+    *   Comprehensive Admin Panel for managing all entities.
+    *   Theme customization.
+    *   Refined UI components and user flows for each feature.
+
+## 7. Risks and Mitigations
+
+*   **`AppContext.tsx` Complexity**:
+    *   **Risk**: The main context file is very large and handles a vast amount of logic, making it hard to maintain and debug.
+    *   **Mitigation**: Plan for future refactoring into smaller, more focused custom hooks or services. Break down logic by domain (chores, users, gamification).
+*   **`localStorage` Limitations**:
+    *   **Risk**: Data loss if browser data is cleared, no multi-device sync, no true multi-user capabilities (current app is single-family instance), storage limits.
+    *   **Mitigation**: Clearly communicate this is for single-device/family use. Plan for a cloud backend in future iterations for wider usability.
+*   **Gemini API Key Management**:
+    *   **Risk**: `process.env.API_KEY` is not typically accessible directly in client-side browser environments without build-time injection or a backend proxy. This can lead to the API not working for end-users.
+    *   **Mitigation**: Current mock response fallback is good. For real usage, a backend proxy for API calls would be necessary to protect the API key.
+*   **UI/UX for Complex Features**:
+    *   **Risk**: Features like trading, help, and urgency can become confusing if not presented clearly.
+    *   **Mitigation**: Iterative UI design. Seek user feedback if possible. Ensure clear visual cues and simple flows.
+*   **Performance with Large Data**:
+    *   **Risk**: As chore history, number of chores/users grows, `localStorage` operations and frontend computations in `AppContext` might slow down.
+    *   **Mitigation**: Optimize expensive computations (e.g., filtering, sorting) with `useMemo`. A backend solution would alleviate most of this.
+*   **State Management Edge Cases**:
+    *   **Risk**: Interactions between features (e.g., a traded chore becoming urgent) can lead to unexpected states.
+    *   **Mitigation**: Thorough testing of feature interactions. Clear state transition diagrams for complex features during development.
+
+## 8. Appendix
+*   **Data Structures**: Refer to `types.ts` for detailed interface definitions.
+*   **Gamification Constants**: Refer to `constants.ts` for specific values related to XP, levels, achievement criteria, etc.
+*   **Theme Colors**: Default themes are defined in `constants.ts`.
+*   **Default Pet Chore Logic**: Specific configurations for default pet chores are in `AppContext.tsx` and `constants.ts`.
