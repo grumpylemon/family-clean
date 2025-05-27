@@ -123,6 +123,8 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   };
 
   const handleDeleteChore = (chore: Chore) => {
+    console.log('Delete button clicked for chore:', chore.title, 'ID:', chore.id);
+    
     Alert.alert(
       'Delete Chore',
       `Are you sure you want to delete "${chore.title}"?`,
@@ -132,9 +134,11 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
+            console.log('Delete confirmed for chore:', chore.id);
             setLoading(true);
             try {
               const success = await deleteChore(chore.id!);
+              console.log('Delete result:', success);
               if (success) {
                 Alert.alert('Success', 'Chore deleted successfully');
                 await loadChores();
@@ -438,7 +442,10 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={styles.choreActionButton}
-                          onPress={() => handleDeleteChore(chore)}
+                          onPress={() => {
+                            console.log('TouchableOpacity onPress triggered');
+                            handleDeleteChore(chore);
+                          }}
                         >
                           <ThemedText style={styles.deleteText}>Delete</ThemedText>
                         </TouchableOpacity>
@@ -571,7 +578,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   choreActionButton: {
-    padding: 4,
+    padding: 8,
+    minWidth: 50,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 4,
   },
   editText: {
     color: '#4285F4',
