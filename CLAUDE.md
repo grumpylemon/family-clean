@@ -72,8 +72,10 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
 3. **Navigation Structure**:
    - Uses Expo Router file-based routing
    - Main layout in `app/_layout.tsx` 
-   - Tab navigation in `app/(tabs)/`
-   - Login screen at `app/login.tsx`
+   - Tab navigation in `app/(tabs)/` with modern UI
+   - Login screen at `app/login.tsx` with gradient design
+   - Dashboard at `app/(tabs)/dashboard.tsx` - main hub with stats and quick actions
+   - Chores list at `app/(tabs)/chores.tsx` - dedicated chore management interface
 
 4. **Error Handling**:
    - Comprehensive error handling in all Firebase operations
@@ -94,11 +96,38 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
 - `services/firestore.ts` - All database operations (v9 modular syntax)
 - `types/index.ts` - TypeScript type definitions
 - `components/FamilySetup.tsx` - Family onboarding flow
+- `components/ChoreManagement.tsx` - Admin chore CRUD interface
+- `components/FamilySettings.tsx` - Family configuration modal
 - `app/_layout.tsx` - Root layout with providers
 - `app/(tabs)/index.tsx` - Home screen with family dashboard
+- `app/(tabs)/dashboard.tsx` - Modern dashboard with cards and stats
+- `app/(tabs)/chores.tsx` - Chore list with filtering and actions
 - `docs/firebase_integration.md` - Comprehensive Firebase integration guide
 - `firebase.json` - Firebase Hosting configuration
 - `.firebaserc` - Firebase project configuration (family-fun-app)
+
+## Modern UI Design Patterns
+
+The app uses a modern, minimalist design approach:
+
+1. **Color Scheme**:
+   - Primary: `#007AFF` (iOS blue)
+   - Success: `#34C759` (green)
+   - Warning: `#FF9500` (orange)
+   - Danger: `#FF3B30` (red)
+   - Background: `#F2F2F7` (light gray)
+
+2. **Component Styling**:
+   - Card-based layouts with subtle shadows
+   - Rounded corners (12px radius)
+   - Consistent padding and spacing
+   - Responsive design for tablets
+   - Platform-specific styling (iOS vs Web)
+
+3. **Navigation**:
+   - Clean tab bar with modern icons (Ionicons)
+   - Gradient login screen with LinearGradient
+   - Modal overlays for forms and settings
 
 ## Development Notes
 
@@ -108,6 +137,7 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
 - Firebase version 11.8.1 with v9 modular API
 - Firebase Project ID: `family-fun-app`
 - GitHub Repository: https://github.com/grumpylemon/family-clean
+- Uses expo-linear-gradient for gradient effects
 
 ## Common Issues & Solutions
 
