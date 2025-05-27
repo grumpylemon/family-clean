@@ -97,13 +97,13 @@ export default function DashboardScreen() {
     <ThemedView style={styles.container}>
       {/* Header */}
       <ThemedView style={styles.header}>
-        <ThemedView style={styles.headerContent}>
-          <ThemedView>
+        <ThemedView style={[styles.headerContent, {backgroundColor: 'transparent'}]}>
+          <ThemedView style={{backgroundColor: 'transparent'}}>
             <ThemedText style={styles.greeting}>Welcome back,</ThemedText>
             <ThemedText style={styles.userName}>{currentMember?.name || user.displayName}</ThemedText>
           </ThemedView>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={24} color="#666" />
+            <Ionicons name="log-out-outline" size={24} color="#ffffff" />
           </TouchableOpacity>
         </ThemedView>
       </ThemedView>
@@ -266,10 +266,10 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#ffffff',
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1976D2',
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -286,14 +286,18 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 16,
-    opacity: 0.7,
+    color: '#ffffff',
+    opacity: 0.9,
   },
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#ffffff',
   },
   logoutButton: {
     padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 8,
   },
   scrollView: {
     flex: 1,
@@ -376,12 +380,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 16,
+    padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -390,8 +396,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
+    color: '#212121',
   },
   seeAllText: {
     color: '#1976D2',
@@ -400,8 +407,9 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
-    opacity: 0.5,
+    color: '#757575',
     paddingVertical: 20,
+    fontSize: 16,
   },
   choreItem: {
     flexDirection: 'row',
@@ -416,12 +424,13 @@ const styles = StyleSheet.create({
   },
   choreTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     marginBottom: 4,
+    color: '#212121',
   },
   choreDate: {
-    fontSize: 12,
-    opacity: 0.7,
+    fontSize: 13,
+    color: '#666666',
   },
   chorePoints: {
     backgroundColor: '#fff3e0',
