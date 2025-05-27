@@ -7,9 +7,8 @@ import {
   ActivityIndicator,
   Platform,
   Dimensions,
+  Text,
 } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { FamilySetup } from '@/components/FamilySetup';
@@ -266,7 +265,7 @@ export default function DashboardScreen() {
         visible={showFamilySettings}
         onClose={() => setShowFamilySettings(false)}
       />
-    </ThemedView>
+    </View>
   );
 }
 
@@ -316,6 +315,8 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
   },
   statsContainer: {
     flexDirection: 'row',
