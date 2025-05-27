@@ -135,7 +135,7 @@ export default function DashboardScreen() {
             style={[styles.actionCard, styles.primaryAction]}
             onPress={() => router.push('/(tabs)/chores')}
           >
-            <Ionicons name="checkmark-circle-outline" size={32} color="#fff" />
+            <Ionicons name="checkmark-circle-outline" size={36} color="#fff" />
             <ThemedText style={styles.actionCardTextPrimary}>View Chores</ThemedText>
           </TouchableOpacity>
           
@@ -143,7 +143,7 @@ export default function DashboardScreen() {
             style={styles.actionCard}
             onPress={() => setShowFamilySettings(true)}
           >
-            <Ionicons name="people-outline" size={32} color="#4285F4" />
+            <Ionicons name="people-outline" size={36} color="#1976D2" />
             <ThemedText style={styles.actionCardText}>Family Info</ThemedText>
           </TouchableOpacity>
         </ThemedView>
@@ -213,23 +213,23 @@ export default function DashboardScreen() {
                 style={styles.adminCard}
                 onPress={() => setShowManageMembers(true)}
               >
-                <Ionicons name="people" size={24} color="#4285F4" />
-                <ThemedText style={styles.adminCardText}>Manage Members</ThemedText>
+                <Ionicons name="people" size={28} color="#1976D2" />
+                <ThemedText style={styles.adminCardText}>Members</ThemedText>
               </TouchableOpacity>
               
               <TouchableOpacity 
                 style={styles.adminCard}
                 onPress={() => setShowChoreManagement(true)}
               >
-                <Ionicons name="list" size={24} color="#4285F4" />
-                <ThemedText style={styles.adminCardText}>Manage Chores</ThemedText>
+                <Ionicons name="list" size={28} color="#1976D2" />
+                <ThemedText style={styles.adminCardText}>Chores</ThemedText>
               </TouchableOpacity>
               
               <TouchableOpacity 
                 style={styles.adminCard}
                 onPress={() => setShowFamilySettings(true)}
               >
-                <Ionicons name="settings" size={24} color="#4285F4" />
+                <Ionicons name="settings" size={28} color="#1976D2" />
                 <ThemedText style={styles.adminCardText}>Settings</ThemedText>
               </TouchableOpacity>
             </ThemedView>
@@ -309,60 +309,67 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 20,
     gap: 12,
+    justifyContent: 'space-between',
   },
   statCard: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  statValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#4285F4',
-  },
-  statLabel: {
-    fontSize: 12,
-    opacity: 0.7,
-    marginTop: 4,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 12,
-    marginBottom: 20,
-  },
-  actionCard: {
-    flex: 1,
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 12,
     alignItems: 'center',
-    gap: 8,
+    minWidth: 100,
+    maxWidth: 120,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  statValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#1976D2',
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  quickActions: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    gap: 16,
+    marginBottom: 20,
+    justifyContent: 'space-between',
+  },
+  actionCard: {
+    backgroundColor: '#fff',
+    padding: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    gap: 8,
+    minWidth: 140,
+    maxWidth: 160,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   primaryAction: {
-    backgroundColor: '#4285F4',
+    backgroundColor: '#1976D2',
   },
   actionCardText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#1976D2',
+    textAlign: 'center',
   },
   actionCardTextPrimary: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+    textAlign: 'center',
   },
   section: {
     marginHorizontal: 20,
@@ -387,8 +394,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   seeAllText: {
-    color: '#4285F4',
-    fontSize: 14,
+    color: '#1976D2',
+    fontSize: 16,
+    fontWeight: '600',
   },
   emptyText: {
     textAlign: 'center',
@@ -416,58 +424,67 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   chorePoints: {
-    backgroundColor: '#E8F0FE',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: '#fff3e0',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ffcc02',
   },
   chorePointsText: {
-    color: '#4285F4',
+    color: '#e65100',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   adminGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
     marginTop: 12,
+    justifyContent: 'space-between',
   },
   adminCard: {
-    flex: 1,
-    minWidth: isTablet ? 150 : 100,
-    backgroundColor: '#f8f9fa',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: '#f0f4ff',
+    padding: 20,
+    borderRadius: 12,
     alignItems: 'center',
     gap: 8,
+    minWidth: 100,
+    maxWidth: 110,
+    borderWidth: 1,
+    borderColor: '#e3f2fd',
   },
   adminCardText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
     textAlign: 'center',
+    color: '#1976D2',
   },
   familyCodeSection: {
     marginHorizontal: 20,
     marginBottom: 20,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#e8f5e8',
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#c8e6c9',
   },
   familyCodeLabel: {
-    fontSize: 14,
-    opacity: 0.7,
+    fontSize: 16,
+    color: '#2e7d32',
     marginBottom: 8,
+    fontWeight: '500',
   },
   familyCode: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#4285F4',
-    letterSpacing: 2,
+    color: '#1b5e20',
+    letterSpacing: 3,
   },
   familyCodeHint: {
-    fontSize: 12,
-    opacity: 0.5,
+    fontSize: 14,
+    color: '#388e3c',
     marginTop: 8,
   },
 });
