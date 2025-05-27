@@ -1,20 +1,21 @@
 import { FirestoreTest } from '@/components/FirestoreTest';
+import { FamilySetup } from '@/components/FamilySetup';
+import { ManageMembers } from '@/components/ManageMembers';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFamily, getUserFamily } from '@/services/firestore';
+import { useFamily } from '@/contexts/FamilyContext';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Platform, ScrollView, StyleSheet, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 
 // Version tracking for updates
-console.log("Home Screen version: v3");
+console.log("Home Screen version: v4");
 
 export default function HomeScreen() {
   const { user, loading: authLoading, logout } = useAuth();
-  const [family, setFamily] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { family, loading: familyLoading, error, isAdmin, currentMember } = useFamily();
+  const [showManageMembers, setShowManageMembers] = useState(false);
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -22,42 +23,6 @@ export default function HomeScreen() {
       router.replace('/login');
     }
   }, [user, authLoading]);
-
-  // Fetch family data if user is logged in
-  useEffect(() => {
-    async function fetchFamily() {
-      if (!user) return;
-      
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // For iOS or when using mock, use simplified flow
-        if (Platform.OS === 'ios') {
-          console.log("iOS detected, using mock family data");
-          const mockFamilyData = await getFamily('mock-family-id');
-          setFamily(mockFamilyData);
-          return;
-        }
-        
-        // Try to get user's family
-        const familyData = await getUserFamily(user.uid);
-        if (familyData) {
-          setFamily(familyData);
-        } else {
-          // If no family found, could show UI to create one
-          console.log("No family found for user");
-        }
-      } catch (err) {
-        console.error("Error fetching family:", err);
-        setError(`Failed to load family data: ${err instanceof Error ? err.message : String(err)}`);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    fetchFamily();
-  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -69,18 +34,11 @@ export default function HomeScreen() {
     }
   };
 
-  if (authLoading || loading) {
+  if (authLoading || familyLoading) {
     return (
       <ThemedView style={styles.container}>
-        <ThemedText>Loading...</ThemedText>
-      </ThemedView>
-    );
-  }
-
-  if (error) {
-    return (
-      <ThemedView style={styles.container}>
-        <ThemedText style={styles.errorText}>{error}</ThemedText>
+        <ActivityIndicator size="large" color="#4285F4" />
+        <ThemedText style={styles.loadingText}>Loading...</ThemedText>
       </ThemedView>
     );
   }
@@ -89,20 +47,36 @@ export default function HomeScreen() {
     return null; // Will redirect to login
   }
 
+  // Show family setup if user has no family
+  if (!family) {
+    return <FamilySetup />;
+  }
+
   return (
     <ScrollView style={styles.scrollView}>
       <ThemedView style={styles.container}>
-        <ThemedText style={styles.title}>Welcome, {user.displayName || 'User'}!</ThemedText>
+        <ThemedText style={styles.title}>Welcome to {family.name}!</ThemedText>
         
         {/* User info */}
         <ThemedView style={styles.section}>
           <ThemedText style={styles.sectionTitle}>Your Profile</ThemedText>
-          <ThemedText>Email: {user.email || 'No email'}</ThemedText>
-          <ThemedText>User ID: {user.uid}</ThemedText>
-          {user.isAnonymous && (
-            <ThemedText style={styles.note}>
-              You're signed in as a guest. Create an account to save your data.
-            </ThemedText>
+          <ThemedText>Name: {currentMember?.name || user.displayName || 'User'}</ThemedText>
+          <ThemedText>Role: {currentMember?.familyRole || 'Member'} ({currentMember?.role || 'member'})</ThemedText>
+          {currentMember && (
+            <ThemedView style={styles.statsRow}>
+              <ThemedView style={styles.statItem}>
+                <ThemedText style={styles.statValue}>{currentMember.points.current}</ThemedText>
+                <ThemedText style={styles.statLabel}>Points</ThemedText>
+              </ThemedView>
+              <ThemedView style={styles.statItem}>
+                <ThemedText style={styles.statValue}>{currentMember.points.weekly}</ThemedText>
+                <ThemedText style={styles.statLabel}>This Week</ThemedText>
+              </ThemedView>
+              <ThemedView style={styles.statItem}>
+                <ThemedText style={styles.statValue}>{currentMember.points.lifetime}</ThemedText>
+                <ThemedText style={styles.statLabel}>All Time</ThemedText>
+              </ThemedView>
+            </ThemedView>
           )}
           <TouchableOpacity 
             style={styles.logoutButton} 
@@ -114,18 +88,51 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </ThemedView>
         
-        {/* Family info if available */}
-        {family && (
+        {/* Family info */}
+        <ThemedView style={styles.section}>
+          <ThemedText style={styles.sectionTitle}>Family Info</ThemedText>
+          <ThemedText>Join Code: <ThemedText style={styles.joinCode}>{family.joinCode}</ThemedText></ThemedText>
+          <ThemedText>Members: {family.members?.length || 0}</ThemedText>
+          
+          {/* Member list */}
+          <ThemedView style={styles.memberList}>
+            {family.members.map((member) => (
+              <ThemedView key={member.uid} style={styles.memberItem}>
+                <ThemedText style={styles.memberName}>{member.name}</ThemedText>
+                <ThemedText style={styles.memberRole}>{member.familyRole}</ThemedText>
+                {member.uid === family.adminId && (
+                  <ThemedText style={styles.adminBadge}>Admin</ThemedText>
+                )}
+              </ThemedView>
+            ))}
+          </ThemedView>
+        </ThemedView>
+        
+        {/* Admin actions */}
+        {isAdmin && (
           <ThemedView style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Family Info</ThemedText>
-            <ThemedText>Name: {family.name}</ThemedText>
-            <ThemedText>Members: {family.members?.length || 0}</ThemedText>
+            <ThemedText style={styles.sectionTitle}>Admin Actions</ThemedText>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => setShowManageMembers(true)}
+            >
+              <ThemedText style={styles.actionButtonText}>Manage Members</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton}>
+              <ThemedText style={styles.actionButtonText}>Family Settings</ThemedText>
+            </TouchableOpacity>
           </ThemedView>
         )}
         
         {/* Firestore test component */}
         <FirestoreTest />
       </ThemedView>
+      
+      {/* Manage Members Modal */}
+      <ManageMembers 
+        visible={showManageMembers}
+        onClose={() => setShowManageMembers(false)}
+      />
     </ScrollView>
   );
 }
@@ -138,6 +145,10 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     gap: 16,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
   },
   title: {
     fontSize: 24,
@@ -154,6 +165,71 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4285F4',
+  },
+  statLabel: {
+    fontSize: 12,
+    opacity: 0.7,
+    marginTop: 4,
+  },
+  joinCode: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    color: '#4285F4',
+  },
+  memberList: {
+    marginTop: 12,
+    gap: 8,
+  },
+  memberItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    gap: 8,
+  },
+  memberName: {
+    flex: 1,
+    fontSize: 16,
+  },
+  memberRole: {
+    fontSize: 14,
+    opacity: 0.7,
+  },
+  adminBadge: {
+    backgroundColor: '#4285F4',
+    color: 'white',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  actionButton: {
+    backgroundColor: 'rgba(66, 133, 244, 0.1)',
+    borderWidth: 1,
+    borderColor: '#4285F4',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  actionButtonText: {
+    color: '#4285F4',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   errorText: {
     color: '#FF6B6B',

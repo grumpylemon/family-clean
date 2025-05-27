@@ -1,5 +1,6 @@
 import { initializeFirebase, isMockImplementation } from '@/config/firebase';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { FamilyProvider } from '@/contexts/FamilyContext';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -12,7 +13,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 // We've moved the Firebase import into the explicit initialization
 
 // Version tracking for updates
-console.log("App Layout version: v4");
+console.log("App Layout version: v5");
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -54,7 +55,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider>
-        <RootLayoutNav firebaseStatus={firebaseInitialized} />
+        <FamilyProvider>
+          <RootLayoutNav firebaseStatus={firebaseInitialized} />
+        </FamilyProvider>
       </AuthProvider>
       <StatusBar style="auto" />
     </ThemeProvider>

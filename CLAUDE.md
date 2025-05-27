@@ -35,6 +35,7 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
    - iOS uses mock implementation due to Expo Go limitations
    - Web uses real Firebase with IndexedDB persistence
    - Exports `auth`, `safeCollection`, and helper functions
+   - Uses dynamic collection references to handle initialization timing
 
 2. **Authentication** (`contexts/AuthContext.tsx`):
    - Provides auth state management via React Context
@@ -42,10 +43,16 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
    - Handles both mock and real Firebase auth seamlessly
 
 3. **Firestore Database** (`services/firestore.ts`):
-   - Uses Firebase v9 modular API syntax
-   - Implements CRUD operations for chores and families
-   - Uses consistent family ID (`demo-family-id`) for persistence
+   - Uses Firebase v9 modular API syntax exclusively
+   - Implements CRUD operations for chores, families, and users
+   - Dynamic collection getters: `getChoresCollection()`, `getFamiliesCollection()`, `getUsersCollection()`
+   - Comprehensive family management system with join codes
    - Dates are converted to ISO strings for Firestore compatibility
+
+4. **Family Management** (`contexts/FamilyContext.tsx`):
+   - Global state management for family data
+   - Handles family creation, joining, and member management
+   - Integrates with user profiles and authentication
 
 ### Key Implementation Details
 
@@ -54,10 +61,13 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
    - Can be forced via `EXPO_PUBLIC_USE_MOCK=true` environment variable
    - Mock implementations mirror real Firebase API for seamless switching
 
-2. **Data Models**:
-   - `Chore`: Task with title, points, assignee, due date, etc.
-   - `Family`: Group with admin and members
-   - `FamilyMember`: User with role, points, and profile info
+2. **Data Models** (`types/index.ts`):
+   - `User`: User profile with preferences and stats
+   - `Family`: Group with admin, members, and settings
+   - `FamilyMember`: User within a family context with role and permissions
+   - `Chore`: Task with title, points, assignee, due date, recurrence
+   - `Reward`: Incentives that can be redeemed with points
+   - `Achievement`: Milestones and badges for gamification
 
 3. **Navigation Structure**:
    - Uses Expo Router file-based routing
@@ -80,8 +90,12 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
 
 - `config/firebase.ts` - Firebase initialization and mock/real switching logic
 - `contexts/AuthContext.tsx` - Authentication state management
-- `services/firestore.ts` - All database operations
+- `contexts/FamilyContext.tsx` - Family state management
+- `services/firestore.ts` - All database operations (v9 modular syntax)
+- `types/index.ts` - TypeScript type definitions
+- `components/FamilySetup.tsx` - Family onboarding flow
 - `app/_layout.tsx` - Root layout with providers
+- `app/(tabs)/index.tsx` - Home screen with family dashboard
 - `docs/firebase_integration.md` - Comprehensive Firebase integration guide
 - `firebase.json` - Firebase Hosting configuration
 - `.firebaserc` - Firebase project configuration (family-fun-app)
@@ -94,3 +108,15 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
 - Firebase version 11.8.1 with v9 modular API
 - Firebase Project ID: `family-fun-app`
 - GitHub Repository: https://github.com/grumpylemon/family-clean
+
+## Common Issues & Solutions
+
+1. **"collection.doc is not a function"**: Ensure using Firebase v9 syntax:
+   - Wrong: `collection().doc(id)`
+   - Right: `doc(collection(), id)`
+
+2. **Expo Go Development**: Use web browser for testing real Firebase features
+   - Run: `npm start` then press `w`
+   - Or visit: http://localhost:8081
+
+3. **Firebase initialization timing**: Collection references use dynamic getters to ensure Firebase is ready

@@ -1,46 +1,36 @@
 import { auth, isMockImplementation, safeCollection } from '@/config/firebase';
-import { addDoc, collection, doc, getDoc, getDocs, getFirestore, query, setDoc, where } from 'firebase/firestore';
+import { 
+  addDoc, 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  getFirestore, 
+  query, 
+  setDoc, 
+  updateDoc,
+  where,
+  arrayUnion,
+  arrayRemove 
+} from 'firebase/firestore';
 import { Platform } from 'react-native';
+import { 
+  Chore, 
+  Family, 
+  FamilyMember, 
+  FamilySettings, 
+  User,
+  UserRole,
+  FamilyRole 
+} from '@/types';
 
-// Version to confirm updates (v9)
-console.log("Firestore service version: v9");
+// Version to confirm updates (v10)
+console.log("Firestore service version: v10");
 
-// Types
-export interface Chore {
-  id?: string;
-  title: string;
-  description?: string;
-  points: number;
-  assignedTo: string;
-  assignedToName?: string;
-  completedBy?: string;
-  completedAt?: Date | string;
-  dueDate: Date | string;
-  createdAt: Date | string;
-  familyId: string;
-}
-
-export interface Family {
-  id?: string;
-  name: string;
-  adminId: string;
-  createdAt: Date | string;
-  members: FamilyMember[];
-}
-
-export interface FamilyMember {
-  uid: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'member' | 'child';
-  points: number;
-  photoURL?: string;
-}
-
-// Collection references using the safe collection helper
-const choresCollection = safeCollection('chores');
-const familiesCollection = safeCollection('families');
-const usersCollection = safeCollection('users');
+// Get collection references dynamically to ensure Firebase is initialized
+const getChoresCollection = () => safeCollection('chores');
+const getFamiliesCollection = () => safeCollection('families');
+const getUsersCollection = () => safeCollection('users');
 
 // Fixed family ID for demo purposes to ensure persistence
 // In a real app, this would be retrieved from the user's profile
@@ -55,23 +45,31 @@ const mockChores: Chore[] = [
     id: 'mock-chore-1',
     title: 'Demo Chore: Clean Room',
     description: 'This is a demo chore from the mock implementation',
+    type: 'individual',
+    difficulty: 'medium',
     points: 10,
     assignedTo: 'mock-user-id',
     assignedToName: 'Demo User',
     dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
     createdAt: new Date(),
-    familyId: 'test-family-id'
+    createdBy: 'mock-user-id',
+    familyId: 'test-family-id',
+    status: 'open'
   },
   {
     id: 'mock-chore-2',
     title: 'Demo Chore: Do Dishes',
     description: 'Another demo chore from mock implementation',
+    type: 'family',
+    difficulty: 'easy',
     points: 5,
     assignedTo: 'mock-user-id',
     assignedToName: 'Demo User',
     dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
     createdAt: new Date(),
-    familyId: 'test-family-id'
+    createdBy: 'mock-user-id',
+    familyId: 'test-family-id',
+    status: 'open'
   }
 ];
 
@@ -197,8 +195,8 @@ export const getChore = async (choreId: string) => {
       throw new Error('Chore not found in mock data');
     }
     
-    const choreDoc = await choresCollection.doc(choreId).get();
-    if (choreDoc.exists) {
+    const choreDoc = await getDoc(doc(getChoresCollection(), choreId));
+    if (choreDoc.exists()) {
       return { id: choreDoc.id, ...choreDoc.data() } as Chore;
     } else {
       throw new Error('Chore not found');
@@ -319,11 +317,11 @@ export const updateChore = async (choreId: string, chore: Partial<Chore>) => {
     console.log(`Updating chore ${choreId} with data:`, formattedChore);
     
     // Use set with merge to avoid overwriting existing data
-    await choresCollection.doc(choreId).set(formattedChore, { merge: true });
+    await setDoc(doc(getChoresCollection(), choreId), formattedChore, { merge: true });
     
     // Verify the update
-    const verifyDoc = await choresCollection.doc(choreId).get();
-    if (verifyDoc.exists) {
+    const verifyDoc = await getDoc(doc(getChoresCollection(), choreId));
+    if (verifyDoc.exists()) {
       console.log(`Successfully verified chore update in Firestore with ID: ${choreId}`);
     } else {
       console.error(`Chore with ID ${choreId} was not found after update!`);
@@ -351,7 +349,7 @@ export const deleteChore = async (choreId: string) => {
     console.log(`Marking chore ${choreId} as deleted`);
     
     // Instead of actually deleting, mark as deleted
-    await choresCollection.doc(choreId).set({ deleted: true }, { merge: true });
+    await setDoc(doc(getChoresCollection(), choreId), { deleted: true }, { merge: true });
     
     return true;
   } catch (error) {
@@ -382,7 +380,7 @@ export const completeChore = async (choreId: string) => {
     
     console.log(`Marking chore ${choreId} as completed`);
     
-    await choresCollection.doc(choreId).set(completionData, { merge: true });
+    await setDoc(doc(getChoresCollection(), choreId), completionData, { merge: true });
     
     return true;
   } catch (error) {
@@ -396,17 +394,32 @@ const mockFamily: Family = {
   id: 'mock-family-id',
   name: 'Demo Family',
   adminId: 'mock-admin-id',
+  joinCode: 'DEMO123',
   createdAt: new Date(),
+  updatedAt: new Date(),
   members: [
     {
       uid: 'mock-user-id',
       name: 'Demo User',
       email: 'demo@example.com',
       role: 'admin',
-      points: 100,
-      photoURL: 'https://via.placeholder.com/150'
+      familyRole: 'parent',
+      points: {
+        current: 100,
+        lifetime: 100,
+        weekly: 25
+      },
+      photoURL: 'https://via.placeholder.com/150',
+      joinedAt: new Date(),
+      isActive: true
     }
-  ]
+  ],
+  settings: {
+    defaultChorePoints: 10,
+    defaultChoreCooldownHours: 24,
+    allowPointTransfers: false,
+    weekStartDay: 0
+  }
 };
 
 // Family functions
@@ -446,18 +459,33 @@ export const getFamily = async (familyId: string) => {
     
     // Otherwise, create a default family (for demo purposes)
     console.log(`Family not found, creating default family: ${effectiveFamilyId}`);
-    const defaultFamily = {
+    const defaultFamily: Omit<Family, 'id'> = {
       name: auth.currentUser?.displayName ? `${auth.currentUser.displayName}'s Family` : 'Demo Family',
       adminId: auth.currentUser?.uid || 'unknown',
+      joinCode: generateJoinCode(),
       createdAt: new Date(),
+      updatedAt: new Date(),
       members: [{
         uid: auth.currentUser?.uid || 'unknown',
         name: auth.currentUser?.displayName || 'Demo User',
         email: auth.currentUser?.email || 'unknown@example.com',
         role: 'admin',
-        points: 0,
-        photoURL: auth.currentUser?.photoURL || undefined
-      }]
+        familyRole: 'parent',
+        points: {
+          current: 0,
+          lifetime: 0,
+          weekly: 0
+        },
+        photoURL: auth.currentUser?.photoURL || undefined,
+        joinedAt: new Date(),
+        isActive: true
+      }],
+      settings: {
+        defaultChorePoints: 10,
+        defaultChoreCooldownHours: 24,
+        allowPointTransfers: false,
+        weekStartDay: 0
+      }
     };
     
     // Format for Firestore
@@ -523,7 +551,7 @@ export const createFamily = async (family: Omit<Family, 'id' | 'createdAt'>) => 
     
     // Create with specific ID for consistency
     console.log(`Creating family with ID ${effectiveFamilyId}:`, formattedFamily);
-    await familiesCollection.doc(effectiveFamilyId).set(formattedFamily);
+    await setDoc(doc(getFamiliesCollection(), effectiveFamilyId), formattedFamily);
     
     return effectiveFamilyId;
   } catch (error) {
@@ -549,7 +577,7 @@ export const updateFamily = async (familyId: string, data: Partial<Family>) => {
     
     console.log(`Updating family ${familyId} with:`, formattedData);
     
-    await familiesCollection.doc(familyId).set(formattedData, { merge: true });
+    await setDoc(doc(getFamiliesCollection(), familyId), formattedData, { merge: true });
     
     return true;
   } catch (error) {
@@ -570,15 +598,15 @@ export const addFamilyMember = async (familyId: string, member: FamilyMember) =>
       return true;
     }
     
-    const familyDoc = await familiesCollection.doc(familyId).get();
-    if (!familyDoc.exists) throw new Error('Family not found');
+    const familyDoc = await getDoc(doc(getFamiliesCollection(), familyId));
+    if (!familyDoc.exists()) throw new Error('Family not found');
     
     const familyData = familyDoc.data() as Family;
     const updatedMembers = [...(familyData.members || []), member];
     
     console.log(`Adding member ${member.name} to family ${familyId}`);
     
-    await familiesCollection.doc(familyId).set({
+    await setDoc(doc(getFamiliesCollection(), familyId), {
       members: updatedMembers
     }, { merge: true });
     
@@ -601,8 +629,8 @@ export const updateFamilyMember = async (familyId: string, userId: string, updat
       return true;
     }
     
-    const familyDoc = await familiesCollection.doc(familyId).get();
-    if (!familyDoc.exists) throw new Error('Family not found');
+    const familyDoc = await getDoc(doc(getFamiliesCollection(), familyId));
+    if (!familyDoc.exists()) throw new Error('Family not found');
     
     const familyData = familyDoc.data() as Family;
     const members = familyData.members || [];
@@ -618,7 +646,7 @@ export const updateFamilyMember = async (familyId: string, userId: string, updat
     
     console.log(`Updating member ${userId} in family ${familyId}`);
     
-    await familiesCollection.doc(familyId).set({
+    await setDoc(doc(getFamiliesCollection(), familyId), {
       members: updatedMembers
     }, { merge: true });
     
@@ -626,5 +654,111 @@ export const updateFamilyMember = async (familyId: string, userId: string, updat
   } catch (error) {
     console.error('Error updating family member:', error);
     return false;
+  }
+};
+
+// Generate a unique join code for families
+export const generateJoinCode = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
+// Find family by join code
+export const findFamilyByJoinCode = async (joinCode: string): Promise<Family | null> => {
+  if (shouldReturnMockImmediately()) {
+    return mockFamily;
+  }
+  
+  try {
+    if (isMockImplementation()) {
+      console.log(`Mock find family by join code: ${joinCode}`);
+      return mockFamily;
+    }
+    
+    const q = query(getFamiliesCollection(), where('joinCode', '==', joinCode));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return null;
+    }
+    
+    const doc = querySnapshot.docs[0];
+    const data = doc.data() || {};
+    return {
+      id: doc.id,
+      ...(data as any)
+    } as Family;
+  } catch (error) {
+    console.error('Error finding family by join code:', error);
+    return null;
+  }
+};
+
+// Create or update user profile
+export const createOrUpdateUserProfile = async (userId: string, userData: Partial<User>) => {
+  if (shouldReturnMockImmediately()) {
+    return true;
+  }
+  
+  try {
+    if (isMockImplementation()) {
+      console.log(`Mock create/update user profile: ${userId}`);
+      return true;
+    }
+    
+    const formattedData = formatForFirestore({
+      ...userData,
+      updatedAt: new Date()
+    });
+    
+    await setDoc(doc(getUsersCollection(), userId), formattedData, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('Error creating/updating user profile:', error);
+    return false;
+  }
+};
+
+// Get user profile
+export const getUserProfile = async (userId: string): Promise<User | null> => {
+  if (shouldReturnMockImmediately()) {
+    return {
+      uid: userId,
+      email: 'mock@example.com',
+      displayName: 'Mock User',
+      photoURL: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+  }
+  
+  try {
+    if (isMockImplementation()) {
+      return {
+        uid: userId,
+        email: 'mock@example.com',
+        displayName: 'Mock User',
+        photoURL: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+    }
+    
+    const userDoc = await getDoc(doc(getUsersCollection(), userId));
+    if (!userDoc.exists()) {
+      return null;
+    }
+    
+    return {
+      uid: userId,
+      ...userDoc.data()
+    } as User;
+  } catch (error) {
+    console.error('Error getting user profile:', error);
+    return null;
   }
 }; 
