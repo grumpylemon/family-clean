@@ -7,9 +7,8 @@ import {
   ActivityIndicator,
   Platform,
   RefreshControl,
+  Text,
 } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { getChores, completeChore } from '@/services/firestore';
@@ -102,10 +101,10 @@ export default function ChoresScreen() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return '#34A853';
-      case 'medium': return '#FBBC04';
-      case 'hard': return '#EA4335';
-      default: return '#666';
+      case 'easy': return '#10b981';
+      case 'medium': return '#f59e0b';
+      case 'hard': return '#ef4444';
+      default: return '#6b7280';
     }
   };
 
@@ -113,18 +112,18 @@ export default function ChoresScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.container}>
-        <ActivityIndicator size="large" color="#4285F4" />
-      </ThemedView>
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+      </View>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <View style={styles.container}>
       {/* Header */}
-      <ThemedView style={styles.header}>
-        <ThemedText style={styles.title}>Chores</ThemedText>
-      </ThemedView>
+      <View style={styles.header}>
+        <Text style={styles.title}>Chores</Text>
+      </View>
 
       {/* Filter Tabs */}
       <ScrollView 
@@ -144,15 +143,15 @@ export default function ChoresScreen() {
             style={[styles.filterTab, filter === tab.key && styles.filterTabActive]}
             onPress={() => setFilter(tab.key as FilterType)}
           >
-            <ThemedText style={[styles.filterTabText, filter === tab.key && styles.filterTabTextActive]}>
+            <Text style={[styles.filterTabText, filter === tab.key && styles.filterTabTextActive]}>
               {tab.label}
-            </ThemedText>
+            </Text>
             {tab.count > 0 && (
-              <ThemedView style={[styles.filterBadge, filter === tab.key && styles.filterBadgeActive]}>
-                <ThemedText style={[styles.filterBadgeText, filter === tab.key && styles.filterBadgeTextActive]}>
+              <View style={[styles.filterBadge, filter === tab.key && styles.filterBadgeActive]}>
+                <Text style={[styles.filterBadgeText, filter === tab.key && styles.filterBadgeTextActive]}>
                   {tab.count}
-                </ThemedText>
-              </ThemedView>
+                </Text>
+              </View>
             )}
           </TouchableOpacity>
         ))}
@@ -172,122 +171,125 @@ export default function ChoresScreen() {
         }
       >
         {filteredChores.length === 0 ? (
-          <ThemedView style={styles.emptyState}>
-            <Ionicons name="checkbox-outline" size={48} color="#ccc" />
-            <ThemedText style={styles.emptyText}>No chores found</ThemedText>
-          </ThemedView>
+          <View style={styles.emptyState}>
+            <Ionicons name="checkbox-outline" size={48} color="#9ca3af" />
+            <Text style={styles.emptyText}>No chores found</Text>
+          </View>
         ) : (
           filteredChores.map((chore) => (
-            <ThemedView key={chore.id} style={styles.choreCard}>
-              <ThemedView style={styles.choreHeader}>
-                <ThemedView style={styles.choreTypeIcon}>
+            <View key={chore.id} style={styles.choreCard}>
+              <View style={styles.choreHeader}>
+                <View style={styles.choreTypeIcon}>
                   <Ionicons 
                     name={getChoreTypeIcon(chore.type) as any} 
                     size={20} 
-                    color="#666" 
+                    color="#64748b" 
                   />
-                </ThemedView>
-                <ThemedView style={styles.choreHeaderInfo}>
-                  <ThemedText style={styles.choreTitle}>{chore.title}</ThemedText>
+                </View>
+                <View style={styles.choreHeaderInfo}>
+                  <Text style={styles.choreTitle}>{chore.title}</Text>
                   {chore.description && (
-                    <ThemedText style={styles.choreDescription}>{chore.description}</ThemedText>
+                    <Text style={styles.choreDescription}>{chore.description}</Text>
                   )}
-                </ThemedView>
-                <ThemedView style={styles.chorePointsBadge}>
-                  <ThemedText style={styles.chorePoints}>{chore.points}</ThemedText>
-                  <ThemedText style={styles.chorePointsLabel}>pts</ThemedText>
-                </ThemedView>
-              </ThemedView>
+                </View>
+                <View style={styles.chorePointsBadge}>
+                  <Text style={styles.chorePoints}>{chore.points}</Text>
+                  <Text style={styles.chorePointsLabel}>pts</Text>
+                </View>
+              </View>
 
-              <ThemedView style={styles.choreDetails}>
-                <ThemedView style={styles.choreDetailRow}>
-                  <Ionicons name="calendar-outline" size={16} color="#666" />
-                  <ThemedText style={styles.choreDetailText}>
+              <View style={styles.choreDetails}>
+                <View style={styles.choreDetailRow}>
+                  <Ionicons name="calendar-outline" size={16} color="#6b7280" />
+                  <Text style={styles.choreDetailText}>
                     Due: {new Date(chore.dueDate).toLocaleDateString()}
-                  </ThemedText>
-                </ThemedView>
+                  </Text>
+                </View>
 
-                <ThemedView style={styles.choreDetailRow}>
-                  <ThemedView 
+                <View style={styles.choreDetailRow}>
+                  <View 
                     style={[styles.difficultyDot, { backgroundColor: getDifficultyColor(chore.difficulty) }]} 
                   />
-                  <ThemedText style={styles.choreDetailText}>
+                  <Text style={styles.choreDetailText}>
                     {chore.difficulty.charAt(0).toUpperCase() + chore.difficulty.slice(1)}
-                  </ThemedText>
-                </ThemedView>
+                  </Text>
+                </View>
 
                 {chore.assignedTo && (
-                  <ThemedView style={styles.choreDetailRow}>
-                    <Ionicons name="person-outline" size={16} color="#666" />
-                    <ThemedText style={styles.choreDetailText}>
+                  <View style={styles.choreDetailRow}>
+                    <Ionicons name="person-outline" size={16} color="#6b7280" />
+                    <Text style={styles.choreDetailText}>
                       {family?.members.find(m => m.uid === chore.assignedTo)?.name || 'Unknown'}
-                    </ThemedText>
-                  </ThemedView>
+                    </Text>
+                  </View>
                 )}
 
                 {chore.status === 'completed' && chore.completedAt && (
-                  <ThemedView style={styles.choreDetailRow}>
-                    <Ionicons name="checkmark-circle" size={16} color="#34A853" />
-                    <ThemedText style={[styles.choreDetailText, { color: '#34A853' }]}>
+                  <View style={styles.choreDetailRow}>
+                    <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+                    <Text style={[styles.choreDetailText, { color: '#10b981' }]}>
                       Completed {new Date(chore.completedAt).toLocaleDateString()}
-                    </ThemedText>
-                  </ThemedView>
+                    </Text>
+                  </View>
                 )}
-              </ThemedView>
+              </View>
 
               {/* Action Buttons */}
               {chore.status === 'open' && (
-                <ThemedView style={styles.choreActions}>
+                <View style={styles.choreActions}>
                   {chore.assignedTo === user?.uid ? (
                     <TouchableOpacity
                       style={[styles.choreActionButton, styles.completeButton]}
                       onPress={() => handleCompleteChore(chore.id!)}
                     >
                       <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                      <ThemedText style={styles.completeButtonText}>Complete</ThemedText>
+                      <Text style={styles.completeButtonText}>Complete</Text>
                     </TouchableOpacity>
                   ) : !chore.assignedTo ? (
                     <TouchableOpacity
                       style={[styles.choreActionButton, styles.claimButton]}
                       onPress={() => handleClaimChore(chore.id!)}
                     >
-                      <Ionicons name="hand-right" size={20} color="#4285F4" />
-                      <ThemedText style={styles.claimButtonText}>Claim</ThemedText>
+                      <Ionicons name="hand-right" size={20} color="#3b82f6" />
+                      <Text style={styles.claimButtonText}>Claim</Text>
                     </TouchableOpacity>
                   ) : null}
-                </ThemedView>
+                </View>
               )}
-            </ThemedView>
+            </View>
           ))
         )}
       </ScrollView>
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
     paddingBottom: 20,
     paddingHorizontal: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: '#1f2937',
   },
   filterContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     maxHeight: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
   },
   filterContent: {
     paddingHorizontal: 20,
@@ -300,22 +302,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f8fafc',
     gap: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   filterTabActive: {
-    backgroundColor: '#4285F4',
+    backgroundColor: '#3b82f6',
+    borderColor: '#3b82f6',
   },
   filterTabText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
+    fontWeight: '600',
+    color: '#6b7280',
   },
   filterTabTextActive: {
-    color: '#fff',
+    color: '#ffffff',
   },
   filterBadge: {
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#e2e8f0',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 10,
@@ -328,10 +333,10 @@ const styles = StyleSheet.create({
   filterBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#666',
+    color: '#6b7280',
   },
   filterBadgeTextActive: {
-    color: '#fff',
+    color: '#ffffff',
   },
   choresList: {
     flex: 1,
@@ -343,33 +348,38 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#999',
+    color: '#9ca3af',
     marginTop: 16,
+    fontWeight: '500',
   },
   choreCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
   choreHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   choreTypeIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#f0f0f0',
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#f8fafc',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   choreHeaderInfo: {
     flex: 1,
@@ -378,31 +388,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
+    color: '#1f2937',
   },
   choreDescription: {
     fontSize: 14,
-    color: '#666',
+    color: '#6b7280',
     lineHeight: 20,
   },
   chorePointsBadge: {
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#fef3c7',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 12,
     alignItems: 'center',
   },
   chorePoints: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#4285F4',
+    fontWeight: '700',
+    color: '#d97706',
   },
   chorePointsLabel: {
     fontSize: 10,
-    color: '#4285F4',
+    color: '#d97706',
+    fontWeight: '600',
   },
   choreDetails: {
-    gap: 8,
-    marginBottom: 12,
+    gap: 10,
+    marginBottom: 16,
   },
   choreDetailRow: {
     flexDirection: 'row',
@@ -411,7 +423,8 @@ const styles = StyleSheet.create({
   },
   choreDetailText: {
     fontSize: 14,
-    color: '#666',
+    color: '#6b7280',
+    fontWeight: '500',
   },
   difficultyDot: {
     width: 8,
@@ -429,22 +442,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
     gap: 8,
   },
   completeButton: {
-    backgroundColor: '#34A853',
+    backgroundColor: '#10b981',
   },
   completeButtonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontWeight: '600',
+    fontSize: 16,
   },
   claimButton: {
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#f0f9ff',
+    borderWidth: 1,
+    borderColor: '#bae6fd',
   },
   claimButtonText: {
-    color: '#4285F4',
+    color: '#3b82f6',
     fontWeight: '600',
+    fontSize: 16,
   },
 });

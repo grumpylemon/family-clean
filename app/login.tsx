@@ -1,5 +1,3 @@
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { isMockImplementation } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
@@ -11,13 +9,13 @@ import {
   TouchableOpacity, 
   View,
   Dimensions,
-  Image
+  Image,
+  Text
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 
 // Version tracking for updates
-console.log("Login Screen version: v3");
+console.log("Login Screen version: v4");
 
 const { width, height } = Dimensions.get('window');
 
@@ -69,25 +67,22 @@ export default function LoginScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.container}>
-        <ActivityIndicator size="large" color="#4285F4" />
-      </ThemedView>
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+      </View>
     );
   }
 
   return (
-    <LinearGradient
-      colors={['#4285F4', '#3367D6']}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <View style={styles.content}>
         {/* Logo/Icon */}
         <View style={styles.logoContainer}>
           <View style={styles.iconBackground}>
-            <Ionicons name="home" size={60} color="#4285F4" />
+            <Ionicons name="home" size={48} color="#3b82f6" />
           </View>
-          <ThemedText style={styles.appTitle}>Family Clean</ThemedText>
-          <ThemedText style={styles.tagline}>Organize chores, earn rewards</ThemedText>
+          <Text style={styles.appTitle}>Family Clean</Text>
+          <Text style={styles.tagline}>Organize chores, earn rewards</Text>
         </View>
 
         {/* Login Buttons */}
@@ -101,9 +96,9 @@ export default function LoginScreen() {
               source={{ uri: 'https://www.google.com/favicon.ico' }} 
               style={styles.googleIcon}
             />
-            <ThemedText style={styles.googleButtonText}>
+            <Text style={styles.googleButtonText}>
               Continue with Google
-            </ThemedText>
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -111,34 +106,35 @@ export default function LoginScreen() {
             onPress={handleGuestSignIn}
             disabled={loading}
           >
-            <Ionicons name="person-outline" size={20} color="#4285F4" />
-            <ThemedText style={styles.guestButtonText}>
+            <Ionicons name="person-outline" size={20} color="#6b7280" />
+            <Text style={styles.guestButtonText}>
               Continue as Guest
-            </ThemedText>
+            </Text>
           </TouchableOpacity>
 
           {/* Platform indicator */}
           {isIOS && (
-            <ThemedText style={styles.platformNote}>
+            <Text style={styles.platformNote}>
               iOS: Using demo mode
-            </ThemedText>
+            </Text>
           )}
         </View>
 
         {/* Error display */}
         {error && (
           <View style={styles.errorContainer}>
-            <ThemedText style={styles.errorText}>{error}</ThemedText>
+            <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f8fafc',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -153,28 +149,31 @@ const styles = StyleSheet.create({
     marginBottom: 60,
   },
   iconBackground: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#fff',
+    width: 100,
+    height: 100,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
   appTitle: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#1f2937',
     marginBottom: 8,
   },
   tagline: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: '#6b7280',
+    fontWeight: '500',
   },
   buttonsContainer: {
     width: '100%',
@@ -184,16 +183,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
     gap: 12,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
   googleIcon: {
     width: 20,
@@ -202,41 +203,45 @@ const styles = StyleSheet.create({
   googleButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#1f2937',
   },
   guestButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#f8fafc',
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
     gap: 12,
   },
   guestButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: '#6b7280',
   },
   platformNote: {
     textAlign: 'center',
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 12,
+    color: '#9ca3af',
+    fontSize: 14,
     marginTop: 20,
+    fontWeight: '500',
   },
   errorContainer: {
-    backgroundColor: 'rgba(234, 67, 53, 0.1)',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: '#fef2f2',
+    padding: 16,
+    borderRadius: 12,
     marginTop: 20,
     width: '100%',
+    borderWidth: 1,
+    borderColor: '#fecaca',
   },
   errorText: {
-    color: '#EA4335',
+    color: '#dc2626',
     textAlign: 'center',
     fontSize: 14,
+    fontWeight: '500',
   },
 });
