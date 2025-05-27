@@ -26,7 +26,7 @@ interface FamilyContextType {
   error: string | null;
   createNewFamily: (familyName: string) => Promise<boolean>;
   joinFamily: (joinCode: string) => Promise<boolean>;
-  updateFamilySettings: (settings: Partial<Family['settings']>) => Promise<boolean>;
+  updateFamilySettings: (settings: Partial<Family['settings']>, name?: string) => Promise<boolean>;
   updateMemberRole: (userId: string, role: UserRole, familyRole: FamilyRole) => Promise<boolean>;
   updateMemberName: (userId: string, newName: string) => Promise<boolean>;
   removeMember: (userId: string) => Promise<boolean>;
@@ -236,19 +236,25 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateFamilySettings = async (settings: Partial<Family['settings']>): Promise<boolean> => {
+  const updateFamilySettings = async (settings: Partial<Family['settings']>, name?: string): Promise<boolean> => {
     if (!family || !isAdmin) return false;
 
     try {
       setError(null);
       
-      const success = await updateFamily(family.id!, {
+      const updates: any = {
         settings: {
           ...family.settings,
           ...settings
         },
         updatedAt: new Date()
-      });
+      };
+      
+      if (name && name.trim()) {
+        updates.name = name.trim();
+      }
+      
+      const success = await updateFamily(family.id!, updates);
 
       if (success) {
         await refreshFamily();

@@ -2,6 +2,7 @@ import { FirestoreTest } from '@/components/FirestoreTest';
 import { FamilySetup } from '@/components/FamilySetup';
 import { ManageMembers } from '@/components/ManageMembers';
 import { ChoreManagement } from '@/components/ChoreManagement';
+import { FamilySettings } from '@/components/FamilySettings';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,6 +19,7 @@ export default function HomeScreen() {
   const { family, loading: familyLoading, error, isAdmin, currentMember } = useFamily();
   const [showManageMembers, setShowManageMembers] = useState(false);
   const [showChoreManagement, setShowChoreManagement] = useState(false);
+  const [showFamilySettings, setShowFamilySettings] = useState(false);
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -108,6 +110,15 @@ export default function HomeScreen() {
               </ThemedView>
             ))}
           </ThemedView>
+          
+          {!isAdmin && (
+            <TouchableOpacity 
+              style={styles.settingsButton}
+              onPress={() => setShowFamilySettings(true)}
+            >
+              <ThemedText style={styles.settingsButtonText}>View Settings</ThemedText>
+            </TouchableOpacity>
+          )}
         </ThemedView>
         
         {/* Admin actions */}
@@ -126,7 +137,10 @@ export default function HomeScreen() {
             >
               <ThemedText style={styles.actionButtonText}>Manage Chores</ThemedText>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => setShowFamilySettings(true)}
+            >
               <ThemedText style={styles.actionButtonText}>Family Settings</ThemedText>
             </TouchableOpacity>
           </ThemedView>
@@ -146,6 +160,12 @@ export default function HomeScreen() {
       <ChoreManagement
         visible={showChoreManagement}
         onClose={() => setShowChoreManagement(false)}
+      />
+      
+      {/* Family Settings Modal */}
+      <FamilySettings
+        visible={showFamilySettings}
+        onClose={() => setShowFamilySettings(false)}
       />
     </ScrollView>
   );
@@ -230,6 +250,19 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  settingsButton: {
+    marginTop: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(66, 133, 244, 0.1)',
+    borderRadius: 4,
+    alignItems: 'center',
+  },
+  settingsButtonText: {
+    color: '#4285F4',
+    fontSize: 14,
+    fontWeight: '600',
   },
   actionButton: {
     backgroundColor: 'rgba(66, 133, 244, 0.1)',
