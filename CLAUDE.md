@@ -20,6 +20,11 @@ This is a React Native/Expo app called "Family Clean" - a family chore managemen
 - No test commands are currently configured
 - Use Expo EAS Build for production builds
 
+### Deployment
+- `npx expo export --platform web` - Build web version for deployment
+- `firebase deploy --only hosting` - Deploy to Firebase Hosting
+- Live at: https://family-fun-app.web.app
+
 ## Architecture & Important Patterns
 
 ### Firebase Integration
@@ -78,6 +83,8 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
 - `services/firestore.ts` - All database operations
 - `app/_layout.tsx` - Root layout with providers
 - `docs/firebase_integration.md` - Comprehensive Firebase integration guide
+- `firebase.json` - Firebase Hosting configuration
+- `.firebaserc` - Firebase project configuration (family-fun-app)
 
 ## Development Notes
 
@@ -85,3 +92,5 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
 - Path alias `@/` maps to the project root
 - Uses React Native 0.79.2 and Expo SDK ~53.0.9
 - Firebase version 11.8.1 with v9 modular API
+- Firebase Project ID: `family-fun-app`
+- GitHub Repository: https://github.com/grumpylemon/family-clean
