@@ -1,40 +1,51 @@
-import { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import { useEffect, useRef } from 'react';
+import { Animated, StyleSheet } from 'react-native';
 
-import { ThemedText } from '@/components/ThemedText';
+interface HelloWaveProps {
+  name?: string;
+}
 
-export function HelloWave() {
-  const rotationAnimation = useSharedValue(0);
+export function HelloWave({ name = 'there' }: HelloWaveProps) {
+  const animation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    rotationAnimation.value = withRepeat(
-      withSequence(withTiming(25, { duration: 150 }), withTiming(0, { duration: 150 })),
-      4 // Run the animation 4 times
-    );
-  }, [rotationAnimation]);
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(animation, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animation, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotationAnimation.value}deg` }],
-  }));
+  const rotateZ = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '25deg'],
+  });
 
   return (
-    <Animated.View style={animatedStyle}>
-      <ThemedText style={styles.text}>👋</ThemedText>
-    </Animated.View>
+    <Animated.Text
+      style={[
+        styles.emoji,
+        {
+          transform: [{ rotateZ }],
+        },
+      ]}>
+      👋 Hello, {name}!
+    </Animated.Text>
   );
 }
 
 const styles = StyleSheet.create({
-  text: {
-    fontSize: 28,
-    lineHeight: 32,
-    marginTop: -6,
+  emoji: {
+    fontSize: 18,
+    marginLeft: 8,
   },
 });
