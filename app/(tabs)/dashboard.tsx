@@ -110,7 +110,7 @@ export default function DashboardScreen() {
             <ThemedText style={styles.userName}>{currentMember?.name || user.displayName}</ThemedText>
           </ThemedView>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={24} color="#ffffff" />
+            <Ionicons name="log-out-outline" size={24} color="#6b7280" />
           </TouchableOpacity>
         </ThemedView>
       </ThemedView>
@@ -142,7 +142,7 @@ export default function DashboardScreen() {
             style={[styles.actionCard, styles.primaryAction]}
             onPress={() => router.push('/(tabs)/chores')}
           >
-            <Ionicons name="checkmark-circle-outline" size={36} color="#fff" />
+            <Ionicons name="checkmark-circle-outline" size={28} color="#ffffff" />
             <ThemedText style={styles.actionCardTextPrimary}>View Chores</ThemedText>
           </TouchableOpacity>
           
@@ -150,7 +150,7 @@ export default function DashboardScreen() {
             style={styles.actionCard}
             onPress={() => setShowFamilySettings(true)}
           >
-            <Ionicons name="people-outline" size={36} color="#1976D2" />
+            <Ionicons name="people-outline" size={28} color="#3b82f6" />
             <ThemedText style={styles.actionCardText}>Family Info</ThemedText>
           </TouchableOpacity>
         </ThemedView>
@@ -220,7 +220,7 @@ export default function DashboardScreen() {
                 style={styles.adminCard}
                 onPress={() => setShowManageMembers(true)}
               >
-                <Ionicons name="people" size={28} color="#1976D2" />
+                <Ionicons name="people" size={24} color="#64748b" />
                 <ThemedText style={styles.adminCardText}>Members</ThemedText>
               </TouchableOpacity>
               
@@ -228,7 +228,7 @@ export default function DashboardScreen() {
                 style={styles.adminCard}
                 onPress={() => setShowChoreManagement(true)}
               >
-                <Ionicons name="list" size={28} color="#1976D2" />
+                <Ionicons name="list" size={24} color="#64748b" />
                 <ThemedText style={styles.adminCardText}>Chores</ThemedText>
               </TouchableOpacity>
               
@@ -236,7 +236,7 @@ export default function DashboardScreen() {
                 style={styles.adminCard}
                 onPress={() => setShowFamilySettings(true)}
               >
-                <Ionicons name="settings" size={28} color="#1976D2" />
+                <Ionicons name="settings" size={24} color="#64748b" />
                 <ThemedText style={styles.adminCardText}>Settings</ThemedText>
               </TouchableOpacity>
             </ThemedView>
@@ -273,18 +273,18 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8fafc',
   },
   header: {
-    backgroundColor: '#1976D2',
+    backgroundColor: '#ffffff',
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
     paddingBottom: 20,
     paddingHorizontal: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   headerContent: {
     flexDirection: 'row',
@@ -293,18 +293,19 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 16,
-    color: '#ffffff',
-    opacity: 0.9,
+    color: '#6b7280',
+    fontWeight: '500',
   },
   userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#ffffff',
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#111827',
+    marginTop: 2,
   },
   logoutButton: {
-    padding: 8,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 8,
+    padding: 10,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
   },
   scrollView: {
     flex: 1,
@@ -323,28 +324,30 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   statCard: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     padding: 20,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
     minWidth: 100,
     maxWidth: 120,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
   statValue: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1976D2',
+    fontWeight: '800',
+    color: '#1f2937',
   },
   statLabel: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-    fontWeight: '500',
+    color: '#6b7280',
+    marginTop: 6,
+    fontWeight: '600',
   },
   quickActions: {
     flexDirection: 'row',
@@ -354,47 +357,50 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   actionCard: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     padding: 24,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     minWidth: 140,
     maxWidth: 160,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
   primaryAction: {
-    backgroundColor: '#1976D2',
+    backgroundColor: '#3b82f6',
+    borderColor: '#3b82f6',
   },
   actionCardText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1976D2',
+    color: '#1f2937',
     textAlign: 'center',
   },
   actionCardTextPrimary: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: '#ffffff',
     textAlign: 'center',
   },
   section: {
     marginHorizontal: 20,
     marginBottom: 24,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
     borderWidth: 1,
-    borderColor: '#f0f0f0',
+    borderColor: '#f1f5f9',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -403,28 +409,30 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#212121',
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: 4,
   },
   seeAllText: {
-    color: '#1976D2',
+    color: '#3b82f6',
     fontSize: 16,
     fontWeight: '600',
   },
   emptyText: {
     textAlign: 'center',
-    color: '#757575',
-    paddingVertical: 20,
+    color: '#9ca3af',
+    paddingVertical: 32,
     fontSize: 16,
+    fontWeight: '500',
   },
   choreItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#f1f5f9',
   },
   choreInfo: {
     flex: 1,
@@ -433,74 +441,74 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
-    color: '#212121',
+    color: '#1f2937',
   },
   choreDate: {
-    fontSize: 13,
-    color: '#666666',
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
   },
   chorePoints: {
-    backgroundColor: '#fff3e0',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#ffcc02',
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
   chorePointsText: {
-    color: '#e65100',
+    color: '#d97706',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   adminGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-    marginTop: 12,
+    marginTop: 16,
     justifyContent: 'space-between',
   },
   adminCard: {
-    backgroundColor: '#f0f4ff',
+    backgroundColor: '#f8fafc',
     padding: 20,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     minWidth: 100,
     maxWidth: 110,
     borderWidth: 1,
-    borderColor: '#e3f2fd',
+    borderColor: '#e2e8f0',
   },
   adminCardText: {
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
-    color: '#1976D2',
+    color: '#475569',
   },
   familyCodeSection: {
     marginHorizontal: 20,
     marginBottom: 20,
-    backgroundColor: '#e8f5e8',
-    borderRadius: 12,
-    padding: 20,
+    backgroundColor: '#f0f9ff',
+    borderRadius: 16,
+    padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#c8e6c9',
+    borderColor: '#e0f2fe',
   },
   familyCodeLabel: {
     fontSize: 16,
-    color: '#2e7d32',
+    color: '#0369a1',
     marginBottom: 8,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   familyCode: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1b5e20',
-    letterSpacing: 3,
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#0c4a6e',
+    letterSpacing: 4,
   },
   familyCodeHint: {
     fontSize: 14,
-    color: '#388e3c',
+    color: '#0284c7',
     marginTop: 8,
+    fontWeight: '500',
   },
 });
