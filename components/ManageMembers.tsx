@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
@@ -18,10 +19,12 @@ interface ManageMembersProps {
 }
 
 export function ManageMembers({ visible, onClose }: ManageMembersProps) {
-  const { family, updateMemberRole, removeMember } = useFamily();
+  const { family, updateMemberRole, removeMember, updateMemberName } = useFamily();
   const [loading, setLoading] = useState(false);
   const [editingMember, setEditingMember] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState<string | null>(null);
   const [editedRole, setEditedRole] = useState<FamilyRole>('child');
+  const [editedName, setEditedName] = useState<string>('');
 
   if (!family) return null;
 
@@ -39,6 +42,29 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
     } catch (error) {
       Alert.alert('Error', 'An error occurred while updating the role');
       console.error('Error updating role:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNameChange = async (memberId: string, newName: string) => {
+    if (!newName.trim()) {
+      Alert.alert('Error', 'Name cannot be empty');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const success = await updateMemberName(memberId, newName.trim());
+      if (success) {
+        Alert.alert('Success', 'Member name updated successfully');
+        setEditingName(null);
+      } else {
+        Alert.alert('Error', 'Failed to update member name');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'An error occurred while updating the name');
+      console.error('Error updating name:', error);
     } finally {
       setLoading(false);
     }
@@ -110,7 +136,17 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
             return (
               <ThemedView key={member.uid} style={styles.memberCard}>
                 <ThemedView style={styles.memberInfo}>
-                  <ThemedText style={styles.memberName}>{member.name}</ThemedText>
+                  {editingName === member.uid ? (
+                    <TextInput
+                      style={styles.nameInput}
+                      value={editedName}
+                      onChangeText={setEditedName}
+                      placeholder="Enter name"
+                      autoFocus
+                    />
+                  ) : (
+                    <ThemedText style={styles.memberName}>{member.name}</ThemedText>
+                  )}
                   {isAdmin && (
                     <ThemedView style={styles.adminBadge}>
                       <ThemedText style={styles.adminBadgeText}>Admin</ThemedText>
@@ -164,7 +200,29 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
 
                 {!isAdmin && (
                   <ThemedView style={styles.actions}>
-                    {isEditing ? (
+                    {editingName === member.uid ? (
+                      <>
+                        <TouchableOpacity
+                          style={[styles.actionButton, styles.saveButton]}
+                          onPress={() => handleNameChange(member.uid, editedName)}
+                          disabled={loading}
+                        >
+                          <ThemedText style={styles.saveButtonText}>
+                            {loading ? 'Saving...' : 'Save Name'}
+                          </ThemedText>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.actionButton, styles.cancelButton]}
+                          onPress={() => {
+                            setEditingName(null);
+                            setEditedName('');
+                          }}
+                          disabled={loading}
+                        >
+                          <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+                        </TouchableOpacity>
+                      </>
+                    ) : isEditing ? (
                       <>
                         <TouchableOpacity
                           style={[styles.actionButton, styles.saveButton]}
@@ -172,7 +230,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                           disabled={loading}
                         >
                           <ThemedText style={styles.saveButtonText}>
-                            {loading ? 'Saving...' : 'Save'}
+                            {loading ? 'Saving...' : 'Save Role'}
                           </ThemedText>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -188,6 +246,15 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                       </>
                     ) : (
                       <>
+                        <TouchableOpacity
+                          style={[styles.actionButton, styles.editButton]}
+                          onPress={() => {
+                            setEditingName(member.uid);
+                            setEditedName(member.name);
+                          }}
+                        >
+                          <ThemedText style={styles.editButtonText}>Edit Name</ThemedText>
+                        </TouchableOpacity>
                         <TouchableOpacity
                           style={[styles.actionButton, styles.editButton]}
                           onPress={() => {
@@ -267,6 +334,15 @@ const styles = StyleSheet.create({
   memberName: {
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  nameInput: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    borderBottomWidth: 1,
+    borderBottomColor: '#4285F4',
+    paddingVertical: 4,
+    minWidth: 200,
+    color: '#000',
   },
   adminBadge: {
     backgroundColor: '#4285F4',

@@ -28,6 +28,7 @@ interface FamilyContextType {
   joinFamily: (joinCode: string) => Promise<boolean>;
   updateFamilySettings: (settings: Partial<Family['settings']>) => Promise<boolean>;
   updateMemberRole: (userId: string, role: UserRole, familyRole: FamilyRole) => Promise<boolean>;
+  updateMemberName: (userId: string, newName: string) => Promise<boolean>;
   removeMember: (userId: string) => Promise<boolean>;
   refreshFamily: () => Promise<void>;
   isAdmin: boolean;
@@ -43,6 +44,7 @@ const FamilyContext = createContext<FamilyContextType>({
   joinFamily: async () => false,
   updateFamilySettings: async () => false,
   updateMemberRole: async () => false,
+  updateMemberName: async () => false,
   removeMember: async () => false,
   refreshFamily: async () => {},
   isAdmin: false,
@@ -156,7 +158,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       if (familyId) {
         // Update user profile with family ID
         await createOrUpdateUserProfile(user.uid, {
-          familyId,
+          familyId: familyId || undefined,
           role: 'admin',
           familyRole: 'parent'
         });
@@ -216,7 +218,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       if (success) {
         // Update user profile with family ID
         await createOrUpdateUserProfile(user.uid, {
-          familyId: familyToJoin.id,
+          familyId: familyToJoin.id || undefined,
           role: 'member',
           familyRole: 'child'
         });
@@ -283,6 +285,28 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateMemberName = async (userId: string, newName: string): Promise<boolean> => {
+    if (!family || !isAdmin) return false;
+
+    try {
+      setError(null);
+      
+      const success = await updateFamilyMember(family.id!, userId, {
+        name: newName
+      });
+
+      if (success) {
+        await refreshFamily();
+      }
+      
+      return success;
+    } catch (err) {
+      console.error('Error updating member name:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update member name');
+      return false;
+    }
+  };
+
   const removeMember = async (userId: string): Promise<boolean> => {
     if (!family || !isAdmin) return false;
 
@@ -305,7 +329,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       if (success) {
         // Update the removed user's profile to clear family association
         await createOrUpdateUserProfile(userId, {
-          familyId: null,
+          familyId: undefined,
           role: 'member',
           familyRole: 'child'
         });
@@ -343,6 +367,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     joinFamily,
     updateFamilySettings,
     updateMemberRole,
+    updateMemberName,
     removeMember,
     refreshFamily,
     isAdmin,
