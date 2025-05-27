@@ -35,7 +35,11 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.replace('/login');
+      // Add a small delay to ensure router is ready
+      const timer = setTimeout(() => {
+        router.replace('/login');
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [user, authLoading]);
 
@@ -62,7 +66,10 @@ export default function DashboardScreen() {
   const handleLogout = async () => {
     try {
       await logout();
-      router.replace('/login');
+      // Add a small delay to ensure router is ready
+      setTimeout(() => {
+        router.replace('/login');
+      }, 100);
     } catch (err) {
       console.error("Error logging out:", err);
     }

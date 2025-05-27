@@ -39,7 +39,11 @@ export default function LoginScreen() {
   // Redirect to home if already logged in
   useEffect(() => {
     if (user) {
-      router.replace('/(tabs)/dashboard');
+      // Add a small delay to ensure router is ready
+      const timer = setTimeout(() => {
+        router.replace('/(tabs)/dashboard');
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [user]);
 

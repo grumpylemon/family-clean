@@ -24,7 +24,11 @@ export default function HomeScreen() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
-      router.replace('/login');
+      // Add a small delay to ensure router is ready
+      const timer = setTimeout(() => {
+        router.replace('/login');
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [user, authLoading]);
 
@@ -32,7 +36,10 @@ export default function HomeScreen() {
     try {
       console.log("Logging out user");
       await logout();
-      router.replace('/login');
+      // Add a small delay to ensure router is ready
+      setTimeout(() => {
+        router.replace('/login');
+      }, 100);
     } catch (err) {
       console.error("Error logging out:", err);
     }

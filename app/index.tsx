@@ -3,8 +3,12 @@ import { useEffect } from 'react';
 
 export default function Index() {
   useEffect(() => {
-    // Redirect to login when app loads
-    router.replace('/login');
+    // Add a small delay to ensure router is ready
+    const timer = setTimeout(() => {
+      router.replace('/login');
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   return null;
