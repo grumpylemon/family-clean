@@ -1,6 +1,7 @@
 import { FirestoreTest } from '@/components/FirestoreTest';
 import { FamilySetup } from '@/components/FamilySetup';
 import { ManageMembers } from '@/components/ManageMembers';
+import { ChoreManagement } from '@/components/ChoreManagement';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +17,7 @@ export default function HomeScreen() {
   const { user, loading: authLoading, logout } = useAuth();
   const { family, loading: familyLoading, error, isAdmin, currentMember } = useFamily();
   const [showManageMembers, setShowManageMembers] = useState(false);
+  const [showChoreManagement, setShowChoreManagement] = useState(false);
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -118,6 +120,12 @@ export default function HomeScreen() {
             >
               <ThemedText style={styles.actionButtonText}>Manage Members</ThemedText>
             </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => setShowChoreManagement(true)}
+            >
+              <ThemedText style={styles.actionButtonText}>Manage Chores</ThemedText>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton}>
               <ThemedText style={styles.actionButtonText}>Family Settings</ThemedText>
             </TouchableOpacity>
@@ -132,6 +140,12 @@ export default function HomeScreen() {
       <ManageMembers 
         visible={showManageMembers}
         onClose={() => setShowManageMembers(false)}
+      />
+      
+      {/* Chore Management Modal */}
+      <ChoreManagement
+        visible={showChoreManagement}
+        onClose={() => setShowChoreManagement(false)}
       />
     </ScrollView>
   );

@@ -207,7 +207,7 @@ export const getChore = async (choreId: string) => {
   }
 };
 
-export const addChore = async (chore: Omit<Chore, 'id'>) => {
+export const createChore = async (chore: Omit<Chore, 'id'>) => {
   // Fast path for iOS
   if (shouldReturnMockImmediately()) {
     return `mock-id-${Date.now()}`;
@@ -298,6 +298,9 @@ export const addChore = async (chore: Omit<Chore, 'id'>) => {
     return `mock-id-${Date.now()}`;
   }
 };
+
+// Alias for backward compatibility
+export const addChore = createChore;
 
 export const updateChore = async (choreId: string, chore: Partial<Chore>) => {
   if (shouldReturnMockImmediately()) {
