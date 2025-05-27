@@ -106,10 +106,18 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
 
       if (editingChore) {
         await updateChore(editingChore.id!, choreData);
-        Alert.alert('Success', 'Chore updated successfully');
+        if (Platform.OS === 'web') {
+          window.alert('Chore updated successfully');
+        } else {
+          Alert.alert('Success', 'Chore updated successfully');
+        }
       } else {
         await createChore(choreData);
-        Alert.alert('Success', 'Chore created successfully');
+        if (Platform.OS === 'web') {
+          window.alert('Chore created successfully');
+        } else {
+          Alert.alert('Success', 'Chore created successfully');
+        }
       }
 
       resetForm();
@@ -125,36 +133,58 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   const handleDeleteChore = (chore: Chore) => {
     console.log('Delete button clicked for chore:', chore.title, 'ID:', chore.id);
     
-    Alert.alert(
-      'Delete Chore',
-      `Are you sure you want to delete "${chore.title}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            console.log('Delete confirmed for chore:', chore.id);
-            setLoading(true);
-            try {
-              const success = await deleteChore(chore.id!);
-              console.log('Delete result:', success);
-              if (success) {
-                Alert.alert('Success', 'Chore deleted successfully');
-                await loadChores();
-              } else {
-                Alert.alert('Error', 'Failed to delete chore');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete chore');
-              console.error('Error deleting chore:', error);
-            } finally {
-              setLoading(false);
-            }
+    // For web compatibility, use a simple confirm dialog
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`Are you sure you want to delete "${chore.title}"?`);
+      if (confirmed) {
+        performDelete(chore);
+      }
+    } else {
+      Alert.alert(
+        'Delete Chore',
+        `Are you sure you want to delete "${chore.title}"?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => performDelete(chore),
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
+  };
+
+  const performDelete = async (chore: Chore) => {
+    console.log('Delete confirmed for chore:', chore.id);
+    setLoading(true);
+    try {
+      const success = await deleteChore(chore.id!);
+      console.log('Delete result:', success);
+      if (success) {
+        if (Platform.OS === 'web') {
+          window.alert('Chore deleted successfully');
+        } else {
+          Alert.alert('Success', 'Chore deleted successfully');
+        }
+        await loadChores();
+      } else {
+        if (Platform.OS === 'web') {
+          window.alert('Failed to delete chore');
+        } else {
+          Alert.alert('Error', 'Failed to delete chore');
+        }
+      }
+    } catch (error) {
+      if (Platform.OS === 'web') {
+        window.alert('Failed to delete chore');
+      } else {
+        Alert.alert('Error', 'Failed to delete chore');
+      }
+      console.error('Error deleting chore:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditChore = (chore: Chore) => {
