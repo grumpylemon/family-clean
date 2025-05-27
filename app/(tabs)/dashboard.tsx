@@ -76,10 +76,10 @@ export default function DashboardScreen() {
 
   if (authLoading || familyLoading) {
     return (
-      <ThemedView style={styles.container}>
+      <View style={styles.container}>
         <ActivityIndicator size="large" color="#4285F4" />
-        <ThemedText style={styles.loadingText}>Loading...</ThemedText>
-      </ThemedView>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
     );
   }
 
@@ -100,19 +100,19 @@ export default function DashboardScreen() {
   );
 
   return (
-    <ThemedView style={styles.container}>
+    <View style={styles.container}>
       {/* Header */}
-      <ThemedView style={styles.header}>
-        <ThemedView style={[styles.headerContent, {backgroundColor: 'transparent'}]}>
-          <ThemedView style={{backgroundColor: 'transparent'}}>
-            <ThemedText style={styles.greeting}>Welcome back,</ThemedText>
-            <ThemedText style={styles.userName}>{currentMember?.name || user.displayName}</ThemedText>
-          </ThemedView>
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.greeting}>Welcome back,</Text>
+            <Text style={styles.userName}>{currentMember?.name || user.displayName}</Text>
+          </View>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
             <Ionicons name="log-out-outline" size={24} color="#6b7280" />
           </TouchableOpacity>
-        </ThemedView>
-      </ThemedView>
+        </View>
+      </View>
 
       <ScrollView 
         style={styles.scrollView}
@@ -120,29 +120,29 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Quick Stats */}
-        <ThemedView style={styles.statsContainer}>
-          <ThemedView style={styles.statCard}>
-            <ThemedText style={styles.statValue}>{currentMember?.points.current || 0}</ThemedText>
-            <ThemedText style={styles.statLabel}>Points</ThemedText>
-          </ThemedView>
-          <ThemedView style={styles.statCard}>
-            <ThemedText style={styles.statValue}>{myChores.length}</ThemedText>
-            <ThemedText style={styles.statLabel}>My Chores</ThemedText>
-          </ThemedView>
-          <ThemedView style={styles.statCard}>
-            <ThemedText style={styles.statValue}>{family.members.length}</ThemedText>
-            <ThemedText style={styles.statLabel}>Members</ThemedText>
-          </ThemedView>
-        </ThemedView>
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{currentMember?.points.current || 0}</Text>
+            <Text style={styles.statLabel}>Points</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{myChores.length}</Text>
+            <Text style={styles.statLabel}>My Chores</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{family.members.length}</Text>
+            <Text style={styles.statLabel}>Members</Text>
+          </View>
+        </View>
 
         {/* Quick Actions */}
-        <ThemedView style={styles.quickActions}>
+        <View style={styles.quickActions}>
           <TouchableOpacity 
             style={[styles.actionCard, styles.primaryAction]}
             onPress={() => router.push('/(tabs)/chores')}
           >
             <Ionicons name="checkmark-circle-outline" size={28} color="#ffffff" />
-            <ThemedText style={styles.actionCardTextPrimary}>View Chores</ThemedText>
+            <Text style={styles.actionCardTextPrimary}>View Chores</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -150,77 +150,77 @@ export default function DashboardScreen() {
             onPress={() => setShowFamilySettings(true)}
           >
             <Ionicons name="people-outline" size={28} color="#3b82f6" />
-            <ThemedText style={styles.actionCardText}>Family Info</ThemedText>
+            <Text style={styles.actionCardText}>Family Info</Text>
           </TouchableOpacity>
-        </ThemedView>
+        </View>
 
         {/* My Chores Section */}
-        <ThemedView style={styles.section}>
-          <ThemedView style={styles.sectionHeader}>
-            <ThemedText style={styles.sectionTitle}>My Chores</ThemedText>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>My Chores</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/chores')}>
-              <ThemedText style={styles.seeAllText}>See all</ThemedText>
+              <Text style={styles.seeAllText}>See all</Text>
             </TouchableOpacity>
-          </ThemedView>
+          </View>
           
           {loadingChores ? (
             <ActivityIndicator size="small" color="#4285F4" />
           ) : myChores.length === 0 ? (
-            <ThemedText style={styles.emptyText}>No chores assigned to you</ThemedText>
+            <Text style={styles.emptyText}>No chores assigned to you</Text>
           ) : (
             myChores.slice(0, 3).map((chore) => (
-              <ThemedView key={chore.id} style={styles.choreItem}>
-                <ThemedView style={styles.choreInfo}>
-                  <ThemedText style={styles.choreTitle}>{chore.title}</ThemedText>
-                  <ThemedText style={styles.choreDate}>
+              <View key={chore.id} style={styles.choreItem}>
+                <View style={styles.choreInfo}>
+                  <Text style={styles.choreTitle}>{chore.title}</Text>
+                  <Text style={styles.choreDate}>
                     Due: {new Date(chore.dueDate).toLocaleDateString()}
-                  </ThemedText>
-                </ThemedView>
-                <ThemedView style={styles.chorePoints}>
-                  <ThemedText style={styles.chorePointsText}>{chore.points} pts</ThemedText>
-                </ThemedView>
-              </ThemedView>
+                  </Text>
+                </View>
+                <View style={styles.chorePoints}>
+                  <Text style={styles.chorePointsText}>{chore.points} pts</Text>
+                </View>
+              </View>
             ))
           )}
-        </ThemedView>
+        </View>
 
         {/* Available Chores */}
         {unassignedChores.length > 0 && (
-          <ThemedView style={styles.section}>
-            <ThemedView style={styles.sectionHeader}>
-              <ThemedText style={styles.sectionTitle}>Available Chores</ThemedText>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Available Chores</Text>
               <TouchableOpacity onPress={() => router.push('/(tabs)/chores')}>
-                <ThemedText style={styles.seeAllText}>See all</ThemedText>
+                <Text style={styles.seeAllText}>See all</Text>
               </TouchableOpacity>
-            </ThemedView>
+            </View>
             
             {unassignedChores.slice(0, 2).map((chore) => (
-              <ThemedView key={chore.id} style={styles.choreItem}>
-                <ThemedView style={styles.choreInfo}>
-                  <ThemedText style={styles.choreTitle}>{chore.title}</ThemedText>
-                  <ThemedText style={styles.choreDate}>
+              <View key={chore.id} style={styles.choreItem}>
+                <View style={styles.choreInfo}>
+                  <Text style={styles.choreTitle}>{chore.title}</Text>
+                  <Text style={styles.choreDate}>
                     Due: {new Date(chore.dueDate).toLocaleDateString()}
-                  </ThemedText>
-                </ThemedView>
-                <ThemedView style={styles.chorePoints}>
-                  <ThemedText style={styles.chorePointsText}>{chore.points} pts</ThemedText>
-                </ThemedView>
-              </ThemedView>
+                  </Text>
+                </View>
+                <View style={styles.chorePoints}>
+                  <Text style={styles.chorePointsText}>{chore.points} pts</Text>
+                </View>
+              </View>
             ))}
-          </ThemedView>
+          </View>
         )}
 
         {/* Admin Section */}
         {isAdmin && (
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Admin Tools</ThemedText>
-            <ThemedView style={styles.adminGrid}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Admin Tools</Text>
+            <View style={styles.adminGrid}>
               <TouchableOpacity 
                 style={styles.adminCard}
                 onPress={() => setShowManageMembers(true)}
               >
                 <Ionicons name="people" size={24} color="#64748b" />
-                <ThemedText style={styles.adminCardText}>Members</ThemedText>
+                <Text style={styles.adminCardText}>Members</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
@@ -228,7 +228,7 @@ export default function DashboardScreen() {
                 onPress={() => setShowChoreManagement(true)}
               >
                 <Ionicons name="list" size={24} color="#64748b" />
-                <ThemedText style={styles.adminCardText}>Chores</ThemedText>
+                <Text style={styles.adminCardText}>Chores</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
