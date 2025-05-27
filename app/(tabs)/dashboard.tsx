@@ -236,18 +236,18 @@ export default function DashboardScreen() {
                 onPress={() => setShowFamilySettings(true)}
               >
                 <Ionicons name="settings" size={24} color="#64748b" />
-                <ThemedText style={styles.adminCardText}>Settings</ThemedText>
+                <Text style={styles.adminCardText}>Settings</Text>
               </TouchableOpacity>
-            </ThemedView>
-          </ThemedView>
+            </View>
+          </View>
         )}
 
         {/* Family Code */}
-        <ThemedView style={styles.familyCodeSection}>
-          <ThemedText style={styles.familyCodeLabel}>Family Join Code</ThemedText>
-          <ThemedText style={styles.familyCode}>{family.joinCode}</ThemedText>
-          <ThemedText style={styles.familyCodeHint}>Share this code with family members</ThemedText>
-        </ThemedView>
+        <View style={styles.familyCodeSection}>
+          <Text style={styles.familyCodeLabel}>Family Join Code</Text>
+          <Text style={styles.familyCode}>{family.joinCode}</Text>
+          <Text style={styles.familyCodeHint}>Share this code with family members</Text>
+        </View>
       </ScrollView>
 
       {/* Modals */}
