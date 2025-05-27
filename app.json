@@ -1,8 +1,9 @@
 {
   "expo": {
     "name": "Family Clean",
-    "slug": "family-clean",
+    "slug": "family-chores",
     "version": "1.0.0",
+    "owner": "grumpylemon",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "familyclean",
@@ -10,7 +11,14 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.grumpylemon.familyfun"
+      "bundleIdentifier": "com.grumpylemon.familyfun",
+      "buildNumber": "1",
+      "googleServicesFile": "./ios/GoogleService-Info.plist",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to scan QR codes for family invites.",
+        "NSPhotoLibraryUsageDescription": "This app accesses your photos to set profile pictures.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -39,6 +47,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6b63f9ee-7702-4622-a992-d52429573749"
+      }
     }
   }
 }

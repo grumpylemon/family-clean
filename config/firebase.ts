@@ -97,17 +97,22 @@ let _firestoreDb: any = null;
 
 // Function to determine if we should use mock implementation
 // We use mock when:
-// 1. On iOS (due to Expo Go limitations with Firebase native modules)
+// 1. On iOS in Expo Go (due to Expo Go limitations with Firebase native modules)
 // 2. During development/testing if explicitly requested
 export const shouldUseMock = (): boolean => {
-  if (Platform.OS === 'ios') {
-    console.log('iOS detected, using mock implementation');
+  // Check if running in Expo Go
+  const isExpoGo = !__DEV__ ? false : !(global as any).expo?.modules?.ExpoUpdates?.isEmbeddedLaunch;
+  
+  if (Platform.OS === 'ios' && isExpoGo) {
+    console.log('iOS Expo Go detected, using mock implementation');
     return true;
   }
+  
   if (process.env.EXPO_PUBLIC_USE_MOCK === 'true') {
     console.log('Mock mode enabled via environment variable');
     return true;
   }
+  
   console.log('Using real Firebase implementation');
   return false;
 };
