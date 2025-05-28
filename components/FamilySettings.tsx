@@ -8,9 +8,9 @@ import {
   Alert,
   ActivityIndicator,
   Switch,
+  View
 } from 'react-native';
 import { ThemedText } from './ThemedText';
-import { ThemedView } from './ThemedView';
 import { useFamily } from '@/contexts/FamilyContext';
 
 interface FamilySettingsProps {
@@ -147,34 +147,34 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
         presentationStyle="pageSheet"
         onRequestClose={onClose}
       >
-        <ThemedView style={styles.container}>
-          <ThemedView style={styles.header}>
+        <View style={styles.container}>
+          <View style={styles.header}>
             <ThemedText style={styles.title}>Family Settings</ThemedText>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <ThemedText style={styles.closeButtonText}>Close</ThemedText>
             </TouchableOpacity>
-          </ThemedView>
+          </View>
           
-          <ThemedView style={styles.content}>
+          <View style={styles.content}>
             <ThemedText style={styles.errorText}>
               Only family admins can modify settings
             </ThemedText>
             
-            <ThemedView style={styles.infoSection}>
+            <View style={styles.infoSection}>
               <ThemedText style={styles.infoTitle}>Family Information</ThemedText>
-              <ThemedView style={styles.infoRow}>
+              <View style={styles.infoRow}>
                 <ThemedText style={styles.infoLabel}>Family Name:</ThemedText>
                 <ThemedText style={styles.infoValue}>{family?.name}</ThemedText>
-              </ThemedView>
-              <ThemedView style={styles.infoRow}>
+              </View>
+              <View style={styles.infoRow}>
                 <ThemedText style={styles.infoLabel}>Join Code:</ThemedText>
                 <ThemedText style={[styles.infoValue, styles.joinCode]}>{family?.joinCode}</ThemedText>
-              </ThemedView>
-              <ThemedView style={styles.infoRow}>
+              </View>
+              <View style={styles.infoRow}>
                 <ThemedText style={styles.infoLabel}>Members:</ThemedText>
                 <ThemedText style={styles.infoValue}>{family?.members.length || 0}</ThemedText>
-              </ThemedView>
-            </ThemedView>
+              </View>
+            </View>
             
             <TouchableOpacity
               style={[styles.actionButton, styles.leaveButton]}
@@ -182,8 +182,8 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
             >
               <ThemedText style={styles.leaveButtonText}>Leave Family</ThemedText>
             </TouchableOpacity>
-          </ThemedView>
-        </ThemedView>
+          </View>
+        </View>
       </Modal>
     );
   }
@@ -195,19 +195,19 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.header}>
+      <View style={styles.container}>
+        <View style={styles.header}>
           <ThemedText style={styles.title}>Family Settings</ThemedText>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <ThemedText style={styles.closeButtonText}>Done</ThemedText>
           </TouchableOpacity>
-        </ThemedView>
+        </View>
 
         <ScrollView style={styles.scrollView}>
-          <ThemedView style={styles.section}>
+          <View style={styles.section}>
             <ThemedText style={styles.sectionTitle}>Basic Information</ThemedText>
             
-            <ThemedView style={styles.inputGroup}>
+            <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Family Name</ThemedText>
               <TextInput
                 style={styles.input}
@@ -215,11 +215,11 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                 onChangeText={setFamilyName}
                 placeholder="Enter family name"
               />
-            </ThemedView>
+            </View>
 
-            <ThemedView style={styles.inputGroup}>
+            <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Join Code</ThemedText>
-              <ThemedView style={styles.joinCodeContainer}>
+              <View style={styles.joinCodeContainer}>
                 <ThemedText style={styles.joinCodeText}>{family?.joinCode}</ThemedText>
                 <TouchableOpacity
                   style={styles.copyButton}
@@ -230,14 +230,14 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                 >
                   <ThemedText style={styles.copyButtonText}>Copy</ThemedText>
                 </TouchableOpacity>
-              </ThemedView>
-            </ThemedView>
-          </ThemedView>
+              </View>
+            </View>
+          </View>
 
-          <ThemedView style={styles.section}>
+          <View style={styles.section}>
             <ThemedText style={styles.sectionTitle}>Chore Settings</ThemedText>
             
-            <ThemedView style={styles.inputGroup}>
+            <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Default Chore Points</ThemedText>
               <TextInput
                 style={styles.input}
@@ -246,9 +246,9 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                 placeholder="10"
                 keyboardType="numeric"
               />
-            </ThemedView>
+            </View>
 
-            <ThemedView style={styles.inputGroup}>
+            <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Default Cooldown Hours</ThemedText>
               <TextInput
                 style={styles.input}
@@ -257,10 +257,10 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                 placeholder="24"
                 keyboardType="numeric"
               />
-            </ThemedView>
+            </View>
 
-            <ThemedView style={styles.inputGroup}>
-              <ThemedView style={styles.switchRow}>
+            <View style={styles.inputGroup}>
+              <View style={styles.switchRow}>
                 <ThemedText style={styles.label}>Allow Point Transfers</ThemedText>
                 <Switch
                   value={allowPointTransfers}
@@ -268,19 +268,19 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                   trackColor={{ false: '#767577', true: '#4285F4' }}
                   thumbColor={allowPointTransfers ? '#fff' : '#f4f3f4'}
                 />
-              </ThemedView>
+              </View>
               <ThemedText style={styles.helperText}>
                 Allow family members to transfer points between each other
               </ThemedText>
-            </ThemedView>
-          </ThemedView>
+            </View>
+          </View>
 
-          <ThemedView style={styles.section}>
+          <View style={styles.section}>
             <ThemedText style={styles.sectionTitle}>Schedule Settings</ThemedText>
             
-            <ThemedView style={styles.inputGroup}>
+            <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Week Start Day</ThemedText>
-              <ThemedView style={styles.weekDaySelector}>
+              <View style={styles.weekDaySelector}>
                 {weekDays.map((day) => (
                   <TouchableOpacity
                     key={day.value}
@@ -300,11 +300,11 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                     </ThemedText>
                   </TouchableOpacity>
                 ))}
-              </ThemedView>
-            </ThemedView>
-          </ThemedView>
+              </View>
+            </View>
+          </View>
 
-          <ThemedView style={styles.section}>
+          <View style={styles.section}>
             <ThemedText style={styles.sectionTitle}>Danger Zone</ThemedText>
             
             <TouchableOpacity
@@ -317,7 +317,7 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
             </TouchableOpacity>
 
             {showDangerZone && (
-              <ThemedView style={styles.dangerZoneContent}>
+              <View style={styles.dangerZoneContent}>
                 <TouchableOpacity
                   style={[styles.actionButton, styles.deleteButton]}
                   onPress={handleDeleteFamily}
@@ -327,11 +327,11 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                 <ThemedText style={styles.dangerWarning}>
                   This will permanently delete all family data
                 </ThemedText>
-              </ThemedView>
+              </View>
             )}
-          </ThemedView>
+          </View>
 
-          <ThemedView style={styles.saveButtonContainer}>
+          <View style={styles.saveButtonContainer}>
             <TouchableOpacity
               style={[styles.actionButton, styles.saveButton]}
               onPress={handleSaveSettings}
@@ -341,15 +341,15 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                 {loading ? 'Saving...' : 'Save Changes'}
               </ThemedText>
             </TouchableOpacity>
-          </ThemedView>
+          </View>
         </ScrollView>
 
         {loading && (
-          <ThemedView style={styles.loadingOverlay}>
+          <View style={styles.loadingOverlay}>
             <ActivityIndicator size="large" color="#4285F4" />
-          </ThemedView>
+          </View>
         )}
-      </ThemedView>
+      </View>
     </Modal>
   );
 }
@@ -357,18 +357,26 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f8fafc',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: '#1f2937',
   },
   closeButton: {
     padding: 8,
@@ -380,6 +388,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    backgroundColor: '#f8fafc',
   },
   content: {
     flex: 1,
@@ -394,13 +403,23 @@ const styles = StyleSheet.create({
   },
   section: {
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    backgroundColor: '#ffffff',
+    marginBottom: 12,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 16,
+    color: '#1f2937',
   },
   inputGroup: {
     marginBottom: 16,
@@ -409,23 +428,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
+    color: '#374151',
   },
   input: {
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.2)',
-    borderRadius: 4,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#f9fafb',
+    color: '#1f2937',
   },
   joinCodeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.2)',
-    borderRadius: 4,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
     padding: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#f9fafb',
   },
   joinCodeText: {
     fontSize: 18,
@@ -451,7 +472,7 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 12,
-    opacity: 0.7,
+    color: '#6b7280',
     marginTop: 4,
   },
   weekDaySelector: {
@@ -464,8 +485,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.2)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: '#e5e7eb',
+    backgroundColor: '#f9fafb',
   },
   weekDayButtonSelected: {
     backgroundColor: '#4285F4',
@@ -514,6 +535,7 @@ const styles = StyleSheet.create({
   },
   saveButtonContainer: {
     padding: 16,
+    paddingTop: 8,
   },
   leaveButton: {
     backgroundColor: '#EA4335',
@@ -533,10 +555,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   infoSection: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#ffffff',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   infoTitle: {
     fontSize: 16,
@@ -550,11 +574,12 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    opacity: 0.7,
+    color: '#6b7280',
   },
   infoValue: {
     fontSize: 14,
     fontWeight: '500',
+    color: '#1f2937',
   },
   joinCode: {
     color: '#4285F4',
@@ -566,7 +591,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(248, 250, 252, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
   },

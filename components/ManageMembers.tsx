@@ -14,7 +14,6 @@ import {
     View,
 } from 'react-native';
 import { ThemedText } from './ThemedText';
-import { ThemedView } from './ThemedView';
 
 interface ManageMembersProps {
   visible: boolean;
@@ -172,13 +171,13 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.header}>
+      <View style={styles.container}>
+        <View style={styles.header}>
           <ThemedText style={styles.title}>Manage Family Members</ThemedText>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <ThemedText style={styles.closeButtonText}>Done</ThemedText>
           </TouchableOpacity>
-        </ThemedView>
+        </View>
 
         <ScrollView style={styles.scrollView}>
           {family.members.map((member) => {
@@ -187,7 +186,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
             const isExcluded = !member.isActive;
 
             return (
-              <ThemedView key={member.uid} style={[styles.memberCard, isExcluded && styles.excludedCard]}>
+              <View key={member.uid} style={[styles.memberCard, isExcluded && styles.excludedCard]}>
                 <View style={styles.avatarRow}>
                   {member.photoURL ? (
                     <Image source={{ uri: member.photoURL }} style={styles.avatar} />
@@ -200,7 +199,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                   )}
                   <View style={[styles.statusDot, { backgroundColor: isExcluded ? '#F87171' : '#34D399' }]} />
                 </View>
-                <ThemedView style={styles.memberInfo}>
+                <View style={styles.memberInfo}>
                   {editingName === member.uid ? (
                     <TextInput
                       style={styles.nameInput}
@@ -213,26 +212,26 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                     <ThemedText style={styles.memberName}>{member.name}</ThemedText>
                   )}
                   {member.role === 'admin' && (
-                    <ThemedView style={styles.adminBadge}>
+                    <View style={styles.adminBadge}>
                       <ThemedText style={styles.adminBadgeText}>Admin</ThemedText>
-                    </ThemedView>
+                    </View>
                   )}
                   {isExcluded && (
-                    <ThemedView style={styles.excludedBadge}>
+                    <View style={styles.excludedBadge}>
                       <ThemedText style={styles.excludedBadgeText}>Excluded</ThemedText>
-                    </ThemedView>
+                    </View>
                   )}
-                </ThemedView>
+                </View>
 
-                <ThemedView style={styles.memberDetails}>
+                <View style={styles.memberDetails}>
                   <ThemedText style={styles.detailLabel}>Email:</ThemedText>
                   <ThemedText style={styles.detailValue}>{member.email || 'Not provided'}</ThemedText>
-                </ThemedView>
+                </View>
 
-                <ThemedView style={styles.memberDetails}>
+                <View style={styles.memberDetails}>
                   <ThemedText style={styles.detailLabel}>Role:</ThemedText>
                   {isEditing ? (
-                    <ThemedView style={styles.roleEditContainer}>
+                    <View style={styles.roleEditContainer}>
                       {(['parent', 'child', 'other'] as FamilyRole[]).map((role) => (
                         <TouchableOpacity
                           key={role}
@@ -253,31 +252,31 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                           </ThemedText>
                         </TouchableOpacity>
                       ))}
-                    </ThemedView>
+                    </View>
                   ) : (
                     <ThemedText style={[styles.detailValue, { color: getRoleColor(member.familyRole) }]}>
                       {member.familyRole}
                     </ThemedText>
                   )}
-                </ThemedView>
+                </View>
 
-                <ThemedView style={styles.memberDetails}>
+                <View style={styles.memberDetails}>
                   <ThemedText style={styles.detailLabel}>Points:</ThemedText>
                   <ThemedText style={styles.detailValue}>
                     {member.points.current} (Lifetime: {member.points.lifetime})
                   </ThemedText>
-                </ThemedView>
+                </View>
 
-                <ThemedView style={styles.memberDetails}>
+                <View style={styles.memberDetails}>
                   <ThemedText style={styles.detailLabel}>Status:</ThemedText>
                   <ThemedText style={[styles.detailValue, isExcluded && { color: '#ef4444' }]}> 
                     {isExcluded ? 'Excluded' : 'Active'}
                   </ThemedText>
-                </ThemedView>
+                </View>
 
                 {!isAdmin && (
                   <>
-                    <ThemedView style={styles.actions}>
+                    <View style={styles.actions}>
                       {editingName === member.uid ? (
                       <>
                         <TouchableOpacity
@@ -367,10 +366,10 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                         )}
                       </>
                     )}
-                  </ThemedView>
+                  </View>
                   {/* Admin Promotion/Demotion - Show for current admin to manage other members */}
                   {isCurrentUserAdmin && (
-                  <ThemedView style={styles.actions}>
+                  <View style={styles.actions}>
                     {member.role === 'admin' ? (
                       // Only allow demotion if there's more than one admin
                       family.members.filter(m => m.role === 'admin').length > 1 && (
@@ -425,6 +424,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                                 onPress: async () => {
                                   setLoading(true);
                                   try {
+                                    // Update the member's role to admin
                                     const success = await updateMemberRole(member.uid, 'admin', member.familyRole);
                                     if (success) {
                                       Alert.alert('Success', `${member.name} is now an admin`);
@@ -447,21 +447,21 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                         <ThemedText style={styles.adminButtonText}>Make Admin</ThemedText>
                       </TouchableOpacity>
                     )}
-                  </ThemedView>
+                  </View>
                   )}
                   </>
                 )}
-              </ThemedView>
+              </View>
             );
           })}
         </ScrollView>
 
         {loading && (
-          <ThemedView style={styles.loadingOverlay}>
+          <View style={styles.loadingOverlay}>
             <ActivityIndicator size="large" color="#4285F4" />
-          </ThemedView>
+          </View>
         )}
-      </ThemedView>
+      </View>
     </Modal>
   );
 }
@@ -469,18 +469,26 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f8fafc',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: '#1f2937',
   },
   closeButton: {
     padding: 8,
@@ -496,11 +504,16 @@ const styles = StyleSheet.create({
   },
   memberCard: {
     padding: 16,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   memberInfo: {
     flexDirection: 'row',
@@ -510,7 +523,8 @@ const styles = StyleSheet.create({
   },
   memberName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#1f2937',
   },
   nameInput: {
     fontSize: 18,
@@ -539,13 +553,14 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    opacity: 0.7,
+    color: '#6b7280',
     width: 80,
   },
   detailValue: {
     fontSize: 14,
     flex: 1,
     fontWeight: '500',
+    color: '#374151',
   },
   roleEditContainer: {
     flexDirection: 'row',
@@ -617,7 +632,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(248, 250, 252, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
   },

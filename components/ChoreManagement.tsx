@@ -12,10 +12,10 @@ import {
     ScrollView,
     StyleSheet,
     TextInput,
-    TouchableOpacity
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { ThemedText } from './ThemedText';
-import { ThemedView } from './ThemedView';
 
 interface ChoreManagementProps {
   visible: boolean;
@@ -236,14 +236,14 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
         presentationStyle="pageSheet"
         onRequestClose={onClose}
       >
-        <ThemedView style={styles.container}>
+        <View style={styles.container}>
           <ThemedText style={styles.errorText}>
             Only family admins can manage chores
           </ThemedText>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <ThemedText style={styles.closeButtonText}>Close</ThemedText>
           </TouchableOpacity>
-        </ThemedView>
+        </View>
       </Modal>
     );
   }
@@ -255,22 +255,22 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.header}>
+      <View style={styles.container}>
+        <View style={styles.header}>
           <ThemedText style={styles.title}>Manage Chores</ThemedText>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <ThemedText style={styles.closeButtonText}>Done</ThemedText>
           </TouchableOpacity>
-        </ThemedView>
+        </View>
 
         {showForm ? (
           <ScrollView style={styles.scrollView}>
-            <ThemedView style={styles.form}>
+            <View style={styles.form}>
               <ThemedText style={styles.formTitle}>
                 {editingChore ? 'Edit Chore' : 'Create New Chore'}
               </ThemedText>
 
-              <ThemedView style={styles.inputGroup}>
+              <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Title *</ThemedText>
                 <TextInput
                   style={styles.input}
@@ -278,9 +278,9 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                   onChangeText={setTitle}
                   placeholder="Enter chore title"
                 />
-              </ThemedView>
+              </View>
 
-              <ThemedView style={styles.inputGroup}>
+              <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Description</ThemedText>
                 <TextInput
                   style={[styles.input, styles.textArea]}
@@ -290,11 +290,11 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                   multiline
                   numberOfLines={3}
                 />
-              </ThemedView>
+              </View>
 
-              <ThemedView style={styles.inputGroup}>
+              <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Type</ThemedText>
-                <ThemedView style={styles.buttonGroup}>
+                <View style={styles.buttonGroup}>
                   {(['individual', 'family', 'pet', 'shared'] as ChoreType[]).map((type) => (
                     <TouchableOpacity
                       key={type}
@@ -315,12 +315,12 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                       </ThemedText>
                     </TouchableOpacity>
                   ))}
-                </ThemedView>
-              </ThemedView>
+                </View>
+              </View>
 
-              <ThemedView style={styles.inputGroup}>
+              <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Difficulty</ThemedText>
-                <ThemedView style={styles.buttonGroup}>
+                <View style={styles.buttonGroup}>
                   {(['easy', 'medium', 'hard'] as ChoreDifficulty[]).map((diff) => (
                     <TouchableOpacity
                       key={diff}
@@ -341,10 +341,10 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                       </ThemedText>
                     </TouchableOpacity>
                   ))}
-                </ThemedView>
-              </ThemedView>
+                </View>
+              </View>
 
-              <ThemedView style={styles.inputGroup}>
+              <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Points</ThemedText>
                 <TextInput
                   style={styles.input}
@@ -353,11 +353,11 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                   placeholder="10"
                   keyboardType="numeric"
                 />
-              </ThemedView>
+              </View>
 
-              <ThemedView style={styles.inputGroup}>
+              <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Assign To</ThemedText>
-                <ThemedView style={styles.memberSelect}>
+                <View style={styles.memberSelect}>
                   <TouchableOpacity
                     style={[styles.memberOption, !assignedTo && styles.memberOptionSelected]}
                     onPress={() => setAssignedTo('')}
@@ -376,10 +376,10 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                       <ThemedText style={styles.memberOptionText}>{member.name}</ThemedText>
                     </TouchableOpacity>
                   ))}
-                </ThemedView>
-              </ThemedView>
+                </View>
+              </View>
 
-              <ThemedView style={styles.inputGroup}>
+              <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Due Date</ThemedText>
                 <TouchableOpacity
                   style={styles.dateButton}
@@ -400,15 +400,15 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                     }}
                   />
                 )}
-              </ThemedView>
+              </View>
 
-              <ThemedView style={styles.inputGroup}>
+              <View style={styles.inputGroup}>
                 <TouchableOpacity
                   style={styles.recurringToggle}
                   onPress={() => setIsRecurring(!isRecurring)}
                 >
                   <ThemedText style={styles.label}>Recurring Chore</ThemedText>
-                  <ThemedView style={[styles.checkbox, isRecurring && styles.checkboxChecked]} />
+                  <View style={[styles.checkbox, isRecurring && styles.checkboxChecked]} />
                 </TouchableOpacity>
                 {isRecurring && (
                   <TextInput
@@ -419,9 +419,9 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                     keyboardType="numeric"
                   />
                 )}
-              </ThemedView>
+              </View>
 
-              <ThemedView style={styles.inputGroup}>
+              <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Cooldown Hours</ThemedText>
                 <TextInput
                   style={styles.input}
@@ -430,9 +430,9 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                   placeholder="24"
                   keyboardType="numeric"
                 />
-              </ThemedView>
+              </View>
 
-              <ThemedView style={styles.formActions}>
+              <View style={styles.formActions}>
                 <TouchableOpacity
                   style={[styles.actionButton, styles.cancelButton]}
                   onPress={resetForm}
@@ -448,8 +448,8 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                     {loading ? 'Saving...' : editingChore ? 'Update' : 'Create'}
                   </ThemedText>
                 </TouchableOpacity>
-              </ThemedView>
-            </ThemedView>
+              </View>
+            </View>
           </ScrollView>
         ) : (
           <>
@@ -469,10 +469,10 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 chores.map((chore) => {
                   const locked = isChoreLocked(chore);
                   return (
-                    <ThemedView key={chore.id} style={styles.choreCard}>
-                      <ThemedView style={styles.choreHeader}>
+                    <View key={chore.id} style={styles.choreCard}>
+                      <View style={styles.choreHeader}>
                         <ThemedText style={styles.choreTitle}>{chore.title}</ThemedText>
-                        <ThemedView style={styles.choreActions}>
+                        <View style={styles.choreActions}>
                           <TouchableOpacity
                             style={styles.choreActionButton}
                             onPress={() => handleEditChore(chore)}
@@ -488,28 +488,28 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                           >
                             <ThemedText style={styles.deleteText}>Delete</ThemedText>
                           </TouchableOpacity>
-                        </ThemedView>
-                      </ThemedView>
+                        </View>
+                      </View>
 
                       {chore.description && (
                         <ThemedText style={styles.choreDescription}>{chore.description}</ThemedText>
                       )}
 
-                      <ThemedView style={styles.choreDetails}>
-                        <ThemedView style={styles.choreTag}>
+                      <View style={styles.choreDetails}>
+                        <View style={styles.choreTag}>
                           <ThemedText style={[styles.choreTagText, { color: getTypeColor(chore.type) }]}>
                             {chore.type}
                           </ThemedText>
-                        </ThemedView>
-                        <ThemedView style={styles.choreTag}>
+                        </View>
+                        <View style={styles.choreTag}>
                           <ThemedText style={[styles.choreTagText, { color: getDifficultyColor(chore.difficulty) }]}>
                             {chore.difficulty}
                           </ThemedText>
-                        </ThemedView>
+                        </View>
                         <ThemedText style={styles.chorePoints}>{chore.points} pts</ThemedText>
-                      </ThemedView>
+                      </View>
 
-                      <ThemedView style={styles.choreFooter}>
+                      <View style={styles.choreFooter}>
                         <ThemedText style={styles.choreFooterText}>
                           Due: {new Date(chore.dueDate).toLocaleDateString()}
                         </ThemedText>
@@ -523,17 +523,17 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                             Repeats every {chore.recurring.frequencyDays} days
                           </ThemedText>
                         )}
-                      </ThemedView>
+                      </View>
 
                       {locked && (
-                        <ThemedView style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
                           <Ionicons name="lock-closed" size={16} color="#ef4444" />
                           <ThemedText style={{ color: '#ef4444', marginLeft: 4 }}>
                             Locked until {new Date(chore.lockedUntil!).toLocaleString()}
                           </ThemedText>
-                        </ThemedView>
+                        </View>
                       )}
-                    </ThemedView>
+                    </View>
                   );
                 })
               )}
@@ -542,11 +542,11 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
         )}
 
         {loading && (
-          <ThemedView style={styles.loadingOverlay}>
+          <View style={styles.loadingOverlay}>
             <ActivityIndicator size="large" color="#4285F4" />
-          </ThemedView>
+          </View>
         )}
-      </ThemedView>
+      </View>
     </Modal>
   );
 }
@@ -554,18 +554,26 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f8fafc',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: '#1f2937',
   },
   closeButton: {
     padding: 8,
@@ -605,11 +613,16 @@ const styles = StyleSheet.create({
   },
   choreCard: {
     padding: 16,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   choreHeader: {
     flexDirection: 'row',
@@ -619,8 +632,9 @@ const styles = StyleSheet.create({
   },
   choreTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     flex: 1,
+    color: '#1f2937',
   },
   choreActions: {
     flexDirection: 'row',
@@ -692,11 +706,12 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.2)',
-    borderRadius: 4,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#ffffff',
+    color: '#1f2937',
   },
   textArea: {
     height: 80,
@@ -750,10 +765,10 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.2)',
-    borderRadius: 4,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
     padding: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#ffffff',
   },
   recurringToggle: {
     flexDirection: 'row',
@@ -802,7 +817,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(248, 250, 252, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
   },

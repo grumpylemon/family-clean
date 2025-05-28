@@ -271,7 +271,12 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateMemberRole = async (userId: string, role: UserRole, familyRole: FamilyRole): Promise<boolean> => {
-    if (!family || !isAdmin) return false;
+    console.log('updateMemberRole called:', { userId, role, familyRole, hasFamily: !!family, isAdmin });
+    
+    if (!family || !isAdmin) {
+      console.log('Cannot update role: no family or not admin');
+      return false;
+    }
 
     // Prevent demoting the last admin
     if (role !== 'admin') {
@@ -285,10 +290,15 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
+      console.log('Calling updateFamilyMember with:', { familyId: family.id, userId, role, familyRole });
+      
       const success = await updateFamilyMember(family.id!, userId, {
         role,
         familyRole
       });
+      
+      console.log('updateFamilyMember result:', success);
+      
       if (success) {
         await refreshFamily();
       }
