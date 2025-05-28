@@ -36,7 +36,8 @@
     "production": {
       "ios": {
         "appleId": "chris@grumpylemon.com",
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID"
+        "ascAppId": "6746467670",
+        "appleTeamId": "87699862N5"
       }
     }
   }
