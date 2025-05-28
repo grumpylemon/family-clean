@@ -5,8 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
     Modal,
     Platform,
     ScrollView,
@@ -17,6 +15,11 @@ import {
 } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { TestDataGenerator } from './TestDataGenerator';
+import { LoadingSpinner } from './ui/LoadingSpinner';
+import { Toast } from './ui/Toast';
+import { ConfirmDialog } from './ui/ConfirmDialog';
+import { ValidatedInput } from './ui/ValidatedInput';
+import { useFormValidation, validationRules } from '@/hooks/useFormValidation';
 
 interface ChoreManagementProps {
   visible: boolean;
@@ -26,9 +29,21 @@ interface ChoreManagementProps {
 export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   const { family, isAdmin } = useFamily();
   const [loading, setLoading] = useState(false);
+  const [savingChore, setSavingChore] = useState(false);
+  const [deletingChoreId, setDeletingChoreId] = useState<string | null>(null);
   const [chores, setChores] = useState<Chore[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingChore, setEditingChore] = useState<Chore | null>(null);
+  const [choreToDelete, setChoreToDelete] = useState<Chore | null>(null);
+  
+  // Form validation
+  const { errors, handleFieldChange, handleFieldBlur, validateAll, resetValidation, isFieldValid } = useFormValidation({
+    title: [validationRules.required('Chore title is required'), validationRules.maxLength(50)],
+    description: [validationRules.maxLength(200, 'Description is too long')],
+    points: [validationRules.required('Points are required'), validationRules.numeric(), validationRules.min(1), validationRules.max(100)],
+    frequencyDays: [validationRules.numeric(), validationRules.min(1), validationRules.max(365)],
+    cooldownHours: [validationRules.numeric(), validationRules.min(0), validationRules.max(168, 'Maximum 1 week')],
+  });
   
   // Form state
   const [title, setTitle] = useState('');
@@ -58,7 +73,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
       setChores(familyChores);
     } catch (error) {
       console.error('Error loading chores:', error);
-      Alert.alert('Error', 'Failed to load chores');
+      Toast.error('Failed to load chores');
     } finally {
       setLoading(false);
     }
@@ -77,15 +92,26 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
     setCooldownHours('24');
     setEditingChore(null);
     setShowForm(false);
+    resetValidation();
   };
 
   const handleSaveChore = async () => {
-    if (!family || !title.trim()) {
-      Alert.alert('Error', 'Please enter a chore title');
+    if (!family) return;
+    
+    const values = {
+      title,
+      description,
+      points,
+      frequencyDays,
+      cooldownHours,
+    };
+    
+    if (!validateAll(values)) {
+      Toast.error('Please fix the form errors');
       return;
     }
 
-    setLoading(true);
+    setSavingChore(true);
     try {
       const choreData: Omit<Chore, 'id'> = {
         title: title.trim(),
@@ -108,84 +134,47 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
 
       if (editingChore) {
         await updateChore(editingChore.id!, choreData);
-        if (Platform.OS === 'web') {
-          window.alert('Chore updated successfully');
-        } else {
-          Alert.alert('Success', 'Chore updated successfully');
-        }
+        Toast.success('Chore updated successfully');
       } else {
         await createChore(choreData);
-        if (Platform.OS === 'web') {
-          window.alert('Chore created successfully');
-        } else {
-          Alert.alert('Success', 'Chore created successfully');
-        }
+        Toast.success('Chore created successfully');
       }
 
       resetForm();
       await loadChores();
     } catch (error) {
-      Alert.alert('Error', 'Failed to save chore');
+      Toast.error('Failed to save chore');
       console.error('Error saving chore:', error);
     } finally {
-      setLoading(false);
+      setSavingChore(false);
     }
   };
 
   const handleDeleteChore = (chore: Chore) => {
     console.log('Delete button clicked for chore:', chore.title, 'ID:', chore.id);
-    
-    // For web compatibility, use a simple confirm dialog
-    if (Platform.OS === 'web') {
-      const confirmed = window.confirm(`Are you sure you want to delete "${chore.title}"?`);
-      if (confirmed) {
-        performDelete(chore);
-      }
-    } else {
-      Alert.alert(
-        'Delete Chore',
-        `Are you sure you want to delete "${chore.title}"?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => performDelete(chore),
-          },
-        ]
-      );
-    }
+    setChoreToDelete(chore);
   };
 
-  const performDelete = async (chore: Chore) => {
+  const performDelete = async () => {
+    if (!choreToDelete) return;
+    const chore = choreToDelete;
     console.log('Delete confirmed for chore:', chore.id);
-    setLoading(true);
+    setDeletingChoreId(chore.id!);
     try {
       const success = await deleteChore(chore.id!);
       console.log('Delete result:', success);
       if (success) {
-        if (Platform.OS === 'web') {
-          window.alert('Chore deleted successfully');
-        } else {
-          Alert.alert('Success', 'Chore deleted successfully');
-        }
+        Toast.success('Chore deleted successfully');
         await loadChores();
       } else {
-        if (Platform.OS === 'web') {
-          window.alert('Failed to delete chore');
-        } else {
-          Alert.alert('Error', 'Failed to delete chore');
-        }
+        Toast.error('Failed to delete chore');
       }
     } catch (error) {
-      if (Platform.OS === 'web') {
-        window.alert('Failed to delete chore');
-      } else {
-        Alert.alert('Error', 'Failed to delete chore');
-      }
+      Toast.error('Failed to delete chore');
       console.error('Error deleting chore:', error);
     } finally {
-      setLoading(false);
+      setDeletingChoreId(null);
+      setChoreToDelete(null);
     }
   };
 
@@ -206,19 +195,19 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
 
   const getTypeColor = (type: ChoreType) => {
     switch (type) {
-      case 'individual': return '#4285F4';
-      case 'family': return '#34A853';
-      case 'pet': return '#FBBC04';
-      case 'shared': return '#EA4335';
+      case 'individual': return '#be185d';
+      case 'family': return '#10b981';
+      case 'pet': return '#f59e0b';
+      case 'shared': return '#ef4444';
       default: return '#666';
     }
   };
 
   const getDifficultyColor = (difficulty: ChoreDifficulty) => {
     switch (difficulty) {
-      case 'easy': return '#34A853';
-      case 'medium': return '#FBBC04';
-      case 'hard': return '#EA4335';
+      case 'easy': return '#10b981';
+      case 'medium': return '#f59e0b';
+      case 'hard': return '#ef4444';
       default: return '#666';
     }
   };
@@ -271,27 +260,34 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 {editingChore ? 'Edit Chore' : 'Create New Chore'}
               </ThemedText>
 
-              <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Title *</ThemedText>
-                <TextInput
-                  style={styles.input}
-                  value={title}
-                  onChangeText={setTitle}
-                  placeholder="Enter chore title"
-                />
-              </View>
+              <ValidatedInput
+                label="Title *"
+                value={title}
+                onChangeText={(text) => {
+                  setTitle(text);
+                  handleFieldChange('title', text);
+                }}
+                onBlur={() => handleFieldBlur('title', title)}
+                placeholder="Enter chore title"
+                error={errors.title}
+                isValid={isFieldValid('title')}
+              />
 
-              <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Description</ThemedText>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholder="Enter description (optional)"
-                  multiline
-                  numberOfLines={3}
-                />
-              </View>
+              <ValidatedInput
+                label="Description"
+                value={description}
+                onChangeText={(text) => {
+                  setDescription(text);
+                  handleFieldChange('description', text);
+                }}
+                onBlur={() => handleFieldBlur('description', description)}
+                placeholder="Enter description (optional)"
+                multiline
+                numberOfLines={3}
+                style={styles.textArea}
+                error={errors.description}
+                isValid={isFieldValid('description')}
+              />
 
               <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Type</ThemedText>
@@ -345,16 +341,19 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 </View>
               </View>
 
-              <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Points</ThemedText>
-                <TextInput
-                  style={styles.input}
-                  value={points}
-                  onChangeText={setPoints}
-                  placeholder="10"
-                  keyboardType="numeric"
-                />
-              </View>
+              <ValidatedInput
+                label="Points"
+                value={points}
+                onChangeText={(text) => {
+                  setPoints(text);
+                  handleFieldChange('points', text);
+                }}
+                onBlur={() => handleFieldBlur('points', points)}
+                placeholder="10"
+                keyboardType="numeric"
+                error={errors.points}
+                isValid={isFieldValid('points')}
+              />
 
               <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Assign To</ThemedText>
@@ -422,16 +421,19 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 )}
               </View>
 
-              <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Cooldown Hours</ThemedText>
-                <TextInput
-                  style={styles.input}
-                  value={cooldownHours}
-                  onChangeText={setCooldownHours}
-                  placeholder="24"
-                  keyboardType="numeric"
-                />
-              </View>
+              <ValidatedInput
+                label="Cooldown Hours"
+                value={cooldownHours}
+                onChangeText={(text) => {
+                  setCooldownHours(text);
+                  handleFieldChange('cooldownHours', text);
+                }}
+                onBlur={() => handleFieldBlur('cooldownHours', cooldownHours)}
+                placeholder="24"
+                keyboardType="numeric"
+                error={errors.cooldownHours}
+                isValid={isFieldValid('cooldownHours')}
+              />
 
               <View style={styles.formActions}>
                 <TouchableOpacity
@@ -443,11 +445,15 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 <TouchableOpacity
                   style={[styles.actionButton, styles.saveButton]}
                   onPress={handleSaveChore}
-                  disabled={loading}
+                  disabled={savingChore}
                 >
-                  <ThemedText style={styles.saveButtonText}>
-                    {loading ? 'Saving...' : editingChore ? 'Update' : 'Create'}
-                  </ThemedText>
+                  {savingChore ? (
+                    <LoadingSpinner size="small" />
+                  ) : (
+                    <ThemedText style={styles.saveButtonText}>
+                      {editingChore ? 'Update' : 'Create'}
+                    </ThemedText>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -468,9 +474,15 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
 
             <ScrollView style={styles.scrollView}>
               {loading ? (
-                <ActivityIndicator size="large" color="#4285F4" />
+                <LoadingSpinner message="Loading chores..." />
               ) : chores.length === 0 ? (
-                <ThemedText style={styles.emptyText}>No chores created yet</ThemedText>
+                <View style={styles.emptyStateContainer}>
+                  <Ionicons name="list-outline" size={64} color="#f9a8d4" />
+                  <ThemedText style={styles.emptyStateTitle}>No chores yet</ThemedText>
+                  <ThemedText style={styles.emptyStateMessage}>
+                    Create your first chore to get started!
+                  </ThemedText>
+                </View>
               ) : (
                 chores.map((chore) => {
                   const locked = isChoreLocked(chore);
@@ -491,8 +503,13 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                               console.log('TouchableOpacity onPress triggered');
                               handleDeleteChore(chore);
                             }}
+                            disabled={deletingChoreId === chore.id}
                           >
-                            <ThemedText style={styles.deleteText}>Delete</ThemedText>
+                            {deletingChoreId === chore.id ? (
+                              <LoadingSpinner size="small" />
+                            ) : (
+                              <ThemedText style={styles.deleteText}>Delete</ThemedText>
+                            )}
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -547,11 +564,17 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
           </>
         )}
 
-        {loading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#4285F4" />
-          </View>
-        )}
+        <ConfirmDialog
+          visible={!!choreToDelete}
+          title="Delete Chore"
+          message={`Are you sure you want to delete "${choreToDelete?.title}"?`}
+          confirmText="Delete"
+          confirmButtonStyle="danger"
+          onConfirm={performDelete}
+          onCancel={() => setChoreToDelete(null)}
+          icon="trash-outline"
+        />
+
       </View>
     </Modal>
   );
@@ -585,7 +608,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   closeButtonText: {
-    color: '#4285F4',
+    color: '#be185d',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -596,25 +619,42 @@ const styles = StyleSheet.create({
   createButton: {
     margin: 16,
     padding: 16,
-    backgroundColor: '#4285F4',
-    borderRadius: 8,
+    backgroundColor: '#be185d',
+    borderRadius: 24,
     alignItems: 'center',
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
   },
   createButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
-  emptyText: {
-    textAlign: 'center',
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#831843',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateMessage: {
     fontSize: 16,
-    opacity: 0.5,
-    marginTop: 50,
+    color: '#9f1239',
+    textAlign: 'center',
+    paddingHorizontal: 40,
   },
   errorText: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#EA4335',
+    color: '#ef4444',
     marginTop: 50,
   },
   choreCard: {
@@ -654,11 +694,11 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   editText: {
-    color: '#4285F4',
+    color: '#be185d',
     fontSize: 14,
   },
   deleteText: {
-    color: '#EA4335',
+    color: '#ef4444',
     fontSize: 14,
   },
   choreDescription: {
@@ -735,7 +775,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   typeButtonSelected: {
-    backgroundColor: 'rgba(66, 133, 244, 0.1)',
+    backgroundColor: 'rgba(190, 24, 93, 0.1)',
   },
   typeButtonText: {
     fontSize: 14,
@@ -747,7 +787,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   diffButtonSelected: {
-    backgroundColor: 'rgba(66, 133, 244, 0.1)',
+    backgroundColor: 'rgba(190, 24, 93, 0.1)',
   },
   diffButtonText: {
     fontSize: 14,
@@ -764,7 +804,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   memberOptionSelected: {
-    backgroundColor: '#4285F4',
+    backgroundColor: '#be185d',
   },
   memberOptionText: {
     fontSize: 14,
@@ -786,11 +826,11 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderWidth: 2,
-    borderColor: '#4285F4',
+    borderColor: '#be185d',
     borderRadius: 4,
   },
   checkboxChecked: {
-    backgroundColor: '#4285F4',
+    backgroundColor: '#be185d',
   },
   formActions: {
     flexDirection: 'row',
@@ -811,21 +851,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   saveButton: {
-    backgroundColor: '#4285F4',
+    backgroundColor: '#be185d',
+    minWidth: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   saveButtonText: {
     color: 'white',
     fontWeight: '600',
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(248, 250, 252, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   testDataSection: {
     marginHorizontal: 16,

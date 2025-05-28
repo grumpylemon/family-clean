@@ -3,9 +3,11 @@ import { FamilySettings } from '@/components/FamilySettings';
 import { FamilySetup } from '@/components/FamilySetup';
 import { ManageMembers } from '@/components/ManageMembers';
 import { TestDataGenerator } from '@/components/TestDataGenerator';
+import WeeklyProgress from '@/components/WeeklyProgress';
+import WeeklyComparison from '@/components/WeeklyComparison';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
-import { getChores } from '@/services/firestore';
+import { getChores, shouldResetWeeklyPoints, resetWeeklyPoints } from '@/services/firestore';
 import { Chore } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -46,6 +48,7 @@ export default function DashboardScreen() {
   useEffect(() => {
     if (family) {
       loadChores();
+      checkWeeklyReset();
     }
   }, [family]);
 
@@ -60,6 +63,21 @@ export default function DashboardScreen() {
       console.error('Error loading chores:', error);
     } finally {
       setLoadingChores(false);
+    }
+  };
+
+  const checkWeeklyReset = async () => {
+    if (!family?.id) return;
+    
+    try {
+      const shouldReset = await shouldResetWeeklyPoints(family.id);
+      if (shouldReset) {
+        await resetWeeklyPoints(family.id);
+        console.log('Weekly points have been reset');
+        // You might want to refresh family data here if needed
+      }
+    } catch (error) {
+      console.error('Error checking weekly reset:', error);
     }
   };
 
@@ -139,6 +157,24 @@ export default function DashboardScreen() {
             <Text style={styles.statLabel}>Members</Text>
           </View>
         </View>
+
+        {/* Weekly Progress */}
+        {user && family && (
+          <WeeklyProgress 
+            userId={user.uid}
+            familyId={family.id!}
+            userName={currentMember?.name}
+          />
+        )}
+
+        {/* Weekly Comparison */}
+        {user && family && (
+          <WeeklyComparison
+            userId={user.uid}
+            familyId={family.id!}
+            weeksToShow={4}
+          />
+        )}
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>

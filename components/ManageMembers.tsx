@@ -1,21 +1,23 @@
+import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { FamilyMember, FamilyRole } from '@/types';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
-    Image,
     Modal,
     Platform,
     ScrollView,
     StyleSheet,
     Text,
     TextInput,
-    ToastAndroid,
     TouchableOpacity,
     View,
 } from 'react-native';
 import { ThemedText } from './ThemedText';
+import { Avatar } from './ui/Avatar';
+import { Toast } from './ui/Toast';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ManageMembersProps {
   visible: boolean;
@@ -23,6 +25,7 @@ interface ManageMembersProps {
 }
 
 export function ManageMembers({ visible, onClose }: ManageMembersProps) {
+  const { user } = useAuth();
   const { family, updateMemberRole, removeMember, updateMemberName, updateFamilyMember, isAdmin: isCurrentUserAdmin } = useFamily();
   const [loading, setLoading] = useState(false);
   const [editingMember, setEditingMember] = useState<string | null>(null);
@@ -35,19 +38,11 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
   if (!family) return null;
 
   const showSuccessMessage = (message: string) => {
-    if (Platform.OS === 'android') {
-      ToastAndroid.show(message, ToastAndroid.SHORT);
-    } else {
-      Alert.alert('Success', message);
-    }
+    Toast.success(message);
   };
 
   const showErrorMessage = (message: string) => {
-    if (Platform.OS === 'android') {
-      ToastAndroid.show(message, ToastAndroid.LONG);
-    } else {
-      Alert.alert('Error', message);
-    }
+    Toast.error(message);
   };
 
   const handleRoleChange = async (memberId: string, newRole: FamilyRole) => {
@@ -213,13 +208,16 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
 
         {/* Search and Filter Controls */}
         <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search members..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor="#9ca3af"
-          />
+          <View style={styles.searchInputWrapper}>
+            <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search by name or email..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#f9a8d4"
+            />
+          </View>
           <View style={styles.filterContainer}>
             {(['all', 'active', 'excluded'] as const).map((status) => (
               <TouchableOpacity
@@ -249,20 +247,28 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
             const isAdmin = member.uid === family.adminId;
             const isEditing = editingMember === member.uid;
             const isExcluded = !member.isActive;
+            
+            // Debug logging
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`Member: ${member.name}`, {
+                isAdmin,
+                memberRole: member.role,
+                isCurrentUserAdmin,
+                familyAdminId: family.adminId,
+                memberUid: member.uid
+              });
+            }
 
             return (
               <View key={member.uid} style={[styles.memberCard, isExcluded && styles.excludedCard]}>
                 <View style={styles.avatarRow}>
-                  {member.photoURL ? (
-                    <Image source={{ uri: member.photoURL }} style={styles.avatar} />
-                  ) : (
-                    <View style={styles.avatarFallback}>
-                      <Text style={styles.avatarInitials}>
-                        {member.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) || '?'}
-                      </Text>
-                    </View>
-                  )}
-                  <View style={[styles.statusDot, { backgroundColor: isExcluded ? '#F87171' : '#34D399' }]} />
+                  <Avatar
+                    photoURL={member.photoURL}
+                    name={member.name}
+                    size={40}
+                    showStatus={true}
+                    isActive={member.isActive}
+                  />
                 </View>
                 <View style={styles.memberInfo}>
                   {editingName === member.uid ? (
@@ -339,172 +345,148 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                   </ThemedText>
                 </View>
 
-                {!isAdmin && (
-                  <>
-                    <View style={styles.actions}>
-                      {editingName === member.uid ? (
-                      <>
-                        <TouchableOpacity
-                          style={[styles.actionButton, styles.saveButton]}
-                          onPress={() => handleNameChange(member.uid, editedName)}
-                          disabled={loading}
-                        >
-                          <ThemedText style={styles.saveButtonText}>
-                            {loading ? 'Saving...' : 'Save Name'}
-                          </ThemedText>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[styles.actionButton, styles.cancelButton]}
-                          onPress={() => {
-                            setEditingName(null);
-                            setEditedName('');
-                          }}
-                          disabled={loading}
-                        >
-                          <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
-                        </TouchableOpacity>
-                      </>
-                    ) : isEditing ? (
-                      <>
-                        <TouchableOpacity
-                          style={[styles.actionButton, styles.saveButton]}
-                          onPress={() => handleRoleChange(member.uid, editedRole)}
-                          disabled={loading}
-                        >
-                          <ThemedText style={styles.saveButtonText}>
-                            {loading ? 'Saving...' : 'Save Role'}
-                          </ThemedText>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[styles.actionButton, styles.cancelButton]}
-                          onPress={() => {
-                            setEditingMember(null);
-                            setEditedRole('child');
-                          }}
-                          disabled={loading}
-                        >
-                          <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
-                        </TouchableOpacity>
-                      </>
-                    ) : (
-                      <>
-                        <TouchableOpacity
-                          style={[styles.actionButton, styles.editButton]}
-                          onPress={() => {
-                            setEditingName(member.uid);
-                            setEditedName(member.name);
-                          }}
-                        >
-                          <ThemedText style={styles.editButtonText}>Edit Name</ThemedText>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[styles.actionButton, styles.editButton]}
-                          onPress={() => {
-                            setEditingMember(member.uid);
-                            setEditedRole(member.familyRole);
-                          }}
-                        >
-                          <ThemedText style={styles.editButtonText}>Edit Role</ThemedText>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[styles.actionButton, styles.removeButton]}
-                          onPress={() => handleRemoveMember(member)}
-                        >
-                          <ThemedText style={styles.removeButtonText}>Remove</ThemedText>
-                        </TouchableOpacity>
-                        {!isExcluded ? (
-                          <TouchableOpacity
-                            style={[styles.actionButton, styles.removeButton]}
-                            onPress={() => handleExcludeMember(member)}
-                            disabled={loading}
-                          >
-                            <ThemedText style={styles.removeButtonText}>Exclude</ThemedText>
-                          </TouchableOpacity>
-                        ) : (
-                          <TouchableOpacity
-                            style={[styles.actionButton, styles.saveButton]}
-                            onPress={() => handleReincludeMember(member)}
-                            disabled={loading}
-                          >
-                            <ThemedText style={styles.saveButtonText}>Re-include</ThemedText>
-                          </TouchableOpacity>
-                        )}
-                      </>
-                    )}
-                  </View>
-                  {/* Admin Promotion/Demotion - Show for current admin to manage other members */}
-                  {isCurrentUserAdmin && (
+                {/* Show member management actions */}
+                {!isAdmin ? (
+                  // Regular member actions for non-original-admins
                   <View style={styles.actions}>
-                    {member.role === 'admin' ? (
-                      // Only allow demotion if there's more than one admin
-                      family.members.filter(m => m.role === 'admin').length > 1 && (
+                    {editingName === member.uid ? (
+                    <>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.saveButton]}
+                        onPress={() => handleNameChange(member.uid, editedName)}
+                        disabled={loading}
+                      >
+                        <ThemedText style={styles.saveButtonText}>
+                          {loading ? 'Saving...' : 'Save Name'}
+                        </ThemedText>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.cancelButton]}
+                        onPress={() => {
+                          setEditingName(null);
+                          setEditedName('');
+                        }}
+                        disabled={loading}
+                      >
+                        <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+                      </TouchableOpacity>
+                    </>
+                  ) : isEditing ? (
+                    <>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.saveButton]}
+                        onPress={() => handleRoleChange(member.uid, editedRole)}
+                        disabled={loading}
+                      >
+                        <ThemedText style={styles.saveButtonText}>
+                          {loading ? 'Saving...' : 'Save Role'}
+                        </ThemedText>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.cancelButton]}
+                        onPress={() => {
+                          setEditingMember(null);
+                          setEditedRole('child');
+                        }}
+                        disabled={loading}
+                      >
+                        <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.editButton]}
+                        onPress={() => {
+                          setEditingName(member.uid);
+                          setEditedName(member.name);
+                        }}
+                      >
+                        <ThemedText style={styles.editButtonText}>Edit Name</ThemedText>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.editButton]}
+                        onPress={() => {
+                          setEditingMember(member.uid);
+                          setEditedRole(member.familyRole);
+                        }}
+                      >
+                        <ThemedText style={styles.editButtonText}>Edit Role</ThemedText>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.removeButton]}
+                        onPress={() => handleRemoveMember(member)}
+                      >
+                        <ThemedText style={styles.removeButtonText}>Remove</ThemedText>
+                      </TouchableOpacity>
+                      {!isExcluded ? (
                         <TouchableOpacity
                           style={[styles.actionButton, styles.removeButton]}
-                          onPress={async () => {
-                            Alert.alert(
-                              'Demote Admin',
-                              `Are you sure you want to remove admin rights from ${member.name}?`,
-                              [
-                                { text: 'Cancel', style: 'cancel' },
-                                {
-                                  text: 'Demote',
-                                  style: 'destructive',
-                                  onPress: async () => {
-                                    setLoading(true);
-                                    try {
-                                      const success = await updateMemberRole(member.uid, 'member', member.familyRole);
-                                      if (success) {
-                                        showSuccessMessage('Admin rights removed');
-                                      } else {
-                                        showErrorMessage('Failed to remove admin rights');
-                                      }
-                                    } catch (error) {
-                                      showErrorMessage('An error occurred');
-                                      console.error('Error demoting admin:', error);
-                                    } finally {
-                                      setLoading(false);
-                                    }
-                                  },
-                                },
-                              ]
-                            );
-                          }}
+                          onPress={() => handleExcludeMember(member)}
                           disabled={loading}
                         >
-                          <ThemedText style={styles.removeButtonText}>Remove Admin</ThemedText>
+                          <ThemedText style={styles.removeButtonText}>Exclude</ThemedText>
                         </TouchableOpacity>
-                      )
-                    ) : (
-                      // Allow promotion to admin for regular members
+                      ) : (
+                        <TouchableOpacity
+                          style={[styles.actionButton, styles.saveButton]}
+                          onPress={() => handleReincludeMember(member)}
+                          disabled={loading}
+                        >
+                          <ThemedText style={styles.saveButtonText}>Re-include</ThemedText>
+                        </TouchableOpacity>
+                      )}
+                    </>
+                  )}
+                  </View>
+                ) : (
+                  // For the original admin, just show their status
+                  <ThemedText style={{ marginTop: 12, fontStyle: 'italic', color: '#6b7280' }}>
+                    Original family creator - cannot be modified
+                  </ThemedText>
+                )}
+
+                {/* Admin Promotion/Demotion - Show for current admin to manage ALL members */}
+                {isCurrentUserAdmin && member.uid !== user?.uid && (
+                <View style={styles.actions}>
+                  {/* Debug info - console.log happens as side effect */}
+                  {(() => {
+                    console.log(`Admin section for ${member.name}:`, {
+                      showingAdminSection: true,
+                      memberRole: member.role,
+                      isOriginalAdmin: isAdmin,
+                      shouldShowMakeAdmin: member.role !== 'admin',
+                      currentUserId: user?.uid,
+                      memberId: member.uid
+                    });
+                    return null;
+                  })()}
+                  {member.role === 'admin' ? (
+                    // Only allow demotion if there's more than one admin
+                    family.members.filter(m => m.role === 'admin').length > 1 && (
                       <TouchableOpacity
-                        style={[styles.actionButton, styles.adminButton]}
-                        onPress={() => {
-                          console.log('Make Admin button clicked for:', member.name, member.uid);
-                          console.log('Current user is admin:', isCurrentUserAdmin);
-                          console.log('Member current role:', member.role);
-                          
+                        style={[styles.actionButton, styles.removeButton]}
+                        onPress={async () => {
                           Alert.alert(
-                            'Promote to Admin',
-                            `Grant admin rights to ${member.name}? They will be able to manage family settings and members.`,
+                            'Demote Admin',
+                            `Are you sure you want to remove admin rights from ${member.name}?`,
                             [
                               { text: 'Cancel', style: 'cancel' },
                               {
-                                text: 'Promote',
+                                text: 'Demote',
+                                style: 'destructive',
                                 onPress: async () => {
-                                  console.log('Promote confirmed for:', member.name);
                                   setLoading(true);
                                   try {
-                                    // Update the member's role to admin
-                                    const success = await updateMemberRole(member.uid, 'admin', member.familyRole);
-                                    console.log('updateMemberRole returned:', success);
+                                    const success = await updateMemberRole(member.uid, 'member', member.familyRole);
                                     if (success) {
-                                      showSuccessMessage(`${member.name} is now an admin`);
+                                      showSuccessMessage('Admin rights removed');
                                     } else {
-                                      showErrorMessage('Failed to grant admin rights');
+                                      showErrorMessage('Failed to remove admin rights');
                                     }
                                   } catch (error) {
                                     showErrorMessage('An error occurred');
-                                    console.error('Error promoting to admin:', error);
+                                    console.error('Error demoting admin:', error);
                                   } finally {
                                     setLoading(false);
                                   }
@@ -515,12 +497,54 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                         }}
                         disabled={loading}
                       >
-                        <ThemedText style={styles.adminButtonText}>Make Admin</ThemedText>
+                        <ThemedText style={styles.removeButtonText}>Remove Admin</ThemedText>
                       </TouchableOpacity>
-                    )}
-                  </View>
+                    )
+                  ) : (
+                    // Allow promotion to admin for regular members
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.adminButton]}
+                      onPress={() => {
+                        console.log('Make Admin button clicked for:', member.name, member.uid);
+                        console.log('Current user is admin:', isCurrentUserAdmin);
+                        console.log('Member current role:', member.role);
+                        
+                        Alert.alert(
+                          'Promote to Admin',
+                          `Grant admin rights to ${member.name}? They will be able to manage family settings and members.`,
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                              text: 'Promote',
+                              onPress: async () => {
+                                console.log('Promote confirmed for:', member.name);
+                                setLoading(true);
+                                try {
+                                  // Update the member's role to admin
+                                  const success = await updateMemberRole(member.uid, 'admin', member.familyRole);
+                                  console.log('updateMemberRole returned:', success);
+                                  if (success) {
+                                    showSuccessMessage(`${member.name} is now an admin`);
+                                  } else {
+                                    showErrorMessage('Failed to grant admin rights');
+                                  }
+                                } catch (error) {
+                                  showErrorMessage('An error occurred');
+                                  console.error('Error promoting to admin:', error);
+                                } finally {
+                                  setLoading(false);
+                                }
+                              },
+                            },
+                          ]
+                        );
+                      }}
+                      disabled={loading}
+                    >
+                      <ThemedText style={styles.adminButtonText}>Make Admin</ThemedText>
+                    </TouchableOpacity>
                   )}
-                  </>
+                </View>
                 )}
               </View>
             );
@@ -765,16 +789,24 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
-  searchInput: {
-    backgroundColor: '#f8fafc',
+  searchInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fdf2f8',
     borderRadius: 12,
-    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#f9a8d4',
+    marginBottom: 12,
+  },
+  searchIcon: {
+    marginLeft: 12,
+  },
+  searchInput: {
+    flex: 1,
+    paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#374151',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    marginBottom: 12,
+    color: '#831843',
   },
   filterContainer: {
     flexDirection: 'row',

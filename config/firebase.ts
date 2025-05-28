@@ -23,45 +23,173 @@ try {
 }
 console.log('EXPO_PUBLIC_USE_MOCK:', process.env.EXPO_PUBLIC_USE_MOCK);
 
-// Mock collection implementation
+// Mock collection implementation with in-memory storage
 interface MockCollection {
   doc: (id: string) => any;
   where: (field: string, op: string, value: any) => any;
   add: (data: any) => Promise<{ id: string }>;
 }
 
+// In-memory storage for mock data
+const mockDatabase: { [collection: string]: { [id: string]: any } } = {};
+
 export class MockCollectionReference implements MockCollection {
-  constructor(public path: string) {}
+  constructor(public path: string) {
+    // Initialize collection if it doesn't exist
+    if (!mockDatabase[this.path]) {
+      mockDatabase[this.path] = {};
+    }
+  }
   
   doc(id: string) {
     return {
       id,
-      get: async () => ({
-        id,
-        exists: true,
-        data: () => ({ title: 'Mock document' })
-      }),
-      set: async (data: any, options?: any) => {}
+      get: async () => {
+        const data = mockDatabase[this.path][id];
+        return {
+          id,
+          exists: !!data,
+          data: () => data || null
+        };
+      },
+      set: async (data: any, options?: any) => {
+        // Store data in mock database
+        if (options?.merge && mockDatabase[this.path][id]) {
+          mockDatabase[this.path][id] = { ...mockDatabase[this.path][id], ...data };
+        } else {
+          mockDatabase[this.path][id] = data;
+        }
+        console.log(`Mock: Set document ${id} in ${this.path}:`, data);
+      },
+      update: async (data: any) => {
+        if (mockDatabase[this.path][id]) {
+          mockDatabase[this.path][id] = { ...mockDatabase[this.path][id], ...data };
+          console.log(`Mock: Updated document ${id} in ${this.path}:`, data);
+        }
+      },
+      delete: async () => {
+        delete mockDatabase[this.path][id];
+        console.log(`Mock: Deleted document ${id} from ${this.path}`);
+      }
     };
   }
   
   where(field: string, op: string, value: any) {
     return {
-      get: async () => ({
-        docs: [
-          {
-            id: 'mock-doc-1',
-            data: () => ({ title: 'Mock document 1' })
-          }
-        ]
-      })
+      get: async () => {
+        // Simple mock implementation - just return all docs for now
+        const allDocs = Object.entries(mockDatabase[this.path] || {}).map(([id, data]) => ({
+          id,
+          data: () => data,
+          exists: true
+        }));
+        
+        // Basic filtering for some common operations
+        let filteredDocs = allDocs;
+        if (op === '==' && field && value !== undefined) {
+          filteredDocs = allDocs.filter(doc => {
+            const docData = doc.data();
+            return docData && docData[field] === value;
+          });
+        }
+        
+        console.log(`Mock: Query ${this.path} where ${field} ${op} ${value}, found ${filteredDocs.length} docs`);
+        
+        return {
+          docs: filteredDocs,
+          empty: filteredDocs.length === 0
+        };
+      }
     };
   }
   
   add(data: any) {
-    return Promise.resolve({ id: `mock-${Date.now()}` });
+    const id = `mock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    mockDatabase[this.path][id] = data;
+    console.log(`Mock: Added document ${id} to ${this.path}:`, data);
+    return Promise.resolve({ id });
   }
 }
+
+// Helper function to initialize mock data for testing
+export const initializeMockData = () => {
+  console.log("Initializing mock data for testing...");
+  
+  // Create a default family for testing
+  const mockFamilyId = 'mock-family-123';
+  const mockFamily = {
+    id: mockFamilyId,
+    name: 'Mock Family',
+    adminId: 'guest-admin-user',
+    joinCode: 'MOCK123',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    members: [{
+      uid: 'guest-admin-user',
+      name: 'Guest Admin',
+      email: 'guest@familyclean.app',
+      role: 'admin',
+      familyRole: 'parent',
+      points: {
+        current: 100,
+        lifetime: 500,
+        weekly: 50
+      },
+      photoURL: 'https://via.placeholder.com/150',
+      joinedAt: new Date(),
+      isActive: true
+    }],
+    settings: {
+      defaultChorePoints: 10,
+      defaultChoreCooldownHours: 24,
+      allowPointTransfers: false,
+      weekStartDay: 0
+    }
+  };
+  
+  // Store in mock database
+  if (!mockDatabase['families']) {
+    mockDatabase['families'] = {};
+  }
+  mockDatabase['families'][mockFamilyId] = mockFamily;
+  
+  // Create user profile
+  const mockUserProfile = {
+    uid: 'guest-admin-user',
+    email: 'guest@familyclean.app',
+    displayName: 'Guest Admin',
+    photoURL: 'https://via.placeholder.com/150',
+    familyId: mockFamilyId,
+    role: 'admin',
+    familyRole: 'parent',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    preferences: {
+      theme: 'light',
+      notifications: true
+    },
+    stats: {
+      totalChoresCompleted: 25,
+      weeklyChoresCompleted: 5,
+      currentStreak: 3,
+      longestStreak: 10
+    },
+    xp: {
+      current: 350,
+      level: 3,
+      nextLevelXp: 400
+    },
+    achievements: [],
+    badges: []
+  };
+  
+  if (!mockDatabase['users']) {
+    mockDatabase['users'] = {};
+  }
+  mockDatabase['users']['guest-admin-user'] = mockUserProfile;
+  
+  console.log("Mock data initialized successfully");
+};
 
 // Version to confirm updates (v8)
 console.log("Firebase config version: v8");
@@ -130,6 +258,7 @@ export const initializeFirebase = async () => {
   
   if (_isUsingMock) {
     console.log("Initializing mock Firebase implementation");
+    initializeMockData();
     _firebaseInitialized = true;
     return;
   }
@@ -244,31 +373,62 @@ export const safeCollection = (collectionPath: string): any => {
 };
 
 // Create Firebase Auth instance
+let mockAuthStateCallbacks: ((user: any) => void)[] = [];
+let mockCurrentUser: any = null;
+
 export const auth = (() => {
   if (isMockImplementation()) {
     // Return mock auth object compatible with real Firebase Auth API
     console.log("Using mock auth implementation");
     return {
-      currentUser: mockUser,
+      get currentUser() { return mockCurrentUser; },
       onAuthStateChanged: (callback: (user: any) => void) => {
-        // Simulate auth state change after a short delay
+        // Store callback for later use
         console.log("Setting up mock auth state listener");
-        setTimeout(() => {
-          console.log("Mock auth state change - providing mock user");
-          callback(mockUser);
-        }, 100);
-        return () => {}; // Return unsubscribe function
+        mockAuthStateCallbacks.push(callback);
+        
+        // If there's already a user, call the callback immediately
+        if (mockCurrentUser) {
+          setTimeout(() => {
+            console.log("Mock auth state change - providing existing user");
+            callback(mockCurrentUser);
+          }, 100);
+        }
+        
+        return () => {
+          // Remove callback when unsubscribing
+          const index = mockAuthStateCallbacks.indexOf(callback);
+          if (index > -1) {
+            mockAuthStateCallbacks.splice(index, 1);
+          }
+        };
       },
       signInWithPopup: async () => {
         console.log("Mock signInWithPopup called");
+        mockCurrentUser = mockUser;
+        // Notify all listeners
+        mockAuthStateCallbacks.forEach(callback => {
+          setTimeout(() => callback(mockCurrentUser), 50);
+        });
         return { user: mockUser };
       },
       signInAnonymously: async () => {
         console.log("Mock signInAnonymously called");
-        return { user: { ...mockUser, isAnonymous: true, displayName: 'Guest Admin' } };
+        const anonymousUser = { ...mockUser, isAnonymous: true, displayName: 'Guest Admin' };
+        mockCurrentUser = anonymousUser;
+        // Notify all listeners
+        mockAuthStateCallbacks.forEach(callback => {
+          setTimeout(() => callback(mockCurrentUser), 50);
+        });
+        return { user: anonymousUser };
       },
       signOut: async () => {
         console.log("Mock signOut called");
+        mockCurrentUser = null;
+        // Notify all listeners about sign out
+        mockAuthStateCallbacks.forEach(callback => {
+          setTimeout(() => callback(null), 50);
+        });
       },
     } as any;
   }
@@ -278,17 +438,43 @@ export const auth = (() => {
     return getAuth();
   } catch (error) {
     console.error("Error getting auth instance:", error);
-    // Return mock auth as fallback
+    // Return mock auth as fallback with proper state management
     console.log("Falling back to mock auth after error");
     return {
-      currentUser: mockUser,
+      get currentUser() { return mockCurrentUser; },
       onAuthStateChanged: (callback: (user: any) => void) => {
-        setTimeout(() => callback(mockUser), 100);
-        return () => {};
+        mockAuthStateCallbacks.push(callback);
+        if (mockCurrentUser) {
+          setTimeout(() => callback(mockCurrentUser), 100);
+        }
+        return () => {
+          const index = mockAuthStateCallbacks.indexOf(callback);
+          if (index > -1) {
+            mockAuthStateCallbacks.splice(index, 1);
+          }
+        };
       },
-      signInWithPopup: async () => ({ user: mockUser }),
-      signInAnonymously: async () => ({ user: { ...mockUser, isAnonymous: true, displayName: 'Guest Admin' } }),
-      signOut: async () => {},
+      signInWithPopup: async () => {
+        mockCurrentUser = mockUser;
+        mockAuthStateCallbacks.forEach(callback => {
+          setTimeout(() => callback(mockCurrentUser), 50);
+        });
+        return { user: mockUser };
+      },
+      signInAnonymously: async () => {
+        const anonymousUser = { ...mockUser, isAnonymous: true, displayName: 'Guest Admin' };
+        mockCurrentUser = anonymousUser;
+        mockAuthStateCallbacks.forEach(callback => {
+          setTimeout(() => callback(mockCurrentUser), 50);
+        });
+        return { user: anonymousUser };
+      },
+      signOut: async () => {
+        mockCurrentUser = null;
+        mockAuthStateCallbacks.forEach(callback => {
+          setTimeout(() => callback(null), 50);
+        });
+      },
     } as any;
   }
 })();

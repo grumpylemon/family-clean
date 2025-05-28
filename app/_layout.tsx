@@ -10,6 +10,8 @@ import { Platform } from 'react-native';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { ToastProvider } from '@/components/ui/Toast';
 // We've moved the Firebase import into the explicit initialization
 
 // Version tracking for updates
@@ -53,14 +55,18 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AuthProvider>
-        <FamilyProvider>
-          <RootLayoutNav firebaseStatus={firebaseInitialized} />
-        </FamilyProvider>
-      </AuthProvider>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ToastProvider>
+          <AuthProvider>
+            <FamilyProvider>
+              <RootLayoutNav firebaseStatus={firebaseInitialized} />
+            </FamilyProvider>
+          </AuthProvider>
+          <StatusBar style="auto" />
+        </ToastProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

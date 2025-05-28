@@ -36,14 +36,15 @@ export default function LoginScreen() {
   
   // Redirect to home if already logged in
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       // Add a small delay to ensure router is ready
+      console.log("User is logged in, redirecting to dashboard...");
       const timer = setTimeout(() => {
         router.replace('/(tabs)/dashboard');
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [user]);
+  }, [user, loading]);
 
   // Handle Google sign in
   const handleGoogleSignIn = async () => {
@@ -68,7 +69,12 @@ export default function LoginScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#be185d" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#be185d" />
+          <Text style={styles.loadingText}>
+            {isIOS ? "Setting up demo mode..." : "Loading..."}
+          </Text>
+        </View>
       </View>
     );
   }
@@ -124,6 +130,19 @@ export default function LoginScreen() {
         {error && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{error}</Text>
+            {isIOS && (
+              <TouchableOpacity
+                style={styles.refreshButton}
+                onPress={() => {
+                  // Try guest sign in as fallback
+                  handleGuestSignIn();
+                }}
+              >
+                <Text style={styles.refreshButtonText}>
+                  Refresh / Already have a family?
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </View>
@@ -137,6 +156,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fdf2f8',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#be185d',
+    fontWeight: '500',
   },
   content: {
     width: '100%',
@@ -244,5 +272,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
     fontWeight: '500',
+  },
+  refreshButton: {
+    backgroundColor: '#be185d',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  refreshButtonText: {
+    color: '#ffffff',
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

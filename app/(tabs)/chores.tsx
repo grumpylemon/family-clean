@@ -23,7 +23,7 @@ type MainTabType = 'active' | 'history';
 
 export default function ChoresScreen() {
   const { user } = useAuth();
-  const { family, currentMember } = useFamily();
+  const { family, currentMember, refreshFamily } = useFamily();
   const [chores, setChores] = useState<Chore[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -81,9 +81,10 @@ export default function ChoresScreen() {
         setCompletionReward(result.reward);
         setShowRewardModal(true);
 
-        // Reload chores to get updated data
+        // Reload chores and refresh family data to update points
         setTimeout(() => {
           loadChores();
+          refreshFamily(); // Refresh family data to update points display
         }, 1000);
       } else if (!result.success && result.error) {
         // Show error message

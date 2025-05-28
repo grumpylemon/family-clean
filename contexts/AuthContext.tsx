@@ -1,4 +1,4 @@
-import { auth, googleProvider, mockUser, shouldUseMock } from '@/config/firebase';
+import { auth, googleProvider, shouldUseMock } from '@/config/firebase';
 import { GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup, signOut, User } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
@@ -31,24 +31,16 @@ export const useAuth = () => useContext(AuthContext);
 
 // Provider component that wraps app and provides auth context
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // For iOS, start with a mock user for smoother experience
+  // Always start with no user and let the auth state listener handle initialization
   const isMockMode = shouldUseMock();
-  const initialUser = (isMockMode && Platform.OS === 'ios') ? mockUser as unknown as User : null;
   
-  const [user, setUser] = useState<User | null>(initialUser);
-  const [loading, setLoading] = useState(!initialUser);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Set up auth state listener
   useEffect(() => {
     console.log(`Auth initialization, Platform: ${Platform.OS}, Mock mode: ${isMockMode}`);
-    
-    // For iOS with mock mode, we can skip the auth listener setup
-    if (isMockMode && Platform.OS === 'ios') {
-      console.log("Using pre-initialized mock user for iOS");
-      setLoading(false);
-      return () => {};
-    }
     
     let unsubscribe = () => {};
     
@@ -77,14 +69,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log(`Attempting Google sign in on ${Platform.OS}, mock mode: ${isMockMode}`);
       
       if (isMockMode) {
-        // Use mock authentication for iOS or when Firebase config is not set
+        // Use mock authentication via the firebase mock auth instance
         console.log("Using mock Google sign in");
-        // Wait a bit to simulate network request
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Set the mock user directly - this works because we're in mock mode
-        // In a real app with proper Firebase config, we'd use the proper Firebase auth methods
-        setUser(mockUser as unknown as User);
+        const result = await signInWithPopup(auth, googleProvider as GoogleAuthProvider);
+        console.log("Mock Google sign in completed", result.user ? "with user" : "but no user returned");
       } else {
         // For web with valid Firebase config
         try {
@@ -120,18 +108,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Signing in as guest, mock mode:", isMockMode);
       
       if (isMockMode) {
-        // Use mock authentication
+        // Use mock authentication via the firebase mock auth instance
         console.log("Using mock anonymous sign in");
-        // Wait a bit to simulate network request
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Set the mock user directly with anonymous flag
-        const anonymousUser = {
-          ...mockUser,
-          displayName: 'Guest Admin',
-          isAnonymous: true
-        };
-        setUser(anonymousUser as unknown as User);
+        const result = await signInAnonymously(auth);
+        console.log("Mock anonymous sign in completed", result.user ? "with user" : "but no user returned");
       } else {
         // Try real anonymous auth
         try {
@@ -172,14 +152,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       setError(null);
       
-      if (isMockMode) {
-        // Just clear the user state for mock mode
-        console.log("Mock logout");
-        setUser(null);
-      } else {
-        // Real Firebase signOut
-        await signOut(auth);
-      }
+      // Use Firebase signOut for both mock and real mode
+      // The mock auth now properly handles signOut and notifies listeners
+      console.log("Signing out...");
+      await signOut(auth);
+      
     } catch (err) {
       setError(`Sign out failed: ${err instanceof Error ? err.message : String(err)}`);
       console.error('Sign out error:', err);

@@ -3,6 +3,8 @@ import { FamilySetup } from '@/components/FamilySetup';
 import { ManageMembers } from '@/components/ManageMembers';
 import { ChoreManagement } from '@/components/ChoreManagement';
 import { FamilySettings } from '@/components/FamilySettings';
+import RewardManagement from '@/components/RewardManagement';
+import RewardStore from '@/components/RewardStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { router } from 'expo-router';
@@ -15,10 +17,12 @@ console.log("Home Screen version: v5");
 
 export default function HomeScreen() {
   const { user, loading: authLoading, logout } = useAuth();
-  const { family, loading: familyLoading, error, isAdmin, currentMember } = useFamily();
+  const { family, loading: familyLoading, error, isAdmin, currentMember, refreshFamily } = useFamily();
   const [showManageMembers, setShowManageMembers] = useState(false);
   const [showChoreManagement, setShowChoreManagement] = useState(false);
   const [showFamilySettings, setShowFamilySettings] = useState(false);
+  const [showRewardManagement, setShowRewardManagement] = useState(false);
+  const [showRewardStore, setShowRewardStore] = useState(false);
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -117,6 +121,15 @@ export default function HomeScreen() {
               </View>
             </View>
           )}
+          
+          {/* Reward Store Button */}
+          <TouchableOpacity 
+            style={styles.rewardStoreButton}
+            onPress={() => setShowRewardStore(true)}
+          >
+            <Ionicons name="storefront" size={20} color="#ffffff" />
+            <Text style={styles.rewardStoreButtonText}>Reward Store</Text>
+          </TouchableOpacity>
         </View>
         
         {/* Family Info Card */}
@@ -215,6 +228,14 @@ export default function HomeScreen() {
               
               <TouchableOpacity 
                 style={styles.adminCard}
+                onPress={() => setShowRewardManagement(true)}
+              >
+                <Ionicons name="gift" size={24} color="#be185d" />
+                <Text style={styles.adminCardText}>Manage Rewards</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.adminCard}
                 onPress={() => setShowFamilySettings(true)}
               >
                 <Ionicons name="settings" size={24} color="#be185d" />
@@ -249,6 +270,25 @@ export default function HomeScreen() {
         visible={showFamilySettings}
         onClose={() => setShowFamilySettings(false)}
       />
+      
+      {showRewardManagement && family && (
+        <RewardManagement
+          familyId={family.id!}
+          onClose={() => setShowRewardManagement(false)}
+        />
+      )}
+      
+      {showRewardStore && family && currentMember && (
+        <RewardStore
+          familyId={family.id!}
+          userPoints={currentMember.points.current}
+          onClose={() => setShowRewardStore(false)}
+          onRedemption={() => {
+            // Refresh family data after redemption to update points
+            refreshFamily();
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -556,5 +596,26 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     color: '#831843',
+  },
+  rewardStoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    backgroundColor: '#be185d',
+    borderRadius: 24,
+    gap: 8,
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  rewardStoreButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

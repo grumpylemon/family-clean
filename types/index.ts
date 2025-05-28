@@ -122,16 +122,52 @@ export interface Chore {
 }
 
 // Reward Types
+export type RewardCategory = 'privilege' | 'item' | 'experience' | 'money' | 'digital' | 'other';
+
 export interface Reward {
   id?: string;
   name: string;
   description?: string;
   pointsCost: number;
+  category: RewardCategory;
   imageUrl?: string;
   familyId: string;
   createdBy: string;
   createdAt: Date | string;
+  updatedAt: Date | string;
   isActive: boolean;
+  // Stock management
+  hasStock?: boolean;
+  stockCount?: number;
+  isUnlimited?: boolean;
+  // Restrictions
+  minLevel?: number; // Minimum level required to redeem
+  requiredAchievements?: string[]; // Achievement IDs required
+  ageRestriction?: number; // Minimum age
+  // Special properties
+  isRepeatable?: boolean; // Can be redeemed multiple times
+  cooldownDays?: number; // Days before can redeem again
+  expiresAt?: Date | string; // For limited-time rewards
+  // Display properties
+  featured?: boolean; // Show in featured section
+  sortOrder?: number; // For custom ordering
+}
+
+export interface RewardRedemption {
+  id?: string;
+  rewardId: string;
+  rewardName: string;
+  userId: string;
+  userName: string;
+  familyId: string;
+  pointsSpent: number;
+  redeemedAt: Date | string;
+  status: 'pending' | 'approved' | 'completed' | 'cancelled';
+  approvedBy?: string;
+  approvedAt?: Date | string;
+  completedAt?: Date | string;
+  notes?: string;
+  adminNotes?: string;
 }
 
 // Achievement Types
@@ -205,4 +241,31 @@ export interface Notification {
   read: boolean;
   createdAt: Date | string;
   data?: any;
+}
+
+// Daily Points Tracking
+export interface DailyPointsRecord {
+  id?: string;
+  userId: string;
+  familyId: string;
+  date: string; // ISO date string (YYYY-MM-DD)
+  points: number;
+  choreCount: number;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface WeeklyPointsData {
+  userId: string;
+  startDate: string; // ISO date string
+  endDate: string; // ISO date string
+  dailyPoints: {
+    date: string;
+    points: number;
+    choreCount: number;
+  }[];
+  totalPoints: number;
+  totalChores: number;
+  weekNumber: number;
+  year: number;
 }
