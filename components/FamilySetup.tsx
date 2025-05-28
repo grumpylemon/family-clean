@@ -11,17 +11,20 @@ import {
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 import { useFamily } from '@/contexts/FamilyContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FamilySetupProps {
   onComplete?: () => void;
 }
 
 export function FamilySetup({ onComplete }: FamilySetupProps) {
-  const { createNewFamily, joinFamily, error } = useFamily();
+  const { createNewFamily, joinFamily, error, refreshFamily } = useFamily();
+  const { logout } = useAuth();
   const [mode, setMode] = useState<'choose' | 'create' | 'join'>('choose');
   const [familyName, setFamilyName] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleCreateFamily = async () => {
     if (!familyName.trim()) return;
@@ -41,10 +44,34 @@ export function FamilySetup({ onComplete }: FamilySetupProps) {
     if (!joinCode.trim()) return;
 
     setLoading(true);
+    setLocalError(null);
     try {
       const success = await joinFamily(joinCode.trim().toUpperCase());
       if (success) {
         onComplete?.();
+      } else if (error?.includes('already a member')) {
+        // If already a member, try to refresh family data
+        const refreshed = await refreshFamily();
+        if (refreshed) {
+          onComplete?.();
+        } else {
+          setLocalError('Unable to load family data. Please try refreshing the page.');
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    setLocalError(null);
+    try {
+      const refreshed = await refreshFamily();
+      if (refreshed) {
+        onComplete?.();
+      } else {
+        setLocalError('Unable to load family data. Please try refreshing the page.');
       }
     } finally {
       setLoading(false);
@@ -77,7 +104,34 @@ export function FamilySetup({ onComplete }: FamilySetupProps) {
               Join Existing Family
             </ThemedText>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={handleRefresh}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#4285F4" />
+            ) : (
+              <ThemedText style={styles.linkButtonText}>
+                Refresh / Already have a family?
+              </ThemedText>
+            )}
+          </TouchableOpacity>
         </View>
+
+        {(error || localError) && (
+          <ThemedText style={styles.errorText}>{error || localError}</ThemedText>
+        )}
+
+        <TouchableOpacity
+          style={[styles.linkButton, { marginTop: 40 }]}
+          onPress={logout}
+        >
+          <ThemedText style={[styles.linkButtonText, { opacity: 0.6 }]}>
+            Sign Out
+          </ThemedText>
+        </TouchableOpacity>
       </ThemedView>
     );
   }
@@ -157,8 +211,8 @@ export function FamilySetup({ onComplete }: FamilySetupProps) {
           maxLength={6}
         />
 
-        {error && (
-          <ThemedText style={styles.errorText}>{error}</ThemedText>
+        {(error || localError) && (
+          <ThemedText style={styles.errorText}>{error || localError}</ThemedText>
         )}
 
         <View style={styles.buttonContainer}>
