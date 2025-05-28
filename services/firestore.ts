@@ -9,7 +9,10 @@ import {
   CompletionReward,
   ChoreCompletionRecord,
   DailyPointsRecord,
-  WeeklyPointsData
+  WeeklyPointsData,
+  Pet,
+  PetChore,
+  PetCareRecord
 } from '@/types';
 import { 
   processChoreCompletion, 
@@ -43,39 +46,52 @@ const getRedemptionsCollection = () => safeCollection('redemptions');
 // In a real app, this would be retrieved from the user's profile
 const DEFAULT_FAMILY_ID = 'demo-family-id';
 
-// Chore ID prefix to make IDs more recognizable
-const CHORE_ID_PREFIX = 'chore-';
 
 // Mock data for fallback
 const mockChores: Chore[] = [
   {
     id: 'mock-chore-1',
-    title: 'Demo Chore: Clean Room',
-    description: 'This is a demo chore from the mock implementation',
-    type: 'individual',
+    title: 'Clean Living Room',
+    description: 'Vacuum, dust surfaces, and organize items',
+    type: 'family',
     difficulty: 'medium',
-    points: 10,
-    assignedTo: 'mock-user-id',
-    assignedToName: 'Demo User',
+    points: 15,
+    assignedTo: 'test-user-1',
+    assignedToName: 'Emma Smith',
     dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
     createdAt: new Date(),
-    createdBy: 'mock-user-id',
-    familyId: 'test-family-id',
+    createdBy: 'guest-admin-user',
+    familyId: 'demo-family-qj7fep',
     status: 'open'
   },
   {
     id: 'mock-chore-2',
-    title: 'Demo Chore: Do Dishes',
-    description: 'Another demo chore from mock implementation',
+    title: 'Load Dishwasher',
+    description: 'Load dirty dishes and start the dishwasher',
     type: 'family',
     difficulty: 'easy',
-    points: 5,
-    assignedTo: 'mock-user-id',
-    assignedToName: 'Demo User',
-    dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+    points: 8,
+    assignedTo: 'test-user-2',
+    assignedToName: 'Sarah Smith',
+    dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
     createdAt: new Date(),
-    createdBy: 'mock-user-id',
-    familyId: 'test-family-id',
+    createdBy: 'guest-admin-user',
+    familyId: 'demo-family-qj7fep',
+    status: 'open'
+  },
+  {
+    id: 'mock-chore-3',
+    title: 'Take Out Trash',
+    description: 'Collect trash from all rooms and take to curb',
+    type: 'family',
+    difficulty: 'easy',
+    points: 10,
+    assignedTo: 'guest-admin-user',
+    assignedToName: 'John Smith',
+    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    createdAt: new Date(),
+    createdBy: 'guest-admin-user',
+    familyId: 'demo-family-qj7fep',
     status: 'open'
   }
 ];
@@ -99,7 +115,7 @@ const formatForFirestore = (data: any) => {
 };
 
 // Ensure we have a consistent family ID for the demo
-export const getDefaultFamilyId = (userId?: string) => {
+export const getDefaultFamilyId = (_userId?: string) => {
   // For iOS, use a mock ID
   if (Platform.OS === 'ios') {
     return 'mock-family-id';
@@ -110,11 +126,6 @@ export const getDefaultFamilyId = (userId?: string) => {
   return DEFAULT_FAMILY_ID;
 };
 
-// Generate a stable ID for a chore
-const generateChoreId = (title: string) => {
-  // Create a simpler ID format that's less likely to cause issues
-  return `chore-${Date.now()}`;
-};
 
 // Chore functions
 export const getChores = async (familyId: string) => {
@@ -132,6 +143,22 @@ export const getChores = async (familyId: string) => {
     // If we're using mock, return mock data for better demo
     if (isMockImplementation()) {
       console.log('Using mock chores data');
+      
+      // Check for expired cooldowns and unlock chores
+      const now = new Date();
+      mockChores.forEach((chore, index) => {
+        if (chore.lockedUntil && new Date(chore.lockedUntil) <= now && chore.status === 'completed') {
+          mockChores[index] = {
+            ...chore,
+            status: 'open',
+            lockedUntil: undefined,
+            completedBy: undefined,
+            completedAt: undefined
+          };
+          console.log(`Unlocked chore: ${chore.title}`);
+        }
+      });
+      
       return mockChores;
     }
     
@@ -245,8 +272,6 @@ export const createChore = async (chore: Omit<Chore, 'id'>) => {
       return `mock-id-${Date.now()}`;
     }
     
-    // Generate a custom ID for the chore
-    const choreId = generateChoreId(chore.title);
     
     try {
       // Format data for Firestore (convert dates to ISO strings)
@@ -387,18 +412,63 @@ export const deleteChore = async (choreId: string) => {
 };
 
 export const completeChore = async (choreId: string): Promise<{ success: boolean; reward?: CompletionReward; error?: string }> => {
-  if (shouldReturnMockImmediately()) {
-    return { success: true };
-  }
-
   try {
     const currentUser = auth.currentUser;
     if (!currentUser) throw new Error('User not authenticated');
 
-    // For mock implementation, we would update the UI state directly
-    if (isMockImplementation()) {
+    // For mock implementation, simulate the full completion flow
+    if (shouldReturnMockImmediately() || isMockImplementation()) {
       console.log(`Mock complete chore: ${choreId}`);
-      return { success: true };
+      
+      // Find the chore in mock data
+      const choreIndex = mockChores.findIndex(c => c.id === choreId);
+      if (choreIndex === -1) throw new Error('Chore not found');
+      
+      const chore = mockChores[choreIndex];
+      
+      // Update the chore status and add cooldown
+      const cooldownHours = 24; // Default cooldown
+      const lockedUntil = new Date(Date.now() + cooldownHours * 60 * 60 * 1000);
+      
+      // For family chores, rotate to next family member after cooldown
+      let nextAssignee = chore.assignedTo;
+      let nextAssigneeName = chore.assignedToName;
+      
+      if (chore.type === 'family') {
+        // Simple rotation: cycle through family members
+        const familyMembers = [
+          { uid: 'guest-admin-user', name: 'John Smith' },
+          { uid: 'test-user-1', name: 'Emma Smith' },
+          { uid: 'test-user-2', name: 'Sarah Smith' }
+        ];
+        
+        const currentIndex = familyMembers.findIndex(m => m.uid === chore.assignedTo);
+        const nextIndex = (currentIndex + 1) % familyMembers.length;
+        nextAssignee = familyMembers[nextIndex].uid;
+        nextAssigneeName = familyMembers[nextIndex].name;
+      }
+      
+      mockChores[choreIndex] = {
+        ...chore,
+        status: 'open', // Reset to open after cooldown
+        completedBy: currentUser.uid,
+        completedAt: new Date(),
+        lockedUntil: lockedUntil,
+        completionCount: (chore.completionCount || 0) + 1,
+        assignedTo: nextAssignee,
+        assignedToName: nextAssigneeName
+      };
+      
+      // Create a mock completion reward
+      const mockReward: CompletionReward = {
+        pointsEarned: chore.points,
+        xpEarned: Math.round(chore.points * 0.5), // Basic XP calculation
+        achievementsUnlocked: [],
+        streakBonus: 1.1 // Small bonus
+      };
+      
+      console.log(`Mock chore completed: ${chore.title}, earned ${chore.points} points, locked until ${lockedUntil.toLocaleTimeString()}`);
+      return { success: true, reward: mockReward };
     }
 
     // Fetch the chore
@@ -455,7 +525,8 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
       currentUser.uid,
       chore.points,
       chore.difficulty,
-      completionCount
+      completionCount,
+      getUserProfile
     );
 
     console.log('Completion reward calculated:', reward);
@@ -476,7 +547,7 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
     };
 
     // Apply gamification rewards (XP, level, achievements)
-    await applyCompletionRewards(currentUser.uid, reward, streak.current);
+    await applyCompletionRewards(currentUser.uid, reward, streak.current, getUserProfile, createOrUpdateUserProfile);
     
     // Update basic profile data
     await createOrUpdateUserProfile(currentUser.uid, updatedUserProfile);
@@ -639,15 +710,15 @@ const handleChoreRotation = async (chore: Chore, family: Family, lockedUntil: Da
 // Mock family data
 const mockFamily: Family = {
   id: 'demo-family-qj7fep',
-  name: 'Testing Family',
+  name: 'Smith Family',
   adminId: 'guest-admin-user',
-  joinCode: 'QJ7FEP',
+  joinCode: 'SMITH1',
   createdAt: new Date(),
   updatedAt: new Date(),
   members: [
     {
       uid: 'guest-admin-user',
-      name: 'Guest Admin',
+      name: 'John Smith',
       email: 'guest@familyclean.app',
       role: 'admin',
       familyRole: 'parent',
@@ -662,8 +733,8 @@ const mockFamily: Family = {
     },
     {
       uid: 'test-user-1',
-      name: 'Alice Smith',
-      email: 'alice@example.com',
+      name: 'Emma Smith',
+      email: 'emma@example.com',
       role: 'member',
       familyRole: 'child',
       points: {
@@ -677,8 +748,8 @@ const mockFamily: Family = {
     },
     {
       uid: 'test-user-2', 
-      name: 'Bob Johnson',
-      email: 'bob@example.com',
+      name: 'Sarah Smith',
+      email: 'sarah@example.com',
       role: 'member',
       familyRole: 'child',
       points: {
@@ -1025,11 +1096,30 @@ export const createOrUpdateUserProfile = async (userId: string, userData: Partia
 // Get user profile
 export const getUserProfile = async (userId: string): Promise<User | null> => {
   if (shouldReturnMockImmediately()) {
+    // Return a complete mock user profile for John Smith with family setup
     return {
       uid: userId,
-      email: 'mock@example.com',
-      displayName: 'Mock User',
+      email: 'guest@familyclean.app',
+      displayName: 'John Smith',
       photoURL: null,
+      familyId: 'demo-family-qj7fep',
+      points: {
+        current: 100,
+        lifetime: 500,
+        weekly: 25
+      },
+      xp: {
+        current: 150,
+        total: 350,
+        toNextLevel: 100
+      },
+      level: 3,
+      streak: {
+        current: 5,
+        longest: 12,
+        lastCompletedDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      },
+      achievements: ['first_chore', 'streak_3', 'chores_10'],
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -1161,7 +1251,7 @@ const mockRewards: Reward[] = [
 // ==================== REWARD FUNCTIONS ====================
 
 // Get all rewards for a family
-export const getRewards = async (familyId: string): Promise<Reward[]> => {
+export const getRewards = async (_familyId: string): Promise<Reward[]> => {
   if (shouldReturnMockImmediately()) {
     console.log('Immediately returning mock rewards data for iOS');
     return mockRewards;
@@ -1499,7 +1589,7 @@ export const getUserRedemptions = async (userId: string, familyId: string): Prom
 };
 
 // Get all redemptions for a family (admin view)
-export const getFamilyRedemptions = async (familyId: string): Promise<RewardRedemption[]> => {
+export const getFamilyRedemptions = async (_familyId: string): Promise<RewardRedemption[]> => {
   if (shouldReturnMockImmediately()) {
     return [];
   }
@@ -1582,7 +1672,7 @@ export const updateRedemptionStatus = async (
 // Update daily points record when a chore is completed
 export const updateDailyPoints = async (
   userId: string, 
-  familyId: string, 
+  _familyId: string, 
   pointsToAdd: number
 ): Promise<void> => {
   if (shouldReturnMockImmediately()) {
@@ -1619,7 +1709,7 @@ export const updateDailyPoints = async (
       // Create new record
       const newRecord: DailyPointsRecord = {
         userId,
-        familyId,
+        familyId: _familyId,
         date: dateKey,
         points: pointsToAdd,
         choreCount: 1,
@@ -1636,7 +1726,7 @@ export const updateDailyPoints = async (
 // Get 7-day rolling window data for a user
 export const getWeeklyPointsData = async (
   userId: string,
-  familyId: string
+  _familyId: string
 ): Promise<WeeklyPointsData> => {
   if (shouldReturnMockImmediately()) {
     return getMockWeeklyData(userId);
@@ -1982,4 +2072,157 @@ const getMockFamilyWeeklyProgress = () => {
     familyTotal,
     memberProgress,
   };
+};
+
+// Pet Management Integration
+const getPetsCollection = () => safeCollection('pets');
+const getPetCareRecordsCollection = () => safeCollection('petCareRecords');
+
+// Add support for pet chores in the existing addChore function
+// This extends the current chore system to handle pet-specific chores
+
+// Room-based Chore Management Functions
+export const getChoresByRoom = async (familyId: string, roomId: string): Promise<Chore[]> => {
+  // Fast path for iOS
+  if (shouldReturnMockImmediately()) {
+    return mockChores.filter(chore => 
+      chore.familyId === familyId && chore.roomId === roomId
+    );
+  }
+
+  try {
+    const effectiveFamilyId = getDefaultFamilyId(auth.currentUser?.uid);
+    
+    if (isMockImplementation()) {
+      return mockChores.filter(chore => 
+        chore.familyId === effectiveFamilyId && chore.roomId === roomId
+      );
+    }
+
+    const q = query(
+      getChoresCollection(),
+      where('familyId', '==', effectiveFamilyId),
+      where('roomId', '==', roomId),
+      where('deleted', '!=', true)
+    );
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Chore[];
+  } catch (error) {
+    console.error('Error getting chores by room:', error);
+    return [];
+  }
+};
+
+export const getChoresByRoomType = async (familyId: string, roomType: string): Promise<Chore[]> => {
+  // Fast path for iOS
+  if (shouldReturnMockImmediately()) {
+    return mockChores.filter(chore => 
+      chore.familyId === familyId && chore.roomType === roomType
+    );
+  }
+
+  try {
+    const effectiveFamilyId = getDefaultFamilyId(auth.currentUser?.uid);
+    
+    if (isMockImplementation()) {
+      return mockChores.filter(chore => 
+        chore.familyId === effectiveFamilyId && chore.roomType === roomType
+      );
+    }
+
+    const q = query(
+      getChoresCollection(),
+      where('familyId', '==', effectiveFamilyId),
+      where('roomType', '==', roomType),
+      where('deleted', '!=', true)
+    );
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Chore[];
+  } catch (error) {
+    console.error('Error getting chores by room type:', error);
+    return [];
+  }
+};
+
+export const getFilteredChores = async (
+  familyId: string, 
+  filters: {
+    roomId?: string;
+    roomType?: string;
+    type?: string;
+    assignedTo?: string;
+    status?: string;
+  } = {}
+): Promise<Chore[]> => {
+  try {
+    const allChores = await getChores(familyId);
+    
+    let filteredChores = allChores;
+
+    // Apply room filters
+    if (filters.roomId) {
+      filteredChores = filteredChores.filter(chore => chore.roomId === filters.roomId);
+    }
+
+    if (filters.roomType) {
+      filteredChores = filteredChores.filter(chore => chore.roomType === filters.roomType);
+    }
+
+    // Apply other filters
+    if (filters.type) {
+      filteredChores = filteredChores.filter(chore => chore.type === filters.type);
+    }
+
+    if (filters.assignedTo) {
+      filteredChores = filteredChores.filter(chore => chore.assignedTo === filters.assignedTo);
+    }
+
+    if (filters.status) {
+      filteredChores = filteredChores.filter(chore => chore.status === filters.status);
+    }
+
+    return filteredChores;
+  } catch (error) {
+    console.error('Error getting filtered chores:', error);
+    return [];
+  }
+};
+
+// Enhanced chore creation with room support
+export const createRoomChore = async (
+  chore: Omit<Chore, 'id'>,
+  roomId: string,
+  roomName: string,
+  roomType: string
+): Promise<string> => {
+  const roomChore: Omit<Chore, 'id'> = {
+    ...chore,
+    type: 'room',
+    roomId,
+    roomName,
+    roomType
+  };
+
+  return await createChore(roomChore);
+};
+
+// Get room assignments for chore assignment logic
+export const getUserAssignedRooms = async (userId: string, familyId: string): Promise<string[]> => {
+  try {
+    // This would typically query the room assignments
+    // For now, we'll return an empty array as a placeholder
+    // In a full implementation, you'd query the roomAssignments collection
+    return [];
+  } catch (error) {
+    console.error('Error getting user assigned rooms:', error);
+    return [];
+  }
 }; 

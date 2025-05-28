@@ -1,5 +1,4 @@
 import { Achievement, LevelConfig, User, FamilyMember, CompletionReward, UserAchievement, Badge } from '@/types';
-import { createOrUpdateUserProfile, getUserProfile } from './firestore';
 
 // Level configuration system
 const LEVEL_CONFIGS: LevelConfig[] = [
@@ -211,11 +210,15 @@ export const processChoreCompletion = async (
   userId: string,
   chorePoints: number,
   choreDifficulty: 'easy' | 'medium' | 'hard',
-  choreCompletionCount?: number
+  choreCompletionCount?: number,
+  getUserProfileFn?: (userId: string) => Promise<User | null>
 ): Promise<CompletionReward> => {
   try {
-    // Get current user profile
-    const userProfile = await getUserProfile(userId);
+    // Get current user profile - use passed function to avoid circular dependency
+    if (!getUserProfileFn) {
+      throw new Error('getUserProfile function not provided');
+    }
+    const userProfile = await getUserProfileFn(userId);
     if (!userProfile) {
       throw new Error('User profile not found');
     }
@@ -235,7 +238,7 @@ export const processChoreCompletion = async (
     
     // Calculate level progression
     const oldLevel = userProfile.level || 1;
-    const { level: newLevel, xpToNext, title } = calculateLevel(newTotalXP);
+    const { level: newLevel } = calculateLevel(newTotalXP);
     
     // Check for achievements
     const userStats = {
@@ -283,10 +286,15 @@ export const processChoreCompletion = async (
 export const applyCompletionRewards = async (
   userId: string,
   reward: CompletionReward,
-  currentStreak: number
+  _currentStreak: number,
+  getUserProfileFn?: (userId: string) => Promise<User | null>,
+  updateUserProfileFn?: (userId: string, updates: Partial<User>) => Promise<boolean>
 ): Promise<boolean> => {
   try {
-    const userProfile = await getUserProfile(userId);
+    if (!getUserProfileFn || !updateUserProfileFn) {
+      throw new Error('Required functions not provided');
+    }
+    const userProfile = await getUserProfileFn(userId);
     if (!userProfile) return false;
     
     // Calculate new XP structure
@@ -313,7 +321,7 @@ export const applyCompletionRewards = async (
       updatedAt: new Date()
     };
     
-    return await createOrUpdateUserProfile(userId, updates);
+    return await updateUserProfileFn(userId, updates);
   } catch (error) {
     console.error('Error applying completion rewards:', error);
     return false;

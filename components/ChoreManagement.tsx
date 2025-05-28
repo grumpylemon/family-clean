@@ -1,7 +1,8 @@
 import { useFamily } from '@/contexts/FamilyContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
-import { createChore, deleteChore, getChores, updateChore } from '@/services/firestore';
-import { Chore, ChoreDifficulty, ChoreType } from '@/types';
+import { createChore, deleteChore, getChores, updateChore, createRoomChore } from '@/services/firestore';
+import { getFamilyRooms, getRoomTypeDisplayName, getRoomTypeEmoji } from '@/services/roomService';
+import { Chore, ChoreDifficulty, ChoreType, Room, RoomType } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
@@ -59,10 +60,16 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequencyDays, setFrequencyDays] = useState('7');
   const [cooldownHours, setCooldownHours] = useState('24');
+  
+  // Room-related state
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [selectedRoomId, setSelectedRoomId] = useState('');
+  const [roomFilter, setRoomFilter] = useState<string>('all');
 
   useEffect(() => {
     if (visible && family) {
       loadChores();
+      loadRooms();
     }
   }, [visible, family]);
 
@@ -81,6 +88,18 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
     }
   };
 
+  const loadRooms = async () => {
+    if (!family) return;
+    
+    try {
+      const familyRooms = await getFamilyRooms(family.id!);
+      setRooms(familyRooms);
+    } catch (error) {
+      console.error('Error loading rooms:', error);
+      // Don't show error toast for rooms as it's not critical
+    }
+  };
+
   const resetForm = () => {
     setTitle('');
     setDescription('');
@@ -92,6 +111,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
     setIsRecurring(false);
     setFrequencyDays('7');
     setCooldownHours('24');
+    setSelectedRoomId('');
     setEditingChore(null);
     setShowForm(false);
     resetValidation();
@@ -134,11 +154,31 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
         } : undefined
       };
 
+      // Add room information if room type is selected and a room is chosen
+      if (choreType === 'room' && selectedRoomId) {
+        const selectedRoom = rooms.find(room => room.id === selectedRoomId);
+        if (selectedRoom) {
+          choreData.roomId = selectedRoom.id;
+          choreData.roomName = selectedRoom.name;
+          choreData.roomType = selectedRoom.type;
+        }
+      }
+
       if (editingChore) {
         await updateChore(editingChore.id!, choreData);
         Toast.success('Chore updated successfully');
       } else {
-        await createChore(choreData);
+        // Use room-specific creation if it's a room chore
+        if (choreType === 'room' && selectedRoomId) {
+          const selectedRoom = rooms.find(room => room.id === selectedRoomId);
+          if (selectedRoom) {
+            await createRoomChore(choreData, selectedRoom.id!, selectedRoom.name, selectedRoom.type);
+          } else {
+            await createChore(choreData);
+          }
+        } else {
+          await createChore(choreData);
+        }
         Toast.success('Chore created successfully');
       }
 
@@ -192,6 +232,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
     setIsRecurring(chore.recurring?.enabled || false);
     setFrequencyDays(chore.recurring?.frequencyDays?.toString() || '7');
     setCooldownHours(chore.cooldownHours?.toString() || '24');
+    setSelectedRoomId(chore.roomId || '');
     setShowForm(true);
   };
 
@@ -201,6 +242,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
       case 'family': return '#10b981';
       case 'pet': return '#f59e0b';
       case 'shared': return '#ef4444';
+      case 'room': return '#8b5cf6';
       default: return '#666';
     }
   };
@@ -342,6 +384,49 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                   ))}
                 </View>
               </View>
+
+              {/* Room Selection - only show for room chores */}
+              {choreType === 'room' && (
+                <View style={styles.inputGroup}>
+                  <ThemedText style={styles.label}>Select Room</ThemedText>
+                  {rooms.length > 0 ? (
+                    <View style={styles.roomSelect}>
+                      <TouchableOpacity
+                        style={[styles.roomOption, !selectedRoomId && styles.roomOptionSelected]}
+                        onPress={() => setSelectedRoomId('')}
+                      >
+                        <ThemedText style={styles.roomOptionText}>No Room</ThemedText>
+                      </TouchableOpacity>
+                      {rooms.map((room) => (
+                        <TouchableOpacity
+                          key={room.id}
+                          style={[
+                            styles.roomOption,
+                            selectedRoomId === room.id && styles.roomOptionSelected
+                          ]}
+                          onPress={() => setSelectedRoomId(room.id!)}
+                        >
+                          <ThemedText style={styles.roomEmoji}>
+                            {getRoomTypeEmoji(room.type)}
+                          </ThemedText>
+                          <View style={styles.roomOptionContent}>
+                            <ThemedText style={styles.roomOptionText}>{room.name}</ThemedText>
+                            <ThemedText style={styles.roomOptionSubtext}>
+                              {getRoomTypeDisplayName(room.type)}
+                            </ThemedText>
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  ) : (
+                    <View style={styles.noRoomsMessage}>
+                      <ThemedText style={styles.noRoomsText}>
+                        No rooms available. Create rooms first to assign room-based chores.
+                      </ThemedText>
+                    </View>
+                  )}
+                </View>
+              )}
 
               <ValidatedInput
                 label="Points"
@@ -861,6 +946,53 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: 'white',
     fontWeight: '600',
+  },
+  roomSelect: {
+    gap: 8,
+    maxHeight: 200,
+  },
+  roomOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#f9a8d4',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  roomOptionSelected: {
+    backgroundColor: '#be185d',
+    borderColor: '#831843',
+  },
+  roomEmoji: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  roomOptionContent: {
+    flex: 1,
+  },
+  roomOptionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#831843',
+  },
+  roomOptionSubtext: {
+    fontSize: 14,
+    color: '#9f1239',
+    marginTop: 2,
+  },
+  noRoomsMessage: {
+    padding: 16,
+    backgroundColor: '#fef3c7',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+  },
+  noRoomsText: {
+    fontSize: 14,
+    color: '#92400e',
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   testDataSection: {
     marginHorizontal: 16,

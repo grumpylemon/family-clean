@@ -45,7 +45,7 @@ This is a React Native/Expo app called "Family Clean" - a family chore managemen
 
    - Add helpfull code comments into all the code you generate
    - before every push to git, update the git version number on the Dashboard page
-
+   - always refrence the [text](docs/development_task_list.md) to see the full list of task and integration. Make updates as you complete tasks and add new features.
 
 ### Firebase Integration
 The app uses a hybrid Firebase implementation to support both web and mobile platforms:

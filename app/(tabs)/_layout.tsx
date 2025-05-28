@@ -49,17 +49,68 @@ export default function TabLayout() {
         options={{
           title: 'Chores',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="checkmark-circle" size={24} color={color} />
+            <Ionicons name="list" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="pets"
+        options={{
+          title: 'Pets',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="heart" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="rewards"
+        options={{
+          title: 'Rewards',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="gift" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="achievements"
+        options={{
+          title: 'Achievements',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="trophy" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="leaders"
+        options={{
+          title: 'Leaders',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="podium" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title: 'Admin',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="shield" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Family',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={24} color={color} />
-          ),
+          href: null, // Hide this tab - family management moved to admin
         }}
       />
       <Tabs.Screen
