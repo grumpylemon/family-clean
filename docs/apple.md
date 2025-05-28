@@ -25,3 +25,21 @@
 - Bundle ID format: reverse domain notation (com.companyname.appname)
 - SKU: internal tracking ID, not visible to users
 - Bundle ID cannot be changed after app creation
+
+## Quick Reference
+- Team ID: 87699862N5
+- Bundle ID: com.grumpylemon.familyclean
+- App Store Connect ID: 6746467670
+- SKU: family-clean-001
+
+## EAS Build Commands
+```bash
+# Configure credentials
+eas credentials
+
+# Build for TestFlight
+eas build --platform ios --profile production
+
+# Submit to TestFlight
+eas submit --platform ios --latest
+```

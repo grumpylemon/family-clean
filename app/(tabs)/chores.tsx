@@ -3,7 +3,6 @@ import { useFamily } from '@/contexts/FamilyContext';
 import { completeChore, getChores } from '@/services/firestore';
 import { Chore, ChoreStatus } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
-import LottieView from 'lottie-react-native';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,7 +16,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import confettiAnimation from '../../assets/animations/confetti.json';
 
 type FilterType = 'all' | 'mine' | 'available' | 'completed';
 type MainTabType = 'active' | 'history';
@@ -30,7 +28,6 @@ export default function ChoresScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterType>('mine');
   const [mainTab, setMainTab] = useState<MainTabType>('active');
-  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     if (family) {
@@ -69,8 +66,6 @@ export default function ChoresScreen() {
               : chore
           )
         );
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 2000);
         const message = 'Chore completed! Points and streak updated.';
         if (Platform.OS === 'android') {
           ToastAndroid.show(message, ToastAndroid.SHORT);
@@ -144,15 +139,6 @@ export default function ChoresScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Confetti Animation */}
-      {showConfetti && (
-        <LottieView
-          source={confettiAnimation}
-          autoPlay
-          loop={false}
-          style={styles.confetti}
-        />
-      )}
       {/* Main Tab Bar */}
       <View style={styles.mainTabBar}>
         <TouchableOpacity
@@ -624,15 +610,5 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     backgroundColor: '#3b82f6',
-  },
-  confetti: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: '100%',
-    height: '100%',
-    zIndex: 100,
   },
 });
