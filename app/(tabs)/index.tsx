@@ -7,6 +7,7 @@ import RewardManagement from '@/components/RewardManagement';
 import RewardStore from '@/components/RewardStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
+import { useAccessControl } from '@/hooks/useAccessControl';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, TouchableOpacity, View, ActivityIndicator, Text, Image } from 'react-native';
@@ -18,6 +19,7 @@ console.log("Home Screen version: v5");
 export default function HomeScreen() {
   const { user, loading: authLoading, logout } = useAuth();
   const { family, loading: familyLoading, error, isAdmin, currentMember, refreshFamily } = useFamily();
+  const { canManageFamily, canManageMembers, canManageChores, canManageRewards, getAccessLevelDisplay } = useAccessControl();
   const [showManageMembers, setShowManageMembers] = useState(false);
   const [showChoreManagement, setShowChoreManagement] = useState(false);
   const [showFamilySettings, setShowFamilySettings] = useState(false);
@@ -190,7 +192,7 @@ export default function HomeScreen() {
             ))}
           </View>
           
-          {!isAdmin && (
+          {!canManageFamily && (
             <TouchableOpacity 
               style={styles.settingsButton}
               onPress={() => setShowFamilySettings(true)}
@@ -202,45 +204,53 @@ export default function HomeScreen() {
         </View>
         
         {/* Admin Actions */}
-        {isAdmin && (
+        {(canManageFamily || canManageMembers || canManageChores || canManageRewards) && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="shield-outline" size={24} color="#be185d" />
-              <Text style={styles.sectionTitle}>Admin Tools</Text>
+              <Text style={styles.sectionTitle}>Admin Tools ({getAccessLevelDisplay()})</Text>
             </View>
             
             <View style={styles.adminGrid}>
-              <TouchableOpacity 
-                style={styles.adminCard}
-                onPress={() => setShowManageMembers(true)}
-              >
-                <Ionicons name="people" size={24} color="#be185d" />
-                <Text style={styles.adminCardText}>Manage Members</Text>
-              </TouchableOpacity>
+              {canManageMembers && (
+                <TouchableOpacity 
+                  style={styles.adminCard}
+                  onPress={() => setShowManageMembers(true)}
+                >
+                  <Ionicons name="people" size={24} color="#be185d" />
+                  <Text style={styles.adminCardText}>Manage Members</Text>
+                </TouchableOpacity>
+              )}
               
-              <TouchableOpacity 
-                style={styles.adminCard}
-                onPress={() => setShowChoreManagement(true)}
-              >
-                <Ionicons name="list" size={24} color="#be185d" />
-                <Text style={styles.adminCardText}>Manage Chores</Text>
-              </TouchableOpacity>
+              {canManageChores && (
+                <TouchableOpacity 
+                  style={styles.adminCard}
+                  onPress={() => setShowChoreManagement(true)}
+                >
+                  <Ionicons name="list" size={24} color="#be185d" />
+                  <Text style={styles.adminCardText}>Manage Chores</Text>
+                </TouchableOpacity>
+              )}
               
-              <TouchableOpacity 
-                style={styles.adminCard}
-                onPress={() => setShowRewardManagement(true)}
-              >
-                <Ionicons name="gift" size={24} color="#be185d" />
-                <Text style={styles.adminCardText}>Manage Rewards</Text>
-              </TouchableOpacity>
+              {canManageRewards && (
+                <TouchableOpacity 
+                  style={styles.adminCard}
+                  onPress={() => setShowRewardManagement(true)}
+                >
+                  <Ionicons name="gift" size={24} color="#be185d" />
+                  <Text style={styles.adminCardText}>Manage Rewards</Text>
+                </TouchableOpacity>
+              )}
               
-              <TouchableOpacity 
-                style={styles.adminCard}
-                onPress={() => setShowFamilySettings(true)}
-              >
-                <Ionicons name="settings" size={24} color="#be185d" />
-                <Text style={styles.adminCardText}>Family Settings</Text>
-              </TouchableOpacity>
+              {canManageFamily && (
+                <TouchableOpacity 
+                  style={styles.adminCard}
+                  onPress={() => setShowFamilySettings(true)}
+                >
+                  <Ionicons name="settings" size={24} color="#be185d" />
+                  <Text style={styles.adminCardText}>Family Settings</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         )}

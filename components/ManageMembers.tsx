@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
+import { useAccessControl } from '@/hooks/useAccessControl';
 import { FamilyMember, FamilyRole } from '@/types';
 import React, { useState } from 'react';
 import {
@@ -27,6 +28,7 @@ interface ManageMembersProps {
 export function ManageMembers({ visible, onClose }: ManageMembersProps) {
   const { user } = useAuth();
   const { family, updateMemberRole, removeMember, updateMemberName, updateFamilyMember, isAdmin: isCurrentUserAdmin } = useFamily();
+  const { canManageMembers, canPromoteDemoteMembers, getAccessLevelDisplay, getPermissionErrorMessage } = useAccessControl();
   const [loading, setLoading] = useState(false);
   const [editingMember, setEditingMember] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string | null>(null);
@@ -46,6 +48,11 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
   };
 
   const handleRoleChange = async (memberId: string, newRole: FamilyRole) => {
+    if (!canManageMembers) {
+      showErrorMessage(getPermissionErrorMessage('admin'));
+      return;
+    }
+
     setLoading(true);
     try {
       // For family management, we keep the user role as 'member' and only change familyRole
@@ -65,6 +72,11 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
   };
 
   const handleNameChange = async (memberId: string, newName: string) => {
+    if (!canManageMembers) {
+      showErrorMessage(getPermissionErrorMessage('admin'));
+      return;
+    }
+
     if (!newName.trim()) {
       showErrorMessage('Name cannot be empty');
       return;
@@ -206,6 +218,15 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
           </TouchableOpacity>
         </View>
 
+        {/* Access Control Notice */}
+        {!canManageMembers && (
+          <View style={styles.accessNotice}>
+            <ThemedText style={styles.accessNoticeText}>
+              👀 View Only - Member management requires Admin access
+            </ThemedText>
+          </View>
+        )}
+
         {/* Search and Filter Controls */}
         <View style={styles.searchContainer}>
           <View style={styles.searchInputWrapper}>
@@ -332,6 +353,16 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                 </View>
 
                 <View style={styles.memberDetails}>
+                  <ThemedText lightColor="#6b7280" style={styles.detailLabel}>Access:</ThemedText>
+                  <ThemedText 
+                    lightColor={member.role === 'admin' ? '#be185d' : '#374151'} 
+                    style={[styles.detailValue, member.role === 'admin' && styles.accessAdminText]}
+                  >
+                    {member.role === 'admin' ? 'Admin' : 'User'}
+                  </ThemedText>
+                </View>
+
+                <View style={styles.memberDetails}>
                   <ThemedText lightColor="#6b7280" style={styles.detailLabel}>Points:</ThemedText>
                   <ThemedText lightColor="#374151" style={styles.detailValue}>
                     {member.points.current} (Lifetime: {member.points.lifetime})
@@ -346,8 +377,8 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                 </View>
 
                 {/* Show member management actions */}
-                {!isAdmin ? (
-                  // Regular member actions for non-original-admins
+                {!isAdmin && canManageMembers ? (
+                  // Regular member actions for non-original-admins (admin users only)
                   <View style={styles.actions}>
                     {editingName === member.uid ? (
                     <>
@@ -447,7 +478,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                 )}
 
                 {/* Admin Promotion/Demotion - Show for current admin to manage ALL members */}
-                {isCurrentUserAdmin && member.uid !== user?.uid && (
+                {canPromoteDemoteMembers && member.uid !== user?.uid && (
                 <View style={styles.actions}>
                   {/* Debug info - console.log happens as side effect */}
                   {(() => {
@@ -833,5 +864,23 @@ const styles = StyleSheet.create({
   },
   filterButtonTextActive: {
     color: '#be185d',
+  },
+  accessAdminText: {
+    fontWeight: '600',
+  },
+  accessNotice: {
+    backgroundColor: '#fef3cd',
+    borderColor: '#f59e0b',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    margin: 16,
+    marginBottom: 0,
+  },
+  accessNoticeText: {
+    color: '#92400e',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

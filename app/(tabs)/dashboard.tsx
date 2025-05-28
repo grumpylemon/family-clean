@@ -122,7 +122,7 @@ export default function DashboardScreen() {
     <View style={styles.container}>
       {/* Version Number */}
       <View style={styles.versionContainer}>
-        <Text style={styles.versionText}>v2.02</Text>
+        <Text style={styles.versionText}>v2.02-172aefe</Text>
       </View>
       {/* Header */}
       <View style={styles.header}>
@@ -295,6 +295,11 @@ export default function DashboardScreen() {
           <Text style={styles.familyCodeLabel}>Family Join Code</Text>
           <Text style={styles.familyCode}>{family.joinCode}</Text>
           <Text style={styles.familyCodeHint}>Share this code with family members</Text>
+        </View>
+
+        {/* App Version */}
+        <View style={styles.versionContainer}>
+          <Text style={styles.versionText}>v2.03 • Build 172aefe</Text>
         </View>
       </ScrollView>
 

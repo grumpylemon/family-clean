@@ -1,4 +1,5 @@
 import { useFamily } from '@/contexts/FamilyContext';
+import { useAccessControl } from '@/hooks/useAccessControl';
 import { createChore, deleteChore, getChores, updateChore } from '@/services/firestore';
 import { Chore, ChoreDifficulty, ChoreType } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,7 +28,8 @@ interface ChoreManagementProps {
 }
 
 export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
-  const { family, isAdmin } = useFamily();
+  const { family } = useFamily();
+  const { canManageChores, getPermissionErrorMessage } = useAccessControl();
   const [loading, setLoading] = useState(false);
   const [savingChore, setSavingChore] = useState(false);
   const [deletingChoreId, setDeletingChoreId] = useState<string | null>(null);
@@ -218,7 +220,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
     return lockedUntil > new Date();
   };
 
-  if (!isAdmin) {
+  if (!canManageChores) {
     return (
       <Modal
         visible={visible}
@@ -228,7 +230,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
       >
         <View style={styles.container}>
           <ThemedText style={styles.errorText}>
-            Only family admins can manage chores
+            {getPermissionErrorMessage('admin')}
           </ThemedText>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <ThemedText style={styles.closeButtonText}>Close</ThemedText>

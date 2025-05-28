@@ -44,6 +44,7 @@ This is a React Native/Expo app called "Family Clean" - a family chore managemen
 ## Architecture & Important Patterns
 
    - Add helpfull code comments into all the code you generate
+   - before every push to git, update the git version number on the Dashboard page
 
 
 ### Firebase Integration

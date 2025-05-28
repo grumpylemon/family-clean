@@ -179,6 +179,16 @@ This document contains a comprehensive task list for continued development of th
   - Added proper TypeScript handling for console.log statements in JSX
   - Implemented self-promotion prevention to avoid users promoting themselves
   - Added comprehensive debug logging for troubleshooting admin actions
+- [x] Implement comprehensive access control system (Completed: 2025-05-28)
+  - Created `useAccessControl` hook for centralized permission management
+  - Changed "Guest" access level to "User" for better UX terminology
+  - Added granular permission checks (canManageMembers, canManageChores, etc.)
+  - Implemented consistent access control across all admin features
+  - Added visual access level indicators and permission error messages
+  - Protected all admin-only UI elements and functionality
+  - Enhanced ManageMembers with view-only mode for non-admin users
+  - Updated ChoreManagement and Home screen with proper access control
+  - Ensured admin tools only show for users with appropriate permissions
 - [ ] Implement granular permissions management
   - [ ] Create permissions configuration data model
     - [ ] Define permission categories (chores, members, rewards, settings)
