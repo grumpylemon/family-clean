@@ -1,21 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-  ActivityIndicator,
-  Platform,
-  RefreshControl,
-  Text,
-} from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
-import { getChores, completeChore } from '@/services/firestore';
+import { completeChore, getChores } from '@/services/firestore';
 import { Chore, ChoreStatus } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
+import LottieView from 'lottie-react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  ToastAndroid,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import confettiAnimation from '../../assets/animations/confetti.json';
 
 type FilterType = 'all' | 'mine' | 'available' | 'completed';
+type MainTabType = 'active' | 'history';
 
 export default function ChoresScreen() {
   const { user } = useAuth();
@@ -24,6 +29,8 @@ export default function ChoresScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterType>('mine');
+  const [mainTab, setMainTab] = useState<MainTabType>('active');
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     if (family) {
@@ -45,11 +52,16 @@ export default function ChoresScreen() {
     }
   };
 
+  const isChoreLocked = (chore: Chore) => {
+    if (!chore.lockedUntil) return false;
+    const lockedUntil = new Date(chore.lockedUntil);
+    return lockedUntil > new Date();
+  };
+
   const handleCompleteChore = async (choreId: string) => {
     try {
       const success = await completeChore(choreId);
       if (success) {
-        // Update local state
         setChores(prevChores => 
           prevChores.map(chore => 
             chore.id === choreId 
@@ -57,9 +69,13 @@ export default function ChoresScreen() {
               : chore
           )
         );
-        
-        if (Platform.OS === 'web') {
-          window.alert('Chore completed! Points awarded.');
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 2000);
+        const message = 'Chore completed! Points and streak updated.';
+        if (Platform.OS === 'android') {
+          ToastAndroid.show(message, ToastAndroid.SHORT);
+        } else {
+          Alert.alert('Success', message);
         }
       }
     } catch (error) {
@@ -89,6 +105,9 @@ export default function ChoresScreen() {
     }
   };
 
+  const getUserCompletedChores = () =>
+    chores.filter(c => c.status === 'completed' && c.completedBy === user?.uid);
+
   const getChoreTypeIcon = (type: string) => {
     switch (type) {
       case 'individual': return 'person-outline';
@@ -110,6 +129,11 @@ export default function ChoresScreen() {
 
   const filteredChores = getFilteredChores();
 
+  // Calculate weekly points progress
+  const weeklyPoints = currentMember?.points?.weekly || 0;
+  const weeklyTarget = 100;
+  const weeklyProgress = Math.min(weeklyPoints / weeklyTarget, 1);
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -120,146 +144,234 @@ export default function ChoresScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Chores</Text>
+      {/* Confetti Animation */}
+      {showConfetti && (
+        <LottieView
+          source={confettiAnimation}
+          autoPlay
+          loop={false}
+          style={styles.confetti}
+        />
+      )}
+      {/* Main Tab Bar */}
+      <View style={styles.mainTabBar}>
+        <TouchableOpacity
+          style={[styles.mainTab, mainTab === 'active' && styles.mainTabActive]}
+          onPress={() => setMainTab('active')}
+        >
+          <Text style={[styles.mainTabText, mainTab === 'active' && styles.mainTabTextActive]}>Active Chores</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.mainTab, mainTab === 'history' && styles.mainTabActive]}
+          onPress={() => setMainTab('history')}
+        >
+          <Text style={[styles.mainTabText, mainTab === 'history' && styles.mainTabTextActive]}>Chore History</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Filter Tabs */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterContainer}
-        contentContainerStyle={styles.filterContent}
-      >
-        {[
-          { key: 'mine', label: 'My Chores', count: chores.filter(c => c.assignedTo === user?.uid && c.status === 'open').length },
-          { key: 'available', label: 'Available', count: chores.filter(c => !c.assignedTo && c.status === 'open').length },
-          { key: 'completed', label: 'Completed', count: chores.filter(c => c.status === 'completed').length },
-          { key: 'all', label: 'All', count: chores.length },
-        ].map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.filterTab, filter === tab.key && styles.filterTabActive]}
-            onPress={() => setFilter(tab.key as FilterType)}
-          >
-            <Text style={[styles.filterTabText, filter === tab.key && styles.filterTabTextActive]}>
-              {tab.label}
-            </Text>
-            {tab.count > 0 && (
-              <View style={[styles.filterBadge, filter === tab.key && styles.filterBadgeActive]}>
-                <Text style={[styles.filterBadgeText, filter === tab.key && styles.filterBadgeTextActive]}>
-                  {tab.count}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Chores List */}
-      <ScrollView 
-        style={styles.choresList}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              loadChores();
-            }}
-          />
-        }
-      >
-        {filteredChores.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="checkbox-outline" size={48} color="#9ca3af" />
-            <Text style={styles.emptyText}>No chores found</Text>
+      {mainTab === 'active' ? (
+        <>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Chores</Text>
           </View>
-        ) : (
-          filteredChores.map((chore) => (
-            <View key={chore.id} style={styles.choreCard}>
-              <View style={styles.choreHeader}>
-                <View style={styles.choreTypeIcon}>
-                  <Ionicons 
-                    name={getChoreTypeIcon(chore.type) as any} 
-                    size={20} 
-                    color="#64748b" 
-                  />
-                </View>
-                <View style={styles.choreHeaderInfo}>
-                  <Text style={styles.choreTitle}>{chore.title}</Text>
-                  {chore.description && (
-                    <Text style={styles.choreDescription}>{chore.description}</Text>
-                  )}
-                </View>
-                <View style={styles.chorePointsBadge}>
-                  <Text style={styles.chorePoints}>{chore.points}</Text>
-                  <Text style={styles.chorePointsLabel}>pts</Text>
-                </View>
-              </View>
 
-              <View style={styles.choreDetails}>
-                <View style={styles.choreDetailRow}>
-                  <Ionicons name="calendar-outline" size={16} color="#6b7280" />
-                  <Text style={styles.choreDetailText}>
-                    Due: {new Date(chore.dueDate).toLocaleDateString()}
-                  </Text>
-                </View>
-
-                <View style={styles.choreDetailRow}>
-                  <View 
-                    style={[styles.difficultyDot, { backgroundColor: getDifficultyColor(chore.difficulty) }]} 
-                  />
-                  <Text style={styles.choreDetailText}>
-                    {chore.difficulty.charAt(0).toUpperCase() + chore.difficulty.slice(1)}
-                  </Text>
-                </View>
-
-                {chore.assignedTo && (
-                  <View style={styles.choreDetailRow}>
-                    <Ionicons name="person-outline" size={16} color="#6b7280" />
-                    <Text style={styles.choreDetailText}>
-                      {family?.members.find(m => m.uid === chore.assignedTo)?.name || 'Unknown'}
+          {/* Filter Tabs */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.filterContainer}
+            contentContainerStyle={styles.filterContent}
+          >
+            {[
+              { key: 'mine', label: 'My Chores', count: chores.filter(c => c.assignedTo === user?.uid && c.status === 'open').length },
+              { key: 'available', label: 'Available', count: chores.filter(c => !c.assignedTo && c.status === 'open').length },
+              { key: 'completed', label: 'Completed', count: chores.filter(c => c.status === 'completed').length },
+              { key: 'all', label: 'All', count: chores.length },
+            ].map((tab) => (
+              <TouchableOpacity
+                key={tab.key}
+                style={[styles.filterTab, filter === tab.key && styles.filterTabActive]}
+                onPress={() => setFilter(tab.key as FilterType)}
+              >
+                <Text style={[styles.filterTabText, filter === tab.key && styles.filterTabTextActive]}>
+                  {tab.label}
+                </Text>
+                {tab.count > 0 && (
+                  <View style={[styles.filterBadge, filter === tab.key && styles.filterBadgeActive]}>
+                    <Text style={[styles.filterBadgeText, filter === tab.key && styles.filterBadgeTextActive]}>
+                      {tab.count}
                     </Text>
                   </View>
                 )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
-                {chore.status === 'completed' && chore.completedAt && (
-                  <View style={styles.choreDetailRow}>
-                    <Ionicons name="checkmark-circle" size={16} color="#10b981" />
-                    <Text style={[styles.choreDetailText, { color: '#10b981' }]}>
-                      Completed {new Date(chore.completedAt).toLocaleDateString()}
-                    </Text>
-                  </View>
-                )}
+          {/* Chores List */}
+          <ScrollView 
+            style={styles.choresList}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() => {
+                  setRefreshing(true);
+                  loadChores();
+                }}
+              />
+            }
+          >
+            {filteredChores.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="checkbox-outline" size={48} color="#9ca3af" />
+                <Text style={styles.emptyText}>No chores found</Text>
               </View>
+            ) : (
+              filteredChores.map((chore) => {
+                const locked = isChoreLocked(chore);
+                return (
+                  <View key={chore.id} style={styles.choreCard}>
+                    <View style={styles.choreHeader}>
+                      <View style={styles.choreTypeIcon}>
+                        <Ionicons 
+                          name={getChoreTypeIcon(chore.type) as any} 
+                          size={20} 
+                          color="#64748b" 
+                        />
+                      </View>
+                      <View style={styles.choreHeaderInfo}>
+                        <Text style={styles.choreTitle}>{chore.title}</Text>
+                        {chore.description && (
+                          <Text style={styles.choreDescription}>{chore.description}</Text>
+                        )}
+                      </View>
+                      <View style={styles.chorePointsBadge}>
+                        <Text style={styles.chorePoints}>{chore.points}</Text>
+                        <Text style={styles.chorePointsLabel}>pts</Text>
+                      </View>
+                    </View>
 
-              {/* Action Buttons */}
-              {chore.status === 'open' && (
-                <View style={styles.choreActions}>
-                  {chore.assignedTo === user?.uid ? (
-                    <TouchableOpacity
-                      style={[styles.choreActionButton, styles.completeButton]}
-                      onPress={() => handleCompleteChore(chore.id!)}
-                    >
-                      <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                      <Text style={styles.completeButtonText}>Complete</Text>
-                    </TouchableOpacity>
-                  ) : !chore.assignedTo ? (
-                    <TouchableOpacity
-                      style={[styles.choreActionButton, styles.claimButton]}
-                      onPress={() => handleClaimChore(chore.id!)}
-                    >
-                      <Ionicons name="hand-right" size={20} color="#3b82f6" />
-                      <Text style={styles.claimButtonText}>Claim</Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-              )}
+                    <View style={styles.choreDetails}>
+                      <View style={styles.choreDetailRow}>
+                        <Ionicons name="calendar-outline" size={16} color="#6b7280" />
+                        <Text style={styles.choreDetailText}>
+                          Due: {new Date(chore.dueDate).toLocaleDateString()}
+                        </Text>
+                      </View>
+
+                      <View style={styles.choreDetailRow}>
+                        <View 
+                          style={[styles.difficultyDot, { backgroundColor: getDifficultyColor(chore.difficulty) }]} 
+                        />
+                        <Text style={styles.choreDetailText}>
+                          {chore.difficulty.charAt(0).toUpperCase() + chore.difficulty.slice(1)}
+                        </Text>
+                      </View>
+
+                      {chore.assignedTo && (
+                        <View style={styles.choreDetailRow}>
+                          <Ionicons name="person-outline" size={16} color="#6b7280" />
+                          <Text style={styles.choreDetailText}>
+                            {family?.members.find(m => m.uid === chore.assignedTo)?.name || 'Unknown'}
+                          </Text>
+                        </View>
+                      )}
+
+                      {chore.status === 'completed' && chore.completedAt && (
+                        <View style={styles.choreDetailRow}>
+                          <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+                          <Text style={[styles.choreDetailText, { color: '#10b981' }]}>
+                            Completed {new Date(chore.completedAt).toLocaleDateString()}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {locked && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                        <Ionicons name="lock-closed" size={16} color="#ef4444" />
+                        <Text style={{ color: '#ef4444', marginLeft: 4 }}>
+                          Locked until {new Date(chore.lockedUntil!).toLocaleString()}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() =>
+                            Alert.alert(
+                              'Chore Locked',
+                              'This chore is in cooldown and cannot be completed until the unlock time. Cooldown ensures chores are fairly distributed and prevents rapid repeats.'
+                            )
+                          }
+                          style={{ marginLeft: 6 }}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Ionicons name="information-circle-outline" size={18} color="#3b82f6" />
+                        </TouchableOpacity>
+                      </View>
+                    )}
+
+                    {/* Action Buttons */}
+                    {chore.status === 'open' && !locked && (
+                      <View style={styles.choreActions}>
+                        {chore.assignedTo === user?.uid ? (
+                          <TouchableOpacity
+                            style={[styles.choreActionButton, styles.completeButton]}
+                            onPress={() => handleCompleteChore(chore.id!)}
+                          >
+                            <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                            <Text style={styles.completeButtonText}>Complete</Text>
+                          </TouchableOpacity>
+                        ) : !chore.assignedTo ? (
+                          <TouchableOpacity
+                            style={[styles.choreActionButton, styles.claimButton]}
+                            onPress={() => handleClaimChore(chore.id!)}
+                          >
+                            <Ionicons name="hand-right" size={20} color="#3b82f6" />
+                            <Text style={styles.claimButtonText}>Claim</Text>
+                          </TouchableOpacity>
+                        ) : null}
+                      </View>
+                    )}
+                  </View>
+                );
+              })
+            )}
+          </ScrollView>
+        </>
+      ) : (
+        <ScrollView style={styles.choresList}>
+          {getUserCompletedChores().length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="checkmark-done-outline" size={48} color="#9ca3af" />
+              <Text style={styles.emptyText}>No completed chores yet</Text>
             </View>
-          ))
-        )}
-      </ScrollView>
+          ) : (
+            getUserCompletedChores()
+              .sort((a, b) => (b.completedAt && a.completedAt ? new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime() : 0))
+              .map((chore) => (
+                <View key={chore.id} style={styles.choreCard}>
+                  <View style={styles.choreHeader}>
+                    <Ionicons name={getChoreTypeIcon(chore.type) as any} size={20} color="#64748b" style={{ marginRight: 8 }} />
+                    <View style={styles.choreHeaderInfo}>
+                      <Text style={styles.choreTitle}>{chore.title}</Text>
+                      <Text style={styles.choreDescription}>{chore.description}</Text>
+                    </View>
+                    <View style={styles.chorePointsBadge}>
+                      <Text style={styles.chorePoints}>{chore.points}</Text>
+                      <Text style={styles.chorePointsLabel}>pts</Text>
+                    </View>
+                  </View>
+                  <View style={styles.choreDetails}>
+                    <View style={styles.choreDetailRow}>
+                      <Ionicons name="calendar-outline" size={16} color="#6b7280" />
+                      <Text style={styles.choreDetailText}>
+                        Completed: {chore.completedAt ? new Date(chore.completedAt).toLocaleString() : '—'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -463,5 +575,64 @@ const styles = StyleSheet.create({
     color: '#3b82f6',
     fontWeight: '600',
     fontSize: 16,
+  },
+  mainTabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  mainTab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  mainTabActive: {
+    borderBottomColor: '#3b82f6',
+    backgroundColor: '#f8fafc',
+  },
+  mainTabText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  mainTabTextActive: {
+    color: '#3b82f6',
+  },
+  progressBarContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 8,
+    backgroundColor: '#f8fafc',
+  },
+  progressBarLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 6,
+  },
+  progressBarBackground: {
+    width: '100%',
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#e5e7eb',
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#3b82f6',
+  },
+  confetti: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 100,
   },
 });

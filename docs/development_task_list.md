@@ -1,4 +1,4 @@
-# Family Clean App - Development Task List
+ Family Clean App - Development Task List
 
 ## Overview
 This document contains a comprehensive task list for continued development of the Family Clean app, based on the Product Requirements Document (PRD). Tasks are organized by priority and feature area, with checkboxes to track completion.
@@ -86,6 +86,11 @@ This document contains a comprehensive task list for continued development of th
   - Removed members can rejoin using family code
   - Admin cannot be removed from family
   - Fixed Firebase v9 syntax issues (collection.doc → doc(collection))
+- [ ] UI/UX Enhancements:
+  - [ ] Show member profile avatars in member list (use photoURL)
+  - [ ] Add activity indicator (badge/dot) for active/excluded members
+  - [ ] Use confirmation toasts/snackbars for member actions
+  - [ ] Add search/filter bar to member management UI
 
 #### Chore Management System
 - [x] Create chore data model in Firestore (Completed: 2025-01-27)
@@ -107,8 +112,38 @@ This document contains a comprehensive task list for continued development of th
 - [x] Add chore assignment logic (Completed: 2025-01-27)
   - Assign to specific members or leave unassigned
   - Visual member selection in creation form
-- [ ] Implement rotation system for family chores
+- [x] Implement rotation system for family chores (Completed by Agent on 2024-06-08)
 - [ ] Build chore completion flow
+  - [ ] Update backend logic to handle:
+    - [ ] Points/XP/money gain on completion
+    - [ ] Streak updates
+    - [ ] Achievement checks
+    - [ ] Chore cooldown (lockedUntil)
+    - [ ] Chore reassignment/rotation (for family/shared chores)
+  - [ ] Update UI to:
+    - [x] Allow users to mark chores as complete
+    - [x] Show feedback for successful completion
+    - [x] Display cooldown/locked state
+  - [ ] Ensure cooldown and reassignment logic is robust
+  - [ ] Integrate with rotation system for family chores
+  - [ ] Implement robust cooldown logic:
+    - [ ] Ensure chores cannot be completed before lockedUntil expires
+    - [ ] Display accurate lockedUntil in all relevant UIs
+  - [ ] Implement automatic reassignment/rotation after cooldown:
+    - [ ] On cooldown expiry, reassign family/shared chores to the next eligible member in rotation
+    - [ ] Skip excluded/inactive members during rotation
+    - [ ] Update nextFamilyChoreAssigneeIndex in Family model
+  - [ ] Integrate with member exclusion logic:
+    - [ ] Remove excluded members from rotation order
+    - [ ] Re-include members when they become active again
+  - [ ] Ensure Firestore updates:
+    - [ ] All changes to rotation, assignment, and cooldown are persisted
+    - [ ] Data model remains consistent after each operation
+  - [ ] Add tests for edge cases:
+    - [ ] All members excluded
+    - [ ] Member rejoins during rotation
+    - [ ] Multiple chores in rotation
+  - [ ] Add unit/integration tests for completion logic
 - [x] Add cooldown mechanism (Completed: 2025-01-27)
   - Cooldown hours configurable per chore
   - Foundation in data model for implementation
@@ -116,6 +151,11 @@ This document contains a comprehensive task list for continued development of th
   - Toggle for recurring chores
   - Configurable frequency in days
   - Data model support for recurring logic
+- [ ] UI/UX Enhancements:
+  - [ ] Add chore history view for users (completed chores, dates, points)
+  - [ ] Show progress bar for weekly/lifetime points or streaks
+  - [ ] Add animated feedback (e.g., confetti) on chore completion
+  - [ ] Show tooltip/info icon for locked chores explaining unlock time
 
 #### Pet Management
 - [ ] Create pet data model
@@ -340,6 +380,13 @@ This document contains a comprehensive task list for continued development of th
 - [ ] At least 3 gamification features implemented
 - [ ] No critical bugs in production
 - [ ] Documentation complete and up-to-date
+
+---
+
+## General App Enhancements
+- [ ] Add dark mode support (toggle or auto-detect)
+- [ ] Improve accessibility (contrast, labels, text size)
+- [ ] Add user settings panel (update name, avatar, notification preferences)
 
 ---
 

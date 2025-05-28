@@ -71,11 +71,12 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
 
 3. **Navigation Structure**:
    - Uses Expo Router file-based routing
-   - Main layout in `app/_layout.tsx` 
-   - Tab navigation in `app/(tabs)/` with modern UI
-   - Login screen at `app/login.tsx` with gradient design
-   - Dashboard at `app/(tabs)/dashboard.tsx` - main hub with stats and quick actions
-   - Chores list at `app/(tabs)/chores.tsx` - dedicated chore management interface
+   - Main layout in `app/_layout.tsx` with AuthProvider and FamilyProvider
+   - Tab navigation in `app/(tabs)/` with modern Apple-inspired styling
+   - Login screen at `app/login.tsx` with clean, elegant design
+   - Dashboard at `app/(tabs)/dashboard.tsx` - main hub with card-based stats and quick actions
+   - Chores screen at `app/(tabs)/chores.tsx` - comprehensive chore management with filtering
+   - Family screen at `app/(tabs)/index.tsx` - family info and member management
 
 4. **Error Handling**:
    - Comprehensive error handling in all Firebase operations
@@ -106,28 +107,46 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
 - `firebase.json` - Firebase Hosting configuration
 - `.firebaserc` - Firebase project configuration (family-fun-app)
 
-## Modern UI Design Patterns
+## Apple-Inspired Design System (Updated: May 27, 2025)
 
-The app uses a modern, minimalist design approach:
+The app features a complete Apple-inspired design system implemented across all screens:
 
-1. **Color Scheme**:
-   - Primary: `#007AFF` (iOS blue)
-   - Success: `#34C759` (green)
-   - Warning: `#FF9500` (orange)
-   - Danger: `#FF3B30` (red)
-   - Background: `#F2F2F7` (light gray)
+1. **Color Palette**:
+   - Background: `#f8fafc` (Light gray)
+   - Cards/Surfaces: `#ffffff` (Pure white)
+   - Primary Text: `#1f2937` (Dark gray)
+   - Secondary Text: `#6b7280` (Medium gray)
+   - Accent/Interactive: `#3b82f6` (Refined blue)
+   - Success: `#10b981` (Modern green)
+   - Warning: `#f59e0b` (Amber)
+   - Error: `#ef4444` (Red)
 
-2. **Component Styling**:
-   - Card-based layouts with subtle shadows
-   - Rounded corners (12px radius)
-   - Consistent padding and spacing
-   - Responsive design for tablets
-   - Platform-specific styling (iOS vs Web)
+2. **Typography Hierarchy**:
+   - Headers: 28px, weight 700 (bold)
+   - Section Titles: 20-22px, weight 700
+   - Body Text: 16px, weight 600
+   - Secondary Text: 14px, weight 500-600
+   - Labels: 12-14px, weight 600
 
-3. **Navigation**:
-   - Clean tab bar with modern icons (Ionicons)
-   - Gradient login screen with LinearGradient
-   - Modal overlays for forms and settings
+3. **Component Design**:
+   - **Border Radius**: 16px for cards, 12px for buttons (modern rounded)
+   - **Shadows**: Subtle with 0.04-0.05 opacity for depth without harshness
+   - **Spacing**: 20-24px padding for cards, consistent gaps
+   - **Cards**: White backgrounds with light borders (#f1f5f9)
+   - **Buttons**: Refined styling with proper visual states
+
+4. **Navigation & Layout**:
+   - Clean white headers with refined typography
+   - Modern tab bar with Ionicons and proper active states
+   - Card-based layouts throughout for better organization
+   - Consistent visual hierarchy and spacing
+
+5. **Key Design Principles**:
+   - **Native Components**: Uses React Native Text/View (not themed components)
+   - **Consistent Styling**: Same color palette and patterns across all screens
+   - **Apple Aesthetics**: Clean, minimal, and elegant design language
+   - **Accessibility**: High contrast ratios and readable font sizes
+   - **Platform Optimization**: Works beautifully on web, iOS, and Android
 
 ## Development Notes
 

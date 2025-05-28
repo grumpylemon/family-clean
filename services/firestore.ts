@@ -1,28 +1,22 @@
 import { auth, isMockImplementation, safeCollection } from '@/config/firebase';
-import { 
-  addDoc, 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  getFirestore, 
-  query, 
-  setDoc, 
-  updateDoc,
-  where,
-  arrayUnion,
-  arrayRemove 
+import {
+  Chore,
+  Family,
+  FamilyMember,
+  User
+} from '@/types';
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  query,
+  setDoc,
+  where
 } from 'firebase/firestore';
 import { Platform } from 'react-native';
-import { 
-  Chore, 
-  Family, 
-  FamilyMember, 
-  FamilySettings, 
-  User,
-  UserRole,
-  FamilyRole 
-} from '@/types';
 
 // Version to confirm updates (v10)
 console.log("Firestore service version: v10");
@@ -383,26 +377,146 @@ export const completeChore = async (choreId: string) => {
   if (shouldReturnMockImmediately()) {
     return true;
   }
-  
+
   try {
     const currentUser = auth.currentUser;
     if (!currentUser) throw new Error('User not authenticated');
-    
+
     // For mock implementation, we would update the UI state directly
     if (isMockImplementation()) {
       console.log(`Mock complete chore: ${choreId}`);
       return true;
     }
-    
+
+    // Fetch the chore
+    const choreDoc = await getDoc(doc(getChoresCollection(), choreId));
+    if (!choreDoc.exists()) throw new Error('Chore not found');
+    const chore = { id: choreDoc.id, ...choreDoc.data() } as Chore;
+
+    // Enforce cooldown: prevent completion if lockedUntil is in the future
+    if (chore.lockedUntil) {
+      const lockedUntil = new Date(chore.lockedUntil);
+      if (lockedUntil > new Date()) {
+        throw new Error('Chore is currently locked and cannot be completed yet.');
+      }
+    }
+
+    // Fetch the user profile
+    const userProfile = await getUserProfile(currentUser.uid);
+    if (!userProfile) throw new Error('User profile not found');
+
+    // Fetch the family
+    const family = await getFamily(chore.familyId);
+    if (!family) throw new Error('Family not found');
+
+    // 1. Calculate points/XP/money gain
+    let pointsEarned = chore.points;
+    let xpEarned = 0;
+    switch (chore.difficulty) {
+      case 'easy': xpEarned = 5; break;
+      case 'medium': xpEarned = 10; break;
+      case 'hard': xpEarned = 15; break;
+      default: xpEarned = 5;
+    }
+    // TODO: Add money logic if monetary system is enabled
+
+    // 2. Update streaks (simple: +1 for each day with a completed chore)
+    const today = new Date();
+    let streak = userProfile.streak || { current: 0, longest: 0 };
+    const lastCompleted = streak.lastCompletedDate ? new Date(streak.lastCompletedDate) : null;
+    const isConsecutive = lastCompleted &&
+      today.getFullYear() === lastCompleted.getFullYear() &&
+      today.getMonth() === lastCompleted.getMonth() &&
+      today.getDate() === lastCompleted.getDate() + 1;
+    if (isConsecutive) {
+      streak.current += 1;
+    } else {
+      streak.current = 1;
+    }
+    streak.longest = Math.max(streak.longest, streak.current);
+    streak.lastCompletedDate = today.toISOString();
+
+    // 3. Update user points and XP
+    const updatedPoints = {
+      current: (userProfile.points?.current || 0) + pointsEarned,
+      lifetime: (userProfile.points?.lifetime || 0) + pointsEarned,
+      weekly: (userProfile.points?.weekly || 0) + pointsEarned,
+    };
+    // TODO: Add XP and level logic if needed
+
+    // 4. Check for achievements (placeholder, implement as needed)
+    // TODO: Implement achievement logic
+
+    // 5. Set cooldown (lockedUntil)
+    const cooldownHours = chore.cooldownHours || family.settings.defaultChoreCooldownHours || 24;
+    const lockedUntil = new Date(Date.now() + cooldownHours * 60 * 60 * 1000);
+
+    // 6. Update chore as completed
     const completionData = formatForFirestore({
       completedBy: currentUser.uid,
-      completedAt: new Date()
+      completedAt: today,
+      status: 'completed',
+      lockedUntil: lockedUntil.toISOString(),
     });
-    
-    console.log(`Marking chore ${choreId} as completed`);
-    
     await setDoc(doc(getChoresCollection(), choreId), completionData, { merge: true });
-    
+
+    // 7. Update user profile with new points and streak
+    await createOrUpdateUserProfile(currentUser.uid, {
+      points: updatedPoints,
+      streak,
+      updatedAt: new Date(),
+    });
+
+    // 8. For family/shared chores, update rotation after cooldown
+    if (chore.type === 'family' || chore.type === 'shared') {
+      // Find eligible members (active, not excluded)
+      const rotationOrder = family.memberRotationOrder || family.members.filter(m => m.isActive).map(m => m.uid);
+      let nextIndex = typeof family.nextFamilyChoreAssigneeIndex === 'number' ? family.nextFamilyChoreAssigneeIndex : 0;
+      // Remove excluded/inactive members from rotation
+      const eligibleMembers = rotationOrder.filter(uid => {
+        const member = family.members.find(m => m.uid === uid);
+        return member && member.isActive;
+      });
+      if (eligibleMembers.length === 0) {
+        // All members are excluded
+        await updateChore(choreId, {
+          assignedTo: '',
+          assignedToName: '',
+          status: 'open',
+          lockedUntil: lockedUntil.toISOString(),
+        });
+        console.warn('No eligible members for rotation. Chore left unassigned.');
+      } else {
+        // Find the next eligible member
+        let found = false;
+        let attempts = 0;
+        let candidateIndex = nextIndex;
+        while (!found && attempts < eligibleMembers.length) {
+          const candidateUid = eligibleMembers[candidateIndex % eligibleMembers.length];
+          if (candidateUid !== chore.assignedTo) {
+            found = true;
+            nextIndex = (candidateIndex + 1) % eligibleMembers.length;
+            // Assign to next eligible member
+            const member = family.members.find(m => m.uid === candidateUid);
+            await updateChore(choreId, {
+              assignedTo: candidateUid,
+              assignedToName: member?.name || '',
+              status: 'open',
+              lockedUntil: lockedUntil.toISOString(),
+            });
+            // Update family rotation index
+            await updateFamily(family.id!, {
+              nextFamilyChoreAssigneeIndex: nextIndex,
+              memberRotationOrder: eligibleMembers,
+            });
+          } else {
+            candidateIndex++;
+            attempts++;
+          }
+        }
+      }
+    }
+
     return true;
   } catch (error) {
     console.error('Error completing chore:', error);

@@ -1,17 +1,20 @@
+import { useFamily } from '@/contexts/FamilyContext';
+import { FamilyMember, FamilyRole } from '@/types';
 import React, { useState } from 'react';
 import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  TextInput,
+    ActivityIndicator,
+    Alert,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
-import { useFamily } from '@/contexts/FamilyContext';
-import { FamilyMember, FamilyRole } from '@/types';
 
 interface ManageMembersProps {
   visible: boolean;
@@ -19,7 +22,7 @@ interface ManageMembersProps {
 }
 
 export function ManageMembers({ visible, onClose }: ManageMembersProps) {
-  const { family, updateMemberRole, removeMember, updateMemberName } = useFamily();
+  const { family, updateMemberRole, removeMember, updateMemberName, updateFamilyMember } = useFamily();
   const [loading, setLoading] = useState(false);
   const [editingMember, setEditingMember] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string | null>(null);
@@ -100,6 +103,55 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
     );
   };
 
+  const handleExcludeMember = async (member: FamilyMember) => {
+    Alert.alert(
+      'Exclude Member',
+      `Are you sure you want to exclude ${member.name} from rotation and active chores?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Exclude',
+          style: 'destructive',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              const success = await updateFamilyMember(family!.id!, member.uid, { isActive: false });
+              if (success) Alert.alert('Success', 'Member excluded');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to exclude member');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleReincludeMember = async (member: FamilyMember) => {
+    Alert.alert(
+      'Re-include Member',
+      `Re-include ${member.name} in rotation and active chores?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Re-include',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              const success = await updateFamilyMember(family!.id!, member.uid, { isActive: true });
+              if (success) Alert.alert('Success', 'Member re-included');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to re-include member');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const getRoleColor = (role: FamilyRole) => {
     switch (role) {
       case 'parent':
@@ -132,9 +184,22 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
           {family.members.map((member) => {
             const isAdmin = member.uid === family.adminId;
             const isEditing = editingMember === member.uid;
+            const isExcluded = !member.isActive;
 
             return (
-              <ThemedView key={member.uid} style={styles.memberCard}>
+              <ThemedView key={member.uid} style={[styles.memberCard, isExcluded && styles.excludedCard]}>
+                <View style={styles.avatarRow}>
+                  {member.photoURL ? (
+                    <Image source={{ uri: member.photoURL }} style={styles.avatar} />
+                  ) : (
+                    <View style={styles.avatarFallback}>
+                      <Text style={styles.avatarInitials}>
+                        {member.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) || '?'}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={[styles.statusDot, { backgroundColor: isExcluded ? '#F87171' : '#34D399' }]} />
+                </View>
                 <ThemedView style={styles.memberInfo}>
                   {editingName === member.uid ? (
                     <TextInput
@@ -147,9 +212,14 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                   ) : (
                     <ThemedText style={styles.memberName}>{member.name}</ThemedText>
                   )}
-                  {isAdmin && (
+                  {member.role === 'admin' && (
                     <ThemedView style={styles.adminBadge}>
                       <ThemedText style={styles.adminBadgeText}>Admin</ThemedText>
+                    </ThemedView>
+                  )}
+                  {isExcluded && (
+                    <ThemedView style={styles.excludedBadge}>
+                      <ThemedText style={styles.excludedBadgeText}>Excluded</ThemedText>
                     </ThemedView>
                   )}
                 </ThemedView>
@@ -195,6 +265,13 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                   <ThemedText style={styles.detailLabel}>Points:</ThemedText>
                   <ThemedText style={styles.detailValue}>
                     {member.points.current} (Lifetime: {member.points.lifetime})
+                  </ThemedText>
+                </ThemedView>
+
+                <ThemedView style={styles.memberDetails}>
+                  <ThemedText style={styles.detailLabel}>Status:</ThemedText>
+                  <ThemedText style={[styles.detailValue, isExcluded && { color: '#ef4444' }]}> 
+                    {isExcluded ? 'Excluded' : 'Active'}
                   </ThemedText>
                 </ThemedView>
 
@@ -270,7 +347,55 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                         >
                           <ThemedText style={styles.removeButtonText}>Remove</ThemedText>
                         </TouchableOpacity>
+                        {!isExcluded ? (
+                          <TouchableOpacity
+                            style={[styles.actionButton, styles.removeButton]}
+                            onPress={() => handleExcludeMember(member)}
+                            disabled={loading}
+                          >
+                            <ThemedText style={styles.removeButtonText}>Exclude</ThemedText>
+                          </TouchableOpacity>
+                        ) : (
+                          <TouchableOpacity
+                            style={[styles.actionButton, styles.saveButton]}
+                            onPress={() => handleReincludeMember(member)}
+                            disabled={loading}
+                          >
+                            <ThemedText style={styles.saveButtonText}>Re-include</ThemedText>
+                          </TouchableOpacity>
+                        )}
                       </>
+                    )}
+                  </ThemedView>
+                )}
+                {isAdmin && family && family.members.filter(m => m.role === 'admin').length > 1 && member.uid !== family.adminId && (
+                  <ThemedView style={styles.actions}>
+                    {member.role === 'admin' ? (
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.removeButton]}
+                        onPress={async () => {
+                          setLoading(true);
+                          const success = await updateMemberRole(member.uid, 'member', member.familyRole);
+                          setLoading(false);
+                          if (success) Alert.alert('Success', 'Admin rights removed');
+                        }}
+                        disabled={loading}
+                      >
+                        <ThemedText style={styles.removeButtonText}>Demote from Admin</ThemedText>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.saveButton]}
+                        onPress={async () => {
+                          setLoading(true);
+                          const success = await updateMemberRole(member.uid, 'admin', member.familyRole);
+                          setLoading(false);
+                          if (success) Alert.alert('Success', 'Promoted to Admin');
+                        }}
+                        disabled={loading}
+                      >
+                        <ThemedText style={styles.saveButtonText}>Promote to Admin</ThemedText>
+                      </TouchableOpacity>
                     )}
                   </ThemedView>
                 )}
@@ -436,5 +561,57 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  excludedCard: {
+    opacity: 0.5,
+    backgroundColor: '#fef2f2',
+  },
+  excludedBadge: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  excludedBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  avatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#e5e7eb',
+    marginRight: 6,
+  },
+  avatarFallback: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#d1d5db',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+  },
+  avatarInitials: {
+    color: '#374151',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  statusDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#fff',
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
   },
 });

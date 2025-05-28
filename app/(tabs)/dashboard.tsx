@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-  ActivityIndicator,
-  Platform,
-  Dimensions,
-  Text,
-} from 'react-native';
-import { useAuth } from '@/contexts/AuthContext';
-import { useFamily } from '@/contexts/FamilyContext';
-import { FamilySetup } from '@/components/FamilySetup';
-import { ManageMembers } from '@/components/ManageMembers';
 import { ChoreManagement } from '@/components/ChoreManagement';
 import { FamilySettings } from '@/components/FamilySettings';
+import { FamilySetup } from '@/components/FamilySetup';
+import { ManageMembers } from '@/components/ManageMembers';
+import { useAuth } from '@/contexts/AuthContext';
+import { useFamily } from '@/contexts/FamilyContext';
 import { getChores } from '@/services/firestore';
 import { Chore } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Dimensions,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
@@ -101,6 +101,10 @@ export default function DashboardScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Version Number */}
+      <View style={styles.versionContainer}>
+        <Text style={styles.versionText}>v2.01</Text>
+      </View>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -511,5 +515,16 @@ const styles = StyleSheet.create({
     color: '#0284c7',
     marginTop: 8,
     fontWeight: '500',
+  },
+  versionContainer: {
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 0,
+  },
+  versionText: {
+    fontSize: 14,
+    color: '#9ca3af',
+    fontWeight: '600',
+    letterSpacing: 1,
   },
 });

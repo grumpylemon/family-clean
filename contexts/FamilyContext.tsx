@@ -1,23 +1,23 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
-import { 
-  Family, 
-  FamilyMember, 
-  User,
-  UserRole,
-  FamilyRole 
-} from '@/types';
 import {
-  getFamily,
-  createFamily,
-  updateFamily,
-  addFamilyMember,
-  updateFamilyMember,
-  findFamilyByJoinCode,
-  createOrUpdateUserProfile,
-  getUserProfile,
-  generateJoinCode
+    addFamilyMember,
+    createFamily,
+    createOrUpdateUserProfile,
+    findFamilyByJoinCode,
+    generateJoinCode,
+    getFamily,
+    getUserProfile,
+    updateFamily,
+    updateFamilyMember
 } from '@/services/firestore';
+import {
+    Family,
+    FamilyMember,
+    FamilyRole,
+    User,
+    UserRole
+} from '@/types';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useAuth } from './AuthContext';
 
 interface FamilyContextType {
   family: Family | null;
@@ -33,6 +33,7 @@ interface FamilyContextType {
   refreshFamily: () => Promise<void>;
   isAdmin: boolean;
   currentMember: FamilyMember | null;
+  updateFamilyMember: (familyId: string, userId: string, updates: Partial<FamilyMember>) => Promise<boolean>;
 }
 
 const FamilyContext = createContext<FamilyContextType>({
@@ -49,6 +50,7 @@ const FamilyContext = createContext<FamilyContextType>({
   refreshFamily: async () => {},
   isAdmin: false,
   currentMember: null,
+  updateFamilyMember: async () => false,
 });
 
 export const useFamily = () => useContext(FamilyContext);
@@ -101,7 +103,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
           uid: user.uid,
           email: user.email,
           displayName: user.displayName,
-          photoURL: user.photoURL,
+          photoURL: user.photoURL ?? undefined,
           createdAt: new Date(),
           updatedAt: new Date()
         });
@@ -141,7 +143,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
             lifetime: 0,
             weekly: 0
           },
-          photoURL: user.photoURL,
+          photoURL: user.photoURL ?? undefined,
           joinedAt: new Date(),
           isActive: true
         }],
@@ -158,7 +160,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       if (familyId) {
         // Update user profile with family ID
         await createOrUpdateUserProfile(user.uid, {
-          familyId: familyId || undefined,
+          familyId: familyId === null ? undefined : familyId,
           role: 'admin',
           familyRole: 'parent'
         });
@@ -208,7 +210,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
           lifetime: 0,
           weekly: 0
         },
-        photoURL: user.photoURL,
+        photoURL: user.photoURL ?? undefined,
         joinedAt: new Date(),
         isActive: true
       };
@@ -218,7 +220,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       if (success) {
         // Update user profile with family ID
         await createOrUpdateUserProfile(user.uid, {
-          familyId: familyToJoin.id || undefined,
+          familyId: familyToJoin.id === null ? undefined : familyToJoin.id,
           role: 'member',
           familyRole: 'child'
         });
@@ -271,18 +273,25 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const updateMemberRole = async (userId: string, role: UserRole, familyRole: FamilyRole): Promise<boolean> => {
     if (!family || !isAdmin) return false;
 
+    // Prevent demoting the last admin
+    if (role !== 'admin') {
+      const adminCount = family.members.filter(m => m.role === 'admin').length;
+      const targetMember = family.members.find(m => m.uid === userId);
+      if (targetMember?.role === 'admin' && adminCount <= 1) {
+        setError('Cannot demote the last admin');
+        return false;
+      }
+    }
+
     try {
       setError(null);
-      
       const success = await updateFamilyMember(family.id!, userId, {
         role,
         familyRole
       });
-
       if (success) {
         await refreshFamily();
       }
-      
       return success;
     } catch (err) {
       console.error('Error updating member role:', err);
@@ -364,6 +373,20 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateFamilyMemberHandler = async (familyId: string, userId: string, updates: Partial<FamilyMember>): Promise<boolean> => {
+    try {
+      const success = await updateFamilyMember(familyId, userId, updates);
+      if (success) {
+        await refreshFamily();
+      }
+      return success;
+    } catch (err) {
+      console.error('Error updating family member:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update family member');
+      return false;
+    }
+  };
+
   const value: FamilyContextType = {
     family,
     userProfile,
@@ -377,7 +400,8 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     removeMember,
     refreshFamily,
     isAdmin,
-    currentMember
+    currentMember,
+    updateFamilyMember: updateFamilyMemberHandler,
   };
 
   return (

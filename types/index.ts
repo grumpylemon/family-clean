@@ -49,6 +49,8 @@ export interface Family {
   settings: FamilySettings;
   createdAt: Date | string;
   updatedAt: Date | string;
+  memberRotationOrder?: string[];
+  nextFamilyChoreAssigneeIndex?: number;
 }
 
 export interface FamilySettings {

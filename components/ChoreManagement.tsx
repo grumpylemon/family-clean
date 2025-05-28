@@ -1,20 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  ActivityIndicator,
-  Platform,
-} from 'react-native';
+import { useFamily } from '@/contexts/FamilyContext';
+import { createChore, deleteChore, getChores, updateChore } from '@/services/firestore';
+import { Chore, ChoreDifficulty, ChoreType } from '@/types';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity
+} from 'react-native';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
-import { useFamily } from '@/contexts/FamilyContext';
-import { Chore, ChoreType, ChoreDifficulty } from '@/types';
-import { createChore, updateChore, deleteChore, getChores } from '@/services/firestore';
 
 interface ChoreManagementProps {
   visible: boolean;
@@ -219,6 +220,12 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
       case 'hard': return '#EA4335';
       default: return '#666';
     }
+  };
+
+  const isChoreLocked = (chore: Chore) => {
+    if (!chore.lockedUntil) return false;
+    const lockedUntil = new Date(chore.lockedUntil);
+    return lockedUntil > new Date();
   };
 
   if (!isAdmin) {
@@ -459,64 +466,76 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
               ) : chores.length === 0 ? (
                 <ThemedText style={styles.emptyText}>No chores created yet</ThemedText>
               ) : (
-                chores.map((chore) => (
-                  <ThemedView key={chore.id} style={styles.choreCard}>
-                    <ThemedView style={styles.choreHeader}>
-                      <ThemedText style={styles.choreTitle}>{chore.title}</ThemedText>
-                      <ThemedView style={styles.choreActions}>
-                        <TouchableOpacity
-                          style={styles.choreActionButton}
-                          onPress={() => handleEditChore(chore)}
-                        >
-                          <ThemedText style={styles.editText}>Edit</ThemedText>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.choreActionButton}
-                          onPress={() => {
-                            console.log('TouchableOpacity onPress triggered');
-                            handleDeleteChore(chore);
-                          }}
-                        >
-                          <ThemedText style={styles.deleteText}>Delete</ThemedText>
-                        </TouchableOpacity>
+                chores.map((chore) => {
+                  const locked = isChoreLocked(chore);
+                  return (
+                    <ThemedView key={chore.id} style={styles.choreCard}>
+                      <ThemedView style={styles.choreHeader}>
+                        <ThemedText style={styles.choreTitle}>{chore.title}</ThemedText>
+                        <ThemedView style={styles.choreActions}>
+                          <TouchableOpacity
+                            style={styles.choreActionButton}
+                            onPress={() => handleEditChore(chore)}
+                          >
+                            <ThemedText style={styles.editText}>Edit</ThemedText>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.choreActionButton}
+                            onPress={() => {
+                              console.log('TouchableOpacity onPress triggered');
+                              handleDeleteChore(chore);
+                            }}
+                          >
+                            <ThemedText style={styles.deleteText}>Delete</ThemedText>
+                          </TouchableOpacity>
+                        </ThemedView>
                       </ThemedView>
-                    </ThemedView>
 
-                    {chore.description && (
-                      <ThemedText style={styles.choreDescription}>{chore.description}</ThemedText>
-                    )}
-
-                    <ThemedView style={styles.choreDetails}>
-                      <ThemedView style={styles.choreTag}>
-                        <ThemedText style={[styles.choreTagText, { color: getTypeColor(chore.type) }]}>
-                          {chore.type}
-                        </ThemedText>
-                      </ThemedView>
-                      <ThemedView style={styles.choreTag}>
-                        <ThemedText style={[styles.choreTagText, { color: getDifficultyColor(chore.difficulty) }]}>
-                          {chore.difficulty}
-                        </ThemedText>
-                      </ThemedView>
-                      <ThemedText style={styles.chorePoints}>{chore.points} pts</ThemedText>
-                    </ThemedView>
-
-                    <ThemedView style={styles.choreFooter}>
-                      <ThemedText style={styles.choreFooterText}>
-                        Due: {new Date(chore.dueDate).toLocaleDateString()}
-                      </ThemedText>
-                      {chore.assignedTo && (
-                        <ThemedText style={styles.choreFooterText}>
-                          Assigned: {family?.members.find(m => m.uid === chore.assignedTo)?.name || 'Unknown'}
-                        </ThemedText>
+                      {chore.description && (
+                        <ThemedText style={styles.choreDescription}>{chore.description}</ThemedText>
                       )}
-                      {chore.recurring?.enabled && (
+
+                      <ThemedView style={styles.choreDetails}>
+                        <ThemedView style={styles.choreTag}>
+                          <ThemedText style={[styles.choreTagText, { color: getTypeColor(chore.type) }]}>
+                            {chore.type}
+                          </ThemedText>
+                        </ThemedView>
+                        <ThemedView style={styles.choreTag}>
+                          <ThemedText style={[styles.choreTagText, { color: getDifficultyColor(chore.difficulty) }]}>
+                            {chore.difficulty}
+                          </ThemedText>
+                        </ThemedView>
+                        <ThemedText style={styles.chorePoints}>{chore.points} pts</ThemedText>
+                      </ThemedView>
+
+                      <ThemedView style={styles.choreFooter}>
                         <ThemedText style={styles.choreFooterText}>
-                          Repeats every {chore.recurring.frequencyDays} days
+                          Due: {new Date(chore.dueDate).toLocaleDateString()}
                         </ThemedText>
+                        {chore.assignedTo && (
+                          <ThemedText style={styles.choreFooterText}>
+                            Assigned: {family?.members.find(m => m.uid === chore.assignedTo)?.name || 'Unknown'}
+                          </ThemedText>
+                        )}
+                        {chore.recurring?.enabled && (
+                          <ThemedText style={styles.choreFooterText}>
+                            Repeats every {chore.recurring.frequencyDays} days
+                          </ThemedText>
+                        )}
+                      </ThemedView>
+
+                      {locked && (
+                        <ThemedView style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                          <Ionicons name="lock-closed" size={16} color="#ef4444" />
+                          <ThemedText style={{ color: '#ef4444', marginLeft: 4 }}>
+                            Locked until {new Date(chore.lockedUntil!).toLocaleString()}
+                          </ThemedText>
+                        </ThemedView>
                       )}
                     </ThemedView>
-                  </ThemedView>
-                ))
+                  );
+                })
               )}
             </ScrollView>
           </>
