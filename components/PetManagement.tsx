@@ -7,8 +7,7 @@ import {
   TouchableOpacity, 
   Image,
   Modal,
-  TextInput,
-  Picker
+  TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFamily } from '../contexts/FamilyContext';
@@ -24,9 +23,9 @@ import {
   checkUrgentCareNeeded
 } from '../services/petService';
 import { addChore } from '../services/firestore';
-import LoadingSpinner from './ui/LoadingSpinner';
-import ConfirmDialog from './ui/ConfirmDialog';
-import Toast from './ui/Toast';
+import { LoadingSpinner } from './ui/LoadingSpinner';
+import { ConfirmDialog } from './ui/ConfirmDialog';
+import { Toast } from './ui/Toast';
 
 // PetManagement component props (empty for now, but structured for future expansion)
 interface PetManagementProps {
@@ -411,21 +410,24 @@ const PetManagement: React.FC<PetManagementProps> = () => {
               />
 
               <Text style={styles.fieldLabel}>Pet Type *</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={formData.type}
-                  onValueChange={(value) => setFormData({ ...formData, type: value })}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Dog" value="dog" />
-                  <Picker.Item label="Cat" value="cat" />
-                  <Picker.Item label="Bird" value="bird" />
-                  <Picker.Item label="Fish" value="fish" />
-                  <Picker.Item label="Hamster" value="hamster" />
-                  <Picker.Item label="Rabbit" value="rabbit" />
-                  <Picker.Item label="Reptile" value="reptile" />
-                  <Picker.Item label="Other" value="other" />
-                </Picker>
+              <View style={styles.selectContainer}>
+                {['dog', 'cat', 'bird', 'fish', 'hamster', 'rabbit', 'reptile', 'other'].map((type) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      styles.selectOption,
+                      formData.type === type && styles.selectOptionSelected
+                    ]}
+                    onPress={() => setFormData({ ...formData, type: type as PetType })}
+                  >
+                    <Text style={[
+                      styles.selectOptionText,
+                      formData.type === type && styles.selectOptionTextSelected
+                    ]}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
 
               <Text style={styles.fieldLabel}>Breed</Text>
@@ -448,29 +450,45 @@ const PetManagement: React.FC<PetManagementProps> = () => {
               />
 
               <Text style={styles.fieldLabel}>Size</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={formData.size}
-                  onValueChange={(value) => setFormData({ ...formData, size: value })}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Small" value="small" />
-                  <Picker.Item label="Medium" value="medium" />
-                  <Picker.Item label="Large" value="large" />
-                </Picker>
+              <View style={styles.selectContainer}>
+                {['small', 'medium', 'large'].map((size) => (
+                  <TouchableOpacity
+                    key={size}
+                    style={[
+                      styles.selectOption,
+                      formData.size === size && styles.selectOptionSelected
+                    ]}
+                    onPress={() => setFormData({ ...formData, size: size as PetSize })}
+                  >
+                    <Text style={[
+                      styles.selectOptionText,
+                      formData.size === size && styles.selectOptionTextSelected
+                    ]}>
+                      {size.charAt(0).toUpperCase() + size.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
 
               <Text style={styles.fieldLabel}>Activity Level</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={formData.activityLevel}
-                  onValueChange={(value) => setFormData({ ...formData, activityLevel: value })}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Low" value="low" />
-                  <Picker.Item label="Medium" value="medium" />
-                  <Picker.Item label="High" value="high" />
-                </Picker>
+              <View style={styles.selectContainer}>
+                {['low', 'medium', 'high'].map((level) => (
+                  <TouchableOpacity
+                    key={level}
+                    style={[
+                      styles.selectOption,
+                      formData.activityLevel === level && styles.selectOptionSelected
+                    ]}
+                    onPress={() => setFormData({ ...formData, activityLevel: level as PetActivityLevel })}
+                  >
+                    <Text style={[
+                      styles.selectOptionText,
+                      formData.activityLevel === level && styles.selectOptionTextSelected
+                    ]}>
+                      {level.charAt(0).toUpperCase() + level.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
 
@@ -764,14 +782,31 @@ const styles = StyleSheet.create({
     height: 80,
     textAlignVertical: 'top',
   },
-  pickerContainer: {
-    backgroundColor: '#ffffff',
+  selectContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 8,
+  },
+  selectOption: {
+    backgroundColor: '#fce7f3',
     borderWidth: 1,
     borderColor: '#f9a8d4',
-    borderRadius: 12,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
-  picker: {
+  selectOptionSelected: {
+    backgroundColor: '#be185d',
+    borderColor: '#be185d',
+  },
+  selectOptionText: {
+    fontSize: 14,
     color: '#831843',
+    fontWeight: '600',
+  },
+  selectOptionTextSelected: {
+    color: '#ffffff',
   },
   templateCount: {
     fontSize: 14,

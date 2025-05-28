@@ -1,8 +1,8 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
-import { FamilyMember, FamilyRole } from '@/types';
-import React, { useState } from 'react';
+import { FamilyMember, FamilyRole, Room, RoomAssignment } from '@/types';
+import React, { useState, useEffect } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -19,6 +19,14 @@ import { ThemedText } from './ThemedText';
 import { Avatar } from './ui/Avatar';
 import { Toast } from './ui/Toast';
 import { Ionicons } from '@expo/vector-icons';
+import { 
+  getUserRoomAssignments, 
+  getFamilyRooms, 
+  assignMemberToRoom, 
+  removeMemberFromRoom,
+  getRoomTypeEmoji,
+  getRoomTypeDisplayName 
+} from '@/services/roomService';
 
 interface ManageMembersProps {
   visible: boolean;
@@ -36,8 +44,42 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
   const [editedName, setEditedName] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'excluded'>('all');
+  
+  // Room management states
+  const [memberRoomAssignments, setMemberRoomAssignments] = useState<{ [userId: string]: RoomAssignment[] }>({});
+  const [familyRooms, setFamilyRooms] = useState<Room[]>([]);
+  const [showRoomAssignModal, setShowRoomAssignModal] = useState(false);
+  const [selectedMemberForRooms, setSelectedMemberForRooms] = useState<FamilyMember | null>(null);
+  const [roomAssignLoading, setRoomAssignLoading] = useState(false);
 
   if (!family) return null;
+
+  // Load room assignments for all members when modal opens
+  useEffect(() => {
+    if (visible && family?.id) {
+      loadRoomData();
+    }
+  }, [visible, family?.id]);
+
+  const loadRoomData = async () => {
+    if (!family?.id) return;
+    
+    try {
+      // Load all family rooms
+      const rooms = await getFamilyRooms(family.id);
+      setFamilyRooms(rooms);
+      
+      // Load room assignments for each member
+      const assignments: { [userId: string]: RoomAssignment[] } = {};
+      for (const member of family.members) {
+        const memberAssignments = await getUserRoomAssignments(member.uid, family.id);
+        assignments[member.uid] = memberAssignments;
+      }
+      setMemberRoomAssignments(assignments);
+    } catch (error) {
+      console.error('Error loading room data:', error);
+    }
+  };
 
   const showSuccessMessage = (message: string) => {
     Toast.success(message);
@@ -188,6 +230,45 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
         return '#f59e0b';
       default:
         return '#831843';
+    }
+  };
+
+  const handleOpenRoomAssignment = (member: FamilyMember) => {
+    setSelectedMemberForRooms(member);
+    setShowRoomAssignModal(true);
+  };
+
+  const handleAssignRoom = async (room: Room, isPrimary: boolean = false) => {
+    if (!selectedMemberForRooms || !family?.id) return;
+
+    try {
+      setRoomAssignLoading(true);
+      await assignMemberToRoom(
+        room.id!,
+        selectedMemberForRooms.uid,
+        selectedMemberForRooms.name,
+        family.id,
+        isPrimary
+      );
+      
+      showSuccessMessage(`${selectedMemberForRooms.name} assigned to ${room.name}`);
+      await loadRoomData(); // Reload room assignments
+    } catch (error) {
+      showErrorMessage('Failed to assign room');
+      console.error('Error assigning room:', error);
+    } finally {
+      setRoomAssignLoading(false);
+    }
+  };
+
+  const handleUnassignRoom = async (roomId: string, memberId: string) => {
+    try {
+      await removeMemberFromRoom(roomId, memberId);
+      showSuccessMessage('Room assignment removed');
+      await loadRoomData(); // Reload room assignments
+    } catch (error) {
+      showErrorMessage('Failed to remove room assignment');
+      console.error('Error removing room assignment:', error);
     }
   };
 
@@ -374,6 +455,47 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                   <ThemedText lightColor={isExcluded ? "#ef4444" : "#374151"} style={styles.detailValue}> 
                     {isExcluded ? 'Excluded' : 'Active'}
                   </ThemedText>
+                </View>
+
+                {/* Room Assignments Section */}
+                <View style={styles.roomSection}>
+                  <View style={styles.roomHeader}>
+                    <ThemedText lightColor="#6b7280" style={styles.detailLabel}>Room Assignments:</ThemedText>
+                    {canManageMembers && (
+                      <TouchableOpacity
+                        style={styles.addRoomButton}
+                        onPress={() => handleOpenRoomAssignment(member)}
+                      >
+                        <Ionicons name="add-circle" size={20} color="#be185d" />
+                        <Text style={styles.addRoomText}>Assign</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  <View style={styles.roomList}>
+                    {memberRoomAssignments[member.uid]?.length > 0 ? (
+                      memberRoomAssignments[member.uid].map((assignment) => (
+                        <View key={assignment.id} style={styles.roomBadge}>
+                          <Text style={styles.roomEmoji}>
+                            {getRoomTypeEmoji(familyRooms.find(r => r.id === assignment.roomId)?.type || 'other')}
+                          </Text>
+                          <Text style={styles.roomName}>{assignment.roomName}</Text>
+                          {assignment.isPrimary && (
+                            <Text style={styles.primaryIndicator}>★</Text>
+                          )}
+                          {canManageMembers && (
+                            <TouchableOpacity
+                              onPress={() => handleUnassignRoom(assignment.roomId, member.uid)}
+                              style={styles.removeRoomButton}
+                            >
+                              <Ionicons name="close-circle" size={16} color="#ef4444" />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      ))
+                    ) : (
+                      <Text style={styles.noRoomsText}>No rooms assigned</Text>
+                    )}
+                  </View>
                 </View>
 
                 {/* Show member management actions */}
@@ -588,6 +710,101 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
           </View>
         )}
       </View>
+
+      {/* Room Assignment Modal */}
+      <Modal
+        visible={showRoomAssignModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowRoomAssignModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Assign Rooms to {selectedMemberForRooms?.name}
+              </Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowRoomAssignModal(false)}
+              >
+                <Ionicons name="close" size={24} color="#831843" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              {familyRooms.length > 0 ? (
+                familyRooms.map((room) => {
+                  const isAssigned = memberRoomAssignments[selectedMemberForRooms?.uid || '']?.some(
+                    a => a.roomId === room.id
+                  );
+                  const assignment = memberRoomAssignments[selectedMemberForRooms?.uid || '']?.find(
+                    a => a.roomId === room.id
+                  );
+                  const isPrimary = assignment?.isPrimary || false;
+
+                  return (
+                    <View key={room.id} style={styles.roomAssignCard}>
+                      <View style={styles.roomInfo}>
+                        <Text style={styles.roomTypeEmoji}>{getRoomTypeEmoji(room.type)}</Text>
+                        <View style={styles.roomDetails}>
+                          <Text style={styles.roomAssignName}>{room.name}</Text>
+                          <Text style={styles.roomAssignType}>
+                            {getRoomTypeDisplayName(room.type)} • {room.sharingType}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.roomAssignActions}>
+                        {!isAssigned ? (
+                          <>
+                            <TouchableOpacity
+                              style={styles.assignRoomButton}
+                              onPress={() => handleAssignRoom(room, false)}
+                              disabled={roomAssignLoading}
+                            >
+                              <Text style={styles.assignRoomButtonText}>Assign</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.assignPrimaryRoomButton}
+                              onPress={() => handleAssignRoom(room, true)}
+                              disabled={roomAssignLoading}
+                            >
+                              <Text style={styles.assignPrimaryButtonText}>Primary</Text>
+                            </TouchableOpacity>
+                          </>
+                        ) : (
+                          <View style={styles.assignedRoomIndicator}>
+                            {isPrimary && (
+                              <View style={styles.primaryRoomBadge}>
+                                <Text style={styles.primaryBadgeText}>Primary</Text>
+                              </View>
+                            )}
+                            <TouchableOpacity
+                              style={styles.unassignRoomButton}
+                              onPress={() => handleUnassignRoom(room.id!, selectedMemberForRooms?.uid || '')}
+                            >
+                              <Text style={styles.unassignButtonText}>Remove</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  );
+                })
+              ) : (
+                <View style={styles.noRoomsAvailable}>
+                  <Ionicons name="home-outline" size={48} color="#f9a8d4" />
+                  <Text style={styles.noRoomsTitle}>No rooms available</Text>
+                  <Text style={styles.noRoomsSubtext}>
+                    Create rooms in the Room Management section first
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </Modal>
   );
 }
@@ -882,5 +1099,199 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  // Room assignment styles
+  roomSection: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f9a8d4',
+  },
+  roomHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  addRoomButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: '#f9a8d4',
+    borderRadius: 12,
+  },
+  addRoomText: {
+    color: '#be185d',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  roomList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  roomBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fbcfe8',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    gap: 4,
+  },
+  roomEmoji: {
+    fontSize: 14,
+  },
+  roomName: {
+    fontSize: 12,
+    color: '#831843',
+    fontWeight: '600',
+  },
+  primaryIndicator: {
+    color: '#be185d',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  removeRoomButton: {
+    marginLeft: 4,
+  },
+  noRoomsText: {
+    fontSize: 12,
+    color: '#9f1239',
+    fontStyle: 'italic',
+  },
+  // Room assignment modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f9a8d4',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#831843',
+    flex: 1,
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  roomAssignCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#fdf2f8',
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  roomInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  roomTypeEmoji: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  roomDetails: {
+    flex: 1,
+  },
+  roomAssignName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#831843',
+  },
+  roomAssignType: {
+    fontSize: 14,
+    color: '#9f1239',
+    marginTop: 2,
+  },
+  roomAssignActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  assignRoomButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#be185d',
+    borderRadius: 8,
+  },
+  assignRoomButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  assignPrimaryRoomButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#831843',
+    borderRadius: 8,
+  },
+  assignPrimaryButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  assignedRoomIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  primaryRoomBadge: {
+    backgroundColor: '#831843',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+  },
+  primaryBadgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  unassignRoomButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#ef4444',
+    borderRadius: 8,
+  },
+  unassignButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  noRoomsAvailable: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  noRoomsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#831843',
+    marginTop: 16,
+  },
+  noRoomsSubtext: {
+    fontSize: 14,
+    color: '#9f1239',
+    textAlign: 'center',
+    marginTop: 8,
   },
 });

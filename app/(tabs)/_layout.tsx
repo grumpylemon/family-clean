@@ -105,6 +105,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="shield" size={24} color={color} />
           ),
+          tabBarLabel: 'Admin',
         }}
       />
       <Tabs.Screen

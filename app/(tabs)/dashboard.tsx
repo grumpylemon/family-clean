@@ -179,7 +179,7 @@ export default function DashboardScreen() {
     <View style={styles.container}>
       {/* Version Number */}
       <View style={styles.versionContainer}>
-        <Text style={styles.versionText}>v2.02-172aefe</Text>
+        <Text style={styles.versionText}>v2.04-f5dd5ed</Text>
       </View>
       {/* Header */}
       <View style={styles.header}>
@@ -373,7 +373,7 @@ export default function DashboardScreen() {
 
         {/* App Version */}
         <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>v2.03 • Build 172aefe</Text>
+          <Text style={styles.versionText}>v2.04 • Build f5dd5ed</Text>
         </View>
       </ScrollView>
 

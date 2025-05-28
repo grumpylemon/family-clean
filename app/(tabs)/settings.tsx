@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
-import Toast from '@/components/ui/Toast';
+import { Toast } from '@/components/ui/Toast';
 
 export default function SettingsScreen() {
   const { user } = useAuth();

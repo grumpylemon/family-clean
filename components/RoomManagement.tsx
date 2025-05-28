@@ -36,10 +36,10 @@ import {
   FamilyMember,
   Chore
 } from '../types';
-import LoadingSpinner from './ui/LoadingSpinner';
-import Toast from './ui/Toast';
-import ConfirmDialog from './ui/ConfirmDialog';
-import Avatar from './ui/Avatar';
+import { LoadingSpinner } from './ui/LoadingSpinner';
+import { Toast } from './ui/Toast';
+import { ConfirmDialog } from './ui/ConfirmDialog';
+import { Avatar } from './ui/Avatar';
 
 const ROOM_TYPES: RoomType[] = [
   'bedroom', 'bathroom', 'kitchen', 'living_room', 'dining_room',

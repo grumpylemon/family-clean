@@ -323,14 +323,27 @@ export const initializeFirebase = async () => {
         // Initialize Firestore with persistence using the simpler approach
         console.log("Using simplified persistence approach");
         _firestoreDb = getFirestore(app);
-        await enableIndexedDbPersistence(_firestoreDb);
+        
+        // Try to enable persistence with multi-tab support
+        await enableIndexedDbPersistence(_firestoreDb, {
+          forceOwnership: false // Allow multiple tabs to share persistence
+        }).catch((err) => {
+          if (err.code === 'failed-precondition') {
+            // Multiple tabs open, persistence can only be enabled in one tab at a time
+            console.warn('Persistence failed: Multiple tabs open. Using memory cache instead.');
+          } else if (err.code === 'unimplemented') {
+            // The current browser doesn't support persistence
+            console.warn('Persistence failed: Browser doesn\'t support IndexedDB');
+          }
+          throw err;
+        });
         console.log("Successfully enabled IndexedDB persistence for Firestore");
       } catch (error) {
         console.error("Error enabling Firestore persistence:", error);
         
-        // Fall back to regular Firestore
+        // Fall back to regular Firestore without persistence
         console.log("Falling back to standard Firestore without persistence");
-        _firestoreDb = getFirestore(app);
+        // No need to reinitialize, just continue with the existing instance
       }
     } else {
       // For native platforms, use regular Firestore

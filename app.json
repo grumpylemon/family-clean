@@ -2,7 +2,7 @@
   "expo": {
     "name": "Family Clean",
     "slug": "family-chores",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "owner": "grumpylemon",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -12,7 +12,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.grumpylemon.familyclean",
-      "buildNumber": "4",
+      "buildNumber": "5",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to scan QR codes for family invites.",
         "NSPhotoLibraryUsageDescription": "This app accesses your photos to set profile pictures.",
