@@ -22,7 +22,7 @@ interface ManageMembersProps {
 }
 
 export function ManageMembers({ visible, onClose }: ManageMembersProps) {
-  const { family, updateMemberRole, removeMember, updateMemberName, updateFamilyMember } = useFamily();
+  const { family, updateMemberRole, removeMember, updateMemberName, updateFamilyMember, isAdmin: isCurrentUserAdmin } = useFamily();
   const [loading, setLoading] = useState(false);
   const [editingMember, setEditingMember] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string | null>(null);
@@ -368,33 +368,83 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                     )}
                   </ThemedView>
                 )}
-                {isAdmin && family && family.members.filter(m => m.role === 'admin').length > 1 && member.uid !== family.adminId && (
+                {/* Admin Promotion/Demotion - Show for current admin to manage other members */}
+                {isCurrentUserAdmin && !isAdmin && (
                   <ThemedView style={styles.actions}>
                     {member.role === 'admin' ? (
-                      <TouchableOpacity
-                        style={[styles.actionButton, styles.removeButton]}
-                        onPress={async () => {
-                          setLoading(true);
-                          const success = await updateMemberRole(member.uid, 'member', member.familyRole);
-                          setLoading(false);
-                          if (success) Alert.alert('Success', 'Admin rights removed');
-                        }}
-                        disabled={loading}
-                      >
-                        <ThemedText style={styles.removeButtonText}>Demote from Admin</ThemedText>
-                      </TouchableOpacity>
+                      // Only allow demotion if there's more than one admin
+                      family.members.filter(m => m.role === 'admin').length > 1 && (
+                        <TouchableOpacity
+                          style={[styles.actionButton, styles.removeButton]}
+                          onPress={async () => {
+                            Alert.alert(
+                              'Demote Admin',
+                              `Are you sure you want to remove admin rights from ${member.name}?`,
+                              [
+                                { text: 'Cancel', style: 'cancel' },
+                                {
+                                  text: 'Demote',
+                                  style: 'destructive',
+                                  onPress: async () => {
+                                    setLoading(true);
+                                    try {
+                                      const success = await updateMemberRole(member.uid, 'member', member.familyRole);
+                                      if (success) {
+                                        Alert.alert('Success', 'Admin rights removed');
+                                      } else {
+                                        Alert.alert('Error', 'Failed to remove admin rights');
+                                      }
+                                    } catch (error) {
+                                      Alert.alert('Error', 'An error occurred');
+                                      console.error('Error demoting admin:', error);
+                                    } finally {
+                                      setLoading(false);
+                                    }
+                                  },
+                                },
+                              ]
+                            );
+                          }}
+                          disabled={loading}
+                        >
+                          <ThemedText style={styles.removeButtonText}>Remove Admin</ThemedText>
+                        </TouchableOpacity>
+                      )
                     ) : (
+                      // Allow promotion to admin for regular members
                       <TouchableOpacity
-                        style={[styles.actionButton, styles.saveButton]}
+                        style={[styles.actionButton, styles.adminButton]}
                         onPress={async () => {
-                          setLoading(true);
-                          const success = await updateMemberRole(member.uid, 'admin', member.familyRole);
-                          setLoading(false);
-                          if (success) Alert.alert('Success', 'Promoted to Admin');
+                          Alert.alert(
+                            'Promote to Admin',
+                            `Grant admin rights to ${member.name}? They will be able to manage family settings and members.`,
+                            [
+                              { text: 'Cancel', style: 'cancel' },
+                              {
+                                text: 'Promote',
+                                onPress: async () => {
+                                  setLoading(true);
+                                  try {
+                                    const success = await updateMemberRole(member.uid, 'admin', member.familyRole);
+                                    if (success) {
+                                      Alert.alert('Success', `${member.name} is now an admin`);
+                                    } else {
+                                      Alert.alert('Error', 'Failed to grant admin rights');
+                                    }
+                                  } catch (error) {
+                                    Alert.alert('Error', 'An error occurred');
+                                    console.error('Error promoting to admin:', error);
+                                  } finally {
+                                    setLoading(false);
+                                  }
+                                },
+                              },
+                            ]
+                          );
                         }}
                         disabled={loading}
                       >
-                        <ThemedText style={styles.saveButtonText}>Promote to Admin</ThemedText>
+                        <ThemedText style={styles.adminButtonText}>Make Admin</ThemedText>
                       </TouchableOpacity>
                     )}
                   </ThemedView>
@@ -550,6 +600,13 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#333',
+    fontWeight: '600',
+  },
+  adminButton: {
+    backgroundColor: '#9333ea',
+  },
+  adminButtonText: {
+    color: 'white',
     fontWeight: '600',
   },
   loadingOverlay: {
