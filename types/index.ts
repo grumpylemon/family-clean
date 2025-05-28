@@ -20,6 +20,18 @@ export interface User {
     longest: number;
     lastCompletedDate?: string;
   };
+  level?: number;
+  xp?: {
+    current: number;
+    toNextLevel: number;
+    total: number;
+  };
+  achievements?: string[]; // Achievement IDs
+  badges?: Badge[];
+  preferences?: {
+    celebrationsEnabled: boolean;
+    soundEffectsEnabled: boolean;
+  };
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -35,6 +47,19 @@ export interface FamilyMember {
     lifetime: number;
     weekly: number;
   };
+  streak?: {
+    current: number;
+    longest: number;
+    lastCompletedDate?: string;
+  };
+  level?: number;
+  xp?: {
+    current: number;
+    toNextLevel: number;
+    total: number;
+  };
+  achievements?: string[];
+  badges?: Badge[];
   photoURL?: string;
   joinedAt: Date | string;
   isActive: boolean;
@@ -76,6 +101,7 @@ export interface Chore {
   type: ChoreType;
   difficulty: ChoreDifficulty;
   points: number;
+  xpReward?: number; // XP separate from points
   assignedTo: string; // User ID
   assignedToName?: string;
   completedBy?: string;
@@ -91,6 +117,8 @@ export interface Chore {
   };
   cooldownHours?: number;
   lockedUntil?: Date | string;
+  completionCount?: number; // Track how many times completed
+  bonusMultiplier?: number; // For special events or streaks
 }
 
 // Reward Types
@@ -125,7 +153,47 @@ export interface ChoreCompletionRecord {
   userId: string;
   completedAt: Date | string;
   pointsEarned: number;
+  xpEarned: number;
   streakDay: number;
+  bonusMultiplier?: number;
+  achievementsUnlocked?: string[];
+  familyId: string;
+}
+
+// New types for enhanced gamification
+export interface Badge {
+  id: string;
+  name: string;
+  icon: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  earnedAt: Date | string;
+}
+
+export interface UserAchievement {
+  id?: string;
+  userId: string;
+  achievementId: string;
+  unlockedAt: Date | string;
+  progress: number;
+  xpEarned: number;
+}
+
+export interface LevelConfig {
+  level: number;
+  xpRequired: number;
+  title: string;
+  perks?: string[];
+}
+
+export interface CompletionReward {
+  pointsEarned: number;
+  xpEarned: number;
+  streakBonus?: number;
+  achievementsUnlocked?: Achievement[];
+  levelUp?: {
+    newLevel: number;
+    title: string;
+  };
 }
 
 export interface Notification {

@@ -1,7 +1,8 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { completeChore, getChores } from '@/services/firestore';
-import { Chore, ChoreStatus } from '@/types';
+import { Chore, ChoreStatus, CompletionReward } from '@/types';
+import { CompletionRewardModal } from '@/components/CompletionRewardModal';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
@@ -28,6 +29,9 @@ export default function ChoresScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterType>('mine');
   const [mainTab, setMainTab] = useState<MainTabType>('active');
+  const [showRewardModal, setShowRewardModal] = useState(false);
+  const [completionReward, setCompletionReward] = useState<CompletionReward | null>(null);
+  const [completedChoreTitle, setCompletedChoreTitle] = useState('');
 
   useEffect(() => {
     if (family) {
@@ -57,26 +61,45 @@ export default function ChoresScreen() {
 
   const handleCompleteChore = async (choreId: string) => {
     try {
-      const success = await completeChore(choreId);
-      if (success) {
+      const chore = chores.find(c => c.id === choreId);
+      if (!chore) return;
+
+      const result = await completeChore(choreId);
+      
+      if (result.success && result.reward) {
+        // Update chores list
         setChores(prevChores => 
-          prevChores.map(chore => 
-            chore.id === choreId 
-              ? { ...chore, status: 'completed' as ChoreStatus, completedBy: user?.uid, completedAt: new Date().toISOString() }
-              : chore
+          prevChores.map(c => 
+            c.id === choreId 
+              ? { ...c, status: 'completed' as ChoreStatus, completedBy: user?.uid, completedAt: new Date().toISOString() }
+              : c
           )
         );
-        const message = 'Chore completed! Points and streak updated.';
+
+        // Show reward modal with celebration
+        setCompletedChoreTitle(chore.title);
+        setCompletionReward(result.reward);
+        setShowRewardModal(true);
+
+        // Reload chores to get updated data
+        setTimeout(() => {
+          loadChores();
+        }, 1000);
+      } else if (!result.success && result.error) {
+        // Show error message
         if (Platform.OS === 'android') {
-          ToastAndroid.show(message, ToastAndroid.SHORT);
+          ToastAndroid.show(result.error, ToastAndroid.LONG);
         } else {
-          Alert.alert('Success', message);
+          Alert.alert('Cannot Complete Chore', result.error);
         }
       }
     } catch (error) {
       console.error('Error completing chore:', error);
-      if (Platform.OS === 'web') {
-        window.alert('Failed to complete chore');
+      const errorMessage = 'Failed to complete chore. Please try again.';
+      if (Platform.OS === 'android') {
+        ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Error', errorMessage);
       }
     }
   };
@@ -358,6 +381,18 @@ export default function ChoresScreen() {
           )}
         </ScrollView>
       )}
+
+      {/* Completion Reward Modal */}
+      <CompletionRewardModal
+        visible={showRewardModal}
+        reward={completionReward}
+        choreTitle={completedChoreTitle}
+        onClose={() => {
+          setShowRewardModal(false);
+          setCompletionReward(null);
+          setCompletedChoreTitle('');
+        }}
+      />
     </View>
   );
 }

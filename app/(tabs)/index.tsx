@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, TouchableOpacity, View, ActivityIndicator, Text } from 'react-native';
+import { Platform, ScrollView, StyleSheet, TouchableOpacity, View, ActivityIndicator, Text, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 // Version tracking for updates
@@ -144,11 +144,28 @@ export default function HomeScreen() {
             <Text style={styles.memberListTitle}>Family Members</Text>
             {family.members.map((member) => (
               <View key={member.uid} style={styles.memberItem}>
-                <View style={styles.memberAvatar}>
-                  <Ionicons name="person" size={20} color="#be185d" />
+                <View style={styles.memberAvatarContainer}>
+                  {member.photoURL ? (
+                    <Image source={{ uri: member.photoURL }} style={styles.memberAvatarImage} />
+                  ) : (
+                    <View style={styles.memberAvatar}>
+                      <Text style={styles.memberAvatarInitials}>
+                        {member.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) || '?'}
+                      </Text>
+                    </View>
+                  )}
+                  {/* Activity Status Indicator */}
+                  <View style={[styles.statusDot, { backgroundColor: member.isActive ? '#10b981' : '#ef4444' }]} />
                 </View>
                 <View style={styles.memberInfo}>
-                  <Text style={styles.memberName}>{member.name}</Text>
+                  <View style={styles.memberNameRow}>
+                    <Text style={styles.memberName}>{member.name}</Text>
+                    {!member.isActive && (
+                      <View style={styles.excludedIndicator}>
+                        <Text style={styles.excludedText}>Excluded</Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={styles.memberRole}>{member.familyRole}</Text>
                 </View>
                 {member.uid === family.adminId && (
@@ -406,6 +423,15 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 12,
   },
+  memberAvatarContainer: {
+    position: 'relative',
+  },
+  memberAvatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#fce7f3',
+  },
   memberAvatar: {
     width: 44,
     height: 44,
@@ -419,8 +445,39 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
+  memberAvatarInitials: {
+    color: '#831843',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  statusDot: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+  },
   memberInfo: {
     flex: 1,
+  },
+  memberNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  excludedIndicator: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  excludedText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '600',
   },
   memberName: {
     fontSize: 17,

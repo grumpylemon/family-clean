@@ -3,8 +3,15 @@ import {
   Chore,
   Family,
   FamilyMember,
-  User
+  User,
+  CompletionReward,
+  ChoreCompletionRecord
 } from '@/types';
+import { 
+  processChoreCompletion, 
+  applyCompletionRewards,
+  calculateStreakBonus 
+} from './gamification';
 import {
   addDoc,
   collection,
@@ -373,9 +380,9 @@ export const deleteChore = async (choreId: string) => {
   }
 };
 
-export const completeChore = async (choreId: string) => {
+export const completeChore = async (choreId: string): Promise<{ success: boolean; reward?: CompletionReward; error?: string }> => {
   if (shouldReturnMockImmediately()) {
-    return true;
+    return { success: true };
   }
 
   try {
@@ -385,7 +392,7 @@ export const completeChore = async (choreId: string) => {
     // For mock implementation, we would update the UI state directly
     if (isMockImplementation()) {
       console.log(`Mock complete chore: ${choreId}`);
-      return true;
+      return { success: true };
     }
 
     // Fetch the chore
@@ -397,7 +404,10 @@ export const completeChore = async (choreId: string) => {
     if (chore.lockedUntil) {
       const lockedUntil = new Date(chore.lockedUntil);
       if (lockedUntil > new Date()) {
-        throw new Error('Chore is currently locked and cannot be completed yet.');
+        return { 
+          success: false, 
+          error: `Chore is locked until ${lockedUntil.toLocaleDateString()} ${lockedUntil.toLocaleTimeString()}` 
+        };
       }
     }
 
@@ -409,118 +419,199 @@ export const completeChore = async (choreId: string) => {
     const family = await getFamily(chore.familyId);
     if (!family) throw new Error('Family not found');
 
-    // 1. Calculate points/XP/money gain
-    let pointsEarned = chore.points;
-    let xpEarned = 0;
-    switch (chore.difficulty) {
-      case 'easy': xpEarned = 5; break;
-      case 'medium': xpEarned = 10; break;
-      case 'hard': xpEarned = 15; break;
-      default: xpEarned = 5;
-    }
-    // TODO: Add money logic if monetary system is enabled
-
-    // 2. Update streaks (simple: +1 for each day with a completed chore)
     const today = new Date();
+
+    // 1. Update streak tracking
     let streak = userProfile.streak || { current: 0, longest: 0 };
     const lastCompleted = streak.lastCompletedDate ? new Date(streak.lastCompletedDate) : null;
-    const isConsecutive = lastCompleted &&
-      today.getFullYear() === lastCompleted.getFullYear() &&
-      today.getMonth() === lastCompleted.getMonth() &&
-      today.getDate() === lastCompleted.getDate() + 1;
-    if (isConsecutive) {
+    
+    // Check if completion is consecutive (same day or next day)
+    let isConsecutive = false;
+    if (lastCompleted) {
+      const daysDiff = Math.floor((today.getTime() - lastCompleted.getTime()) / (1000 * 60 * 60 * 24));
+      isConsecutive = daysDiff <= 1;
+    }
+    
+    if (isConsecutive || !lastCompleted) {
       streak.current += 1;
     } else {
-      streak.current = 1;
+      streak.current = 1; // Reset streak
     }
+    
     streak.longest = Math.max(streak.longest, streak.current);
     streak.lastCompletedDate = today.toISOString();
 
-    // 3. Update user points and XP
-    const updatedPoints = {
-      current: (userProfile.points?.current || 0) + pointsEarned,
-      lifetime: (userProfile.points?.lifetime || 0) + pointsEarned,
-      weekly: (userProfile.points?.weekly || 0) + pointsEarned,
+    // 2. Calculate completion count
+    const completionCount = (chore.completionCount || 0) + 1;
+
+    // 3. Process gamification rewards (XP, achievements, levels)
+    const reward = await processChoreCompletion(
+      currentUser.uid,
+      chore.points,
+      chore.difficulty,
+      completionCount
+    );
+
+    console.log('Completion reward calculated:', reward);
+
+    // 4. Apply streak bonus to points
+    const streakBonus = calculateStreakBonus(streak.current);
+    const finalPoints = Math.round(reward.pointsEarned * streakBonus);
+
+    // 5. Update user profile with all rewards and streak
+    const updatedUserProfile = {
+      points: {
+        current: (userProfile.points?.current || 0) + finalPoints,
+        lifetime: (userProfile.points?.lifetime || 0) + finalPoints,
+        weekly: (userProfile.points?.weekly || 0) + finalPoints,
+      },
+      streak,
+      updatedAt: today,
     };
-    // TODO: Add XP and level logic if needed
 
-    // 4. Check for achievements (placeholder, implement as needed)
-    // TODO: Implement achievement logic
+    // Apply gamification rewards (XP, level, achievements)
+    await applyCompletionRewards(currentUser.uid, reward, streak.current);
+    
+    // Update basic profile data
+    await createOrUpdateUserProfile(currentUser.uid, updatedUserProfile);
 
-    // 5. Set cooldown (lockedUntil)
-    const cooldownHours = chore.cooldownHours || family.settings.defaultChoreCooldownHours || 24;
+    // 6. Set cooldown (lockedUntil)
+    const cooldownHours = chore.cooldownHours || family.settings?.defaultChoreCooldownHours || 24;
     const lockedUntil = new Date(Date.now() + cooldownHours * 60 * 60 * 1000);
 
-    // 6. Update chore as completed
+    // 7. Update chore as completed
     const completionData = formatForFirestore({
       completedBy: currentUser.uid,
       completedAt: today,
       status: 'completed',
       lockedUntil: lockedUntil.toISOString(),
+      completionCount,
     });
     await setDoc(doc(getChoresCollection(), choreId), completionData, { merge: true });
 
-    // 7. Update user profile with new points and streak
-    await createOrUpdateUserProfile(currentUser.uid, {
-      points: updatedPoints,
-      streak,
-      updatedAt: new Date(),
-    });
+    // 8. Log completion record for analytics
+    const completionRecord: Omit<ChoreCompletionRecord, 'id'> = {
+      choreId,
+      userId: currentUser.uid,
+      completedAt: today,
+      pointsEarned: finalPoints,
+      xpEarned: reward.xpEarned,
+      streakDay: streak.current,
+      bonusMultiplier: streakBonus > 1 ? streakBonus : undefined,
+      achievementsUnlocked: reward.achievementsUnlocked?.map(a => a.id),
+      familyId: chore.familyId,
+    };
 
-    // 8. For family/shared chores, update rotation after cooldown
+    try {
+      // Store completion record (optional - for analytics)
+      const completionsRef = collection(getFirestore(), 'choreCompletions');
+      await addDoc(completionsRef, formatForFirestore(completionRecord));
+    } catch (recordError) {
+      console.warn('Failed to store completion record:', recordError);
+      // Don't fail the whole operation for analytics
+    }
+
+    // 9. Handle rotation for family/shared chores
     if (chore.type === 'family' || chore.type === 'shared') {
-      // Find eligible members (active, not excluded)
-      const rotationOrder = family.memberRotationOrder || family.members.filter(m => m.isActive).map(m => m.uid);
-      let nextIndex = typeof family.nextFamilyChoreAssigneeIndex === 'number' ? family.nextFamilyChoreAssigneeIndex : 0;
-      // Remove excluded/inactive members from rotation
-      const eligibleMembers = rotationOrder.filter(uid => {
-        const member = family.members.find(m => m.uid === uid);
-        return member && member.isActive;
+      await handleChoreRotation(chore, family, lockedUntil);
+    } else {
+      // For individual chores, just update the lock time and reset status
+      await updateChore(choreId, {
+        status: 'open',
+        lockedUntil: lockedUntil.toISOString(),
       });
-      if (eligibleMembers.length === 0) {
-        // All members are excluded
-        await updateChore(choreId, {
-          assignedTo: '',
-          assignedToName: '',
+    }
+
+    return { 
+      success: true, 
+      reward: {
+        ...reward,
+        pointsEarned: finalPoints, // Update with streak bonus
+        streakBonus: streakBonus > 1 ? streakBonus : undefined
+      }
+    };
+  } catch (error) {
+    console.error('Error completing chore:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    };
+  }
+};
+
+// Helper function to handle chore rotation logic
+const handleChoreRotation = async (chore: Chore, family: Family, lockedUntil: Date) => {
+  try {
+    // Find eligible members (active, not excluded)
+    const rotationOrder = family.memberRotationOrder || family.members.filter(m => m.isActive).map(m => m.uid);
+    let nextIndex = typeof family.nextFamilyChoreAssigneeIndex === 'number' ? family.nextFamilyChoreAssigneeIndex : 0;
+    
+    // Remove excluded/inactive members from rotation
+    const eligibleMembers = rotationOrder.filter(uid => {
+      const member = family.members.find(m => m.uid === uid);
+      return member && member.isActive;
+    });
+    
+    if (eligibleMembers.length === 0) {
+      // All members are excluded
+      await updateChore(chore.id!, {
+        assignedTo: '',
+        assignedToName: '',
+        status: 'open',
+        lockedUntil: lockedUntil.toISOString(),
+      });
+      console.warn('No eligible members for rotation. Chore left unassigned.');
+      return;
+    }
+    
+    // Find the next eligible member
+    let found = false;
+    let attempts = 0;
+    let candidateIndex = nextIndex;
+    
+    while (!found && attempts < eligibleMembers.length) {
+      const candidateUid = eligibleMembers[candidateIndex % eligibleMembers.length];
+      
+      if (candidateUid !== chore.assignedTo) {
+        found = true;
+        nextIndex = (candidateIndex + 1) % eligibleMembers.length;
+        
+        // Assign to next eligible member
+        const member = family.members.find(m => m.uid === candidateUid);
+        await updateChore(chore.id!, {
+          assignedTo: candidateUid,
+          assignedToName: member?.name || '',
           status: 'open',
           lockedUntil: lockedUntil.toISOString(),
         });
-        console.warn('No eligible members for rotation. Chore left unassigned.');
+        
+        // Update family rotation index
+        await updateFamily(family.id!, {
+          nextFamilyChoreAssigneeIndex: nextIndex,
+          memberRotationOrder: eligibleMembers,
+        });
+        
+        console.log(`Rotated chore ${chore.id} to ${member?.name} (${candidateUid})`);
       } else {
-        // Find the next eligible member
-        let found = false;
-        let attempts = 0;
-        let candidateIndex = nextIndex;
-        while (!found && attempts < eligibleMembers.length) {
-          const candidateUid = eligibleMembers[candidateIndex % eligibleMembers.length];
-          if (candidateUid !== chore.assignedTo) {
-            found = true;
-            nextIndex = (candidateIndex + 1) % eligibleMembers.length;
-            // Assign to next eligible member
-            const member = family.members.find(m => m.uid === candidateUid);
-            await updateChore(choreId, {
-              assignedTo: candidateUid,
-              assignedToName: member?.name || '',
-              status: 'open',
-              lockedUntil: lockedUntil.toISOString(),
-            });
-            // Update family rotation index
-            await updateFamily(family.id!, {
-              nextFamilyChoreAssigneeIndex: nextIndex,
-              memberRotationOrder: eligibleMembers,
-            });
-          } else {
-            candidateIndex++;
-            attempts++;
-          }
-        }
+        candidateIndex++;
+        attempts++;
       }
     }
-
-    return true;
+    
+    if (!found) {
+      console.warn('Could not find a different member for rotation, keeping current assignment');
+      await updateChore(chore.id!, {
+        status: 'open',
+        lockedUntil: lockedUntil.toISOString(),
+      });
+    }
   } catch (error) {
-    console.error('Error completing chore:', error);
-    return false;
+    console.error('Error in chore rotation:', error);
+    // Fallback: just unlock the chore
+    await updateChore(chore.id!, {
+      status: 'open',
+      lockedUntil: lockedUntil.toISOString(),
+    });
   }
 };
 

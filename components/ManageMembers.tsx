@@ -6,10 +6,12 @@ import {
     Alert,
     Image,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
     TextInput,
+    ToastAndroid,
     TouchableOpacity,
     View,
 } from 'react-native';
@@ -27,8 +29,26 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
   const [editingName, setEditingName] = useState<string | null>(null);
   const [editedRole, setEditedRole] = useState<FamilyRole>('child');
   const [editedName, setEditedName] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'excluded'>('all');
 
   if (!family) return null;
+
+  const showSuccessMessage = (message: string) => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      Alert.alert('Success', message);
+    }
+  };
+
+  const showErrorMessage = (message: string) => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message, ToastAndroid.LONG);
+    } else {
+      Alert.alert('Error', message);
+    }
+  };
 
   const handleRoleChange = async (memberId: string, newRole: FamilyRole) => {
     setLoading(true);
@@ -36,13 +56,13 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
       // For family management, we keep the user role as 'member' and only change familyRole
       const success = await updateMemberRole(memberId, 'member', newRole);
       if (success) {
-        Alert.alert('Success', 'Member role updated successfully');
+        showSuccessMessage('Member role updated successfully');
         setEditingMember(null);
       } else {
-        Alert.alert('Error', 'Failed to update member role');
+        showErrorMessage('Failed to update member role');
       }
     } catch (error) {
-      Alert.alert('Error', 'An error occurred while updating the role');
+      showErrorMessage('An error occurred while updating the role');
       console.error('Error updating role:', error);
     } finally {
       setLoading(false);
@@ -51,7 +71,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
 
   const handleNameChange = async (memberId: string, newName: string) => {
     if (!newName.trim()) {
-      Alert.alert('Error', 'Name cannot be empty');
+      showErrorMessage('Name cannot be empty');
       return;
     }
 
@@ -59,13 +79,13 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
     try {
       const success = await updateMemberName(memberId, newName.trim());
       if (success) {
-        Alert.alert('Success', 'Member name updated successfully');
+        showSuccessMessage('Member name updated successfully');
         setEditingName(null);
       } else {
-        Alert.alert('Error', 'Failed to update member name');
+        showErrorMessage('Failed to update member name');
       }
     } catch (error) {
-      Alert.alert('Error', 'An error occurred while updating the name');
+      showErrorMessage('An error occurred while updating the name');
       console.error('Error updating name:', error);
     } finally {
       setLoading(false);
@@ -86,12 +106,12 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
             try {
               const success = await removeMember(member.uid);
               if (success) {
-                Alert.alert('Success', 'Member removed from family');
+                showSuccessMessage('Member removed from family');
               } else {
-                Alert.alert('Error', 'Failed to remove member');
+                showErrorMessage('Failed to remove member');
               }
             } catch (error) {
-              Alert.alert('Error', 'An error occurred while removing the member');
+              showErrorMessage('An error occurred while removing the member');
               console.error('Error removing member:', error);
             } finally {
               setLoading(false);
@@ -115,9 +135,9 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
             setLoading(true);
             try {
               const success = await updateFamilyMember(family!.id!, member.uid, { isActive: false });
-              if (success) Alert.alert('Success', 'Member excluded');
+              if (success) showSuccessMessage('Member excluded');
             } catch (error) {
-              Alert.alert('Error', 'Failed to exclude member');
+              showErrorMessage('Failed to exclude member');
             } finally {
               setLoading(false);
             }
@@ -139,9 +159,9 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
             setLoading(true);
             try {
               const success = await updateFamilyMember(family!.id!, member.uid, { isActive: true });
-              if (success) Alert.alert('Success', 'Member re-included');
+              if (success) showSuccessMessage('Member re-included');
             } catch (error) {
-              Alert.alert('Error', 'Failed to re-include member');
+              showErrorMessage('Failed to re-include member');
             } finally {
               setLoading(false);
             }
@@ -154,15 +174,27 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
   const getRoleColor = (role: FamilyRole) => {
     switch (role) {
       case 'parent':
-        return '#4285F4';
+        return '#be185d';
       case 'child':
-        return '#34A853';
+        return '#10b981';
       case 'other':
-        return '#FBBC04';
+        return '#f59e0b';
       default:
-        return '#666';
+        return '#831843';
     }
   };
+
+  // Filter members based on search query and status
+  const filteredMembers = family.members.filter(member => {
+    const matchesSearch = member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (member.email && member.email.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesStatus = filterStatus === 'all' ||
+                         (filterStatus === 'active' && member.isActive) ||
+                         (filterStatus === 'excluded' && !member.isActive);
+    
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <Modal
@@ -179,8 +211,41 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
           </TouchableOpacity>
         </View>
 
+        {/* Search and Filter Controls */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search members..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor="#9ca3af"
+          />
+          <View style={styles.filterContainer}>
+            {(['all', 'active', 'excluded'] as const).map((status) => (
+              <TouchableOpacity
+                key={status}
+                style={[
+                  styles.filterButton,
+                  filterStatus === status && styles.filterButtonActive
+                ]}
+                onPress={() => setFilterStatus(status)}
+              >
+                <Text style={[
+                  styles.filterButtonText,
+                  filterStatus === status && styles.filterButtonTextActive
+                ]}>
+                  {status.charAt(0).toUpperCase() + status.slice(1)} 
+                  {status === 'all' && ` (${family.members.length})`}
+                  {status === 'active' && ` (${family.members.filter(m => m.isActive).length})`}
+                  {status === 'excluded' && ` (${family.members.filter(m => !m.isActive).length})`}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         <ScrollView style={styles.scrollView}>
-          {family.members.map((member) => {
+          {filteredMembers.map((member) => {
             const isAdmin = member.uid === family.adminId;
             const isEditing = editingMember === member.uid;
             const isExcluded = !member.isActive;
@@ -389,12 +454,12 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                                     try {
                                       const success = await updateMemberRole(member.uid, 'member', member.familyRole);
                                       if (success) {
-                                        Alert.alert('Success', 'Admin rights removed');
+                                        showSuccessMessage('Admin rights removed');
                                       } else {
-                                        Alert.alert('Error', 'Failed to remove admin rights');
+                                        showErrorMessage('Failed to remove admin rights');
                                       }
                                     } catch (error) {
-                                      Alert.alert('Error', 'An error occurred');
+                                      showErrorMessage('An error occurred');
                                       console.error('Error demoting admin:', error);
                                     } finally {
                                       setLoading(false);
@@ -433,12 +498,12 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                                     const success = await updateMemberRole(member.uid, 'admin', member.familyRole);
                                     console.log('updateMemberRole returned:', success);
                                     if (success) {
-                                      Alert.alert('Success', `${member.name} is now an admin`);
+                                      showSuccessMessage(`${member.name} is now an admin`);
                                     } else {
-                                      Alert.alert('Error', 'Failed to grant admin rights');
+                                      showErrorMessage('Failed to grant admin rights');
                                     }
                                   } catch (error) {
-                                    Alert.alert('Error', 'An error occurred');
+                                    showErrorMessage('An error occurred');
                                     console.error('Error promoting to admin:', error);
                                   } finally {
                                     setLoading(false);
@@ -464,7 +529,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
 
         {loading && (
           <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#4285F4" />
+            <ActivityIndicator size="large" color="#be185d" />
           </View>
         )}
       </View>
@@ -475,7 +540,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fdf2f8',
   },
   header: {
     flexDirection: 'row',
@@ -500,7 +565,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   closeButtonText: {
-    color: '#4285F4',
+    color: '#be185d',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -536,16 +601,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     borderBottomWidth: 1,
-    borderBottomColor: '#4285F4',
+    borderBottomColor: '#be185d',
     paddingVertical: 4,
     minWidth: 200,
-    color: '#000',
+    color: '#831843',
   },
   adminBadge: {
-    backgroundColor: '#4285F4',
+    backgroundColor: '#be185d',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 8,
   },
   adminBadgeText: {
     color: 'white',
@@ -581,7 +646,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
   },
   roleOptionSelected: {
-    backgroundColor: 'rgba(66, 133, 244, 0.1)',
+    backgroundColor: 'rgba(190, 24, 93, 0.1)',
   },
   roleOptionText: {
     fontSize: 14,
@@ -598,21 +663,21 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   editButton: {
-    backgroundColor: '#4285F4',
+    backgroundColor: '#be185d',
   },
   editButtonText: {
     color: 'white',
     fontWeight: '600',
   },
   removeButton: {
-    backgroundColor: '#EA4335',
+    backgroundColor: '#ef4444',
   },
   removeButtonText: {
     color: 'white',
     fontWeight: '600',
   },
   saveButton: {
-    backgroundColor: '#34A853',
+    backgroundColor: '#10b981',
   },
   saveButtonText: {
     color: 'white',
@@ -626,7 +691,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   adminButton: {
-    backgroundColor: '#9333ea',
+    backgroundColor: '#8b5cf6',
   },
   adminButtonText: {
     color: 'white',
@@ -638,7 +703,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(248, 250, 252, 0.95)',
+    backgroundColor: 'rgba(253, 242, 248, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -693,5 +758,48 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: -2,
     bottom: -2,
+  },
+  searchContainer: {
+    padding: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  searchInput: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#374151',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    marginBottom: 12,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  filterButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+  },
+  filterButtonActive: {
+    backgroundColor: '#fce7f3',
+    borderColor: '#be185d',
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  filterButtonTextActive: {
+    color: '#be185d',
   },
 });

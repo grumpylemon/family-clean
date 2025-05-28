@@ -117,3 +117,26 @@ ow to Test Your App on iPhone
   3. Add yourself as internal tester in App Store Connect
   4. Accept invite in TestFlight app on your iPhone
   5. Install and test your app!
+
+
+   iOS Build & Deploy Commands:
+
+  1. Build iOS App:
+
+  eas build --platform ios
+
+  2. Submit to App Store (after build completes):
+
+  eas submit --platform ios
+
+  Alternative Build Profiles:
+
+  # Preview build (internal testing)
+  eas build --platform ios --profile preview
+
+  # Development build (for Expo Go alternative)
+  eas build --platform ios --profile development
+
+  Current Status:
+
+  - ✅ Web deployed: https://family-fun-app.web.app (live with pink
