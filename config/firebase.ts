@@ -191,8 +191,8 @@ export const initializeMockData = () => {
   console.log("Mock data initialized successfully");
 };
 
-// Version to confirm updates (v8)
-console.log("Firebase config version: v8");
+// Version to confirm updates (v9)
+console.log("Firebase config version: v9");
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -202,6 +202,20 @@ const firebaseConfig = {
   storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
   messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || ""
+};
+
+// Validate Firebase configuration
+const validateFirebaseConfig = (): boolean => {
+  const requiredFields = ['apiKey', 'authDomain', 'projectId', 'appId'];
+  const missingFields = requiredFields.filter(field => !firebaseConfig[field as keyof typeof firebaseConfig]);
+  
+  if (missingFields.length > 0) {
+    console.error('Missing Firebase configuration fields:', missingFields);
+    return false;
+  }
+  
+  console.log('Firebase configuration validated successfully');
+  return true;
 };
 
 // Mock user data for testing
@@ -228,17 +242,34 @@ let _firestoreDb: any = null;
 // 1. On iOS in Expo Go (due to Expo Go limitations with Firebase native modules)
 // 2. During development/testing if explicitly requested
 export const shouldUseMock = (): boolean => {
-  // Check if running in Expo Go
-  const isExpoGo = !__DEV__ ? false : !(global as any).expo?.modules?.ExpoUpdates?.isEmbeddedLaunch;
+  console.log('--- shouldUseMock() Debug Info ---');
+  console.log('Platform.OS:', Platform.OS);
+  console.log('__DEV__:', __DEV__);
+  console.log('process.env.EXPO_PUBLIC_USE_MOCK:', process.env.EXPO_PUBLIC_USE_MOCK);
   
-  if (Platform.OS === 'ios' && isExpoGo) {
-    console.log('iOS Expo Go detected, using mock implementation');
-    return true;
-  }
-  
+  // Check environment variable first - explicit override
   if (process.env.EXPO_PUBLIC_USE_MOCK === 'true') {
     console.log('Mock mode enabled via environment variable');
     return true;
+  }
+  
+  // For production builds, never use mock unless explicitly requested
+  if (!__DEV__) {
+    console.log('Production build detected, using real Firebase implementation');
+    return false;
+  }
+  
+  // Only in development, check if running in Expo Go
+  try {
+    const isExpoGo = !(global as any).expo?.modules?.ExpoUpdates?.isEmbeddedLaunch;
+    console.log('isExpoGo (development only):', isExpoGo);
+    
+    if (Platform.OS === 'ios' && isExpoGo) {
+      console.log('iOS Expo Go detected in development, using mock implementation');
+      return true;
+    }
+  } catch (error) {
+    console.log('Error checking Expo Go status:', error);
   }
   
   console.log('Using real Firebase implementation');
@@ -263,11 +294,20 @@ export const initializeFirebase = async () => {
     return;
   }
   
+  // Validate Firebase configuration before initializing
+  if (!validateFirebaseConfig()) {
+    console.error("Invalid Firebase configuration, falling back to mock implementation");
+    _isUsingMock = true;
+    initializeMockData();
+    _firebaseInitialized = true;
+    return;
+  }
+  
   try {
     // Check if Firebase is already initialized
     const apps = getApps();
     if (apps.length === 0) {
-      console.log("Initializing Firebase with config");
+      console.log("Initializing Firebase with config:", firebaseConfig);
       initializeApp(firebaseConfig);
     } else {
       console.log("Firebase app already initialized, using existing app");

@@ -3,8 +3,8 @@ import { GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPo
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 
-// Version to confirm updates (v5)
-console.log("AuthContext version: v5");
+// Version to confirm updates (v6)
+console.log("AuthContext version: v6");
 
 // Define the shape of the auth context
 export interface AuthContextType {
@@ -44,6 +44,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     let unsubscribe = () => {};
     
+    if (isMockMode) {
+      // For mock mode, auto-sign in as guest after a short delay
+      console.log("Setting up mock auth state listener - auto-signing in as guest");
+      
+      const autoSignIn = async () => {
+        try {
+          // Auto-sign in as guest in mock mode
+          await signInAsGuest();
+        } catch (error) {
+          console.error("Auto-sign in failed in mock mode:", error);
+          setLoading(false);
+        }
+      };
+      
+      // Auto-sign in after a short delay
+      const timer = setTimeout(autoSignIn, 500);
+      
+      // Return cleanup function
+      return () => clearTimeout(timer);
+    }
+    
     try {
       console.log("Setting up auth state listener");
       unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -69,10 +90,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log(`Attempting Google sign in on ${Platform.OS}, mock mode: ${isMockMode}`);
       
       if (isMockMode) {
-        // Use mock authentication via the firebase mock auth instance
+        // Create a mock user for Google sign in
         console.log("Using mock Google sign in");
-        const result = await signInWithPopup(auth, googleProvider as GoogleAuthProvider);
-        console.log("Mock Google sign in completed", result.user ? "with user" : "but no user returned");
+        const mockUser = {
+          uid: 'google-user-123',
+          email: 'user@gmail.com',
+          displayName: 'Google User',
+          photoURL: 'https://via.placeholder.com/150',
+          emailVerified: true,
+          isAnonymous: false,
+          providerId: 'google.com',
+          refreshToken: 'mock-refresh-token',
+          accessToken: 'mock-access-token',
+          metadata: {},
+          providerData: [],
+          tenantId: null
+        } as unknown as User;
+        
+        setUser(mockUser);
+        console.log("Mock Google sign in completed with mock user");
       } else {
         // For web with valid Firebase config
         try {
@@ -108,10 +144,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Signing in as guest, mock mode:", isMockMode);
       
       if (isMockMode) {
-        // Use mock authentication via the firebase mock auth instance
+        // Create a mock guest user
         console.log("Using mock anonymous sign in");
-        const result = await signInAnonymously(auth);
-        console.log("Mock anonymous sign in completed", result.user ? "with user" : "but no user returned");
+        const mockGuestUser = {
+          uid: 'guest-admin-user',
+          email: 'guest@familyclean.app',
+          displayName: 'John Smith',
+          photoURL: null,
+          emailVerified: false,
+          isAnonymous: true,
+          providerId: 'anonymous',
+          refreshToken: 'mock-refresh-token',
+          accessToken: 'mock-access-token',
+          metadata: {},
+          providerData: [],
+          tenantId: null
+        } as unknown as User;
+        
+        setUser(mockGuestUser);
+        console.log("Mock anonymous sign in completed with John Smith test user");
       } else {
         // Try real anonymous auth
         try {
@@ -152,10 +203,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       setError(null);
       
-      // Use Firebase signOut for both mock and real mode
-      // The mock auth now properly handles signOut and notifies listeners
       console.log("Signing out...");
-      await signOut(auth);
+      
+      if (isMockMode) {
+        // For mock mode, just clear the user state
+        console.log("Mock sign out");
+        setUser(null);
+      } else {
+        // Use Firebase signOut for real mode
+        await signOut(auth);
+      }
       
     } catch (err) {
       setError(`Sign out failed: ${err instanceof Error ? err.message : String(err)}`);
