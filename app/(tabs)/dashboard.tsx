@@ -78,7 +78,7 @@ export default function DashboardScreen() {
   if (authLoading || familyLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#4285F4" />
+        <ActivityIndicator size="large" color="#be185d" />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
@@ -154,7 +154,7 @@ export default function DashboardScreen() {
             style={styles.actionCard}
             onPress={() => setShowFamilySettings(true)}
           >
-            <Ionicons name="people-outline" size={28} color="#3b82f6" />
+            <Ionicons name="people-outline" size={28} color="#be185d" />
             <Text style={styles.actionCardText}>Family Info</Text>
           </TouchableOpacity>
         </View>
@@ -169,7 +169,7 @@ export default function DashboardScreen() {
           </View>
           
           {loadingChores ? (
-            <ActivityIndicator size="small" color="#4285F4" />
+            <ActivityIndicator size="small" color="#be185d" />
           ) : myChores.length === 0 ? (
             <Text style={styles.emptyText}>No chores assigned to you</Text>
           ) : (
@@ -284,18 +284,13 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fdf2f8',
   },
   header: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fdf2f8',
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
     paddingBottom: 20,
     paddingHorizontal: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
   },
   headerContent: {
     flexDirection: 'row',
@@ -303,20 +298,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   greeting: {
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: 18,
+    color: '#be185d',
     fontWeight: '500',
   },
   userName: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
-    color: '#111827',
-    marginTop: 2,
+    color: '#831843',
+    marginTop: 4,
   },
   logoutButton: {
-    padding: 10,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 12,
+    padding: 12,
+    backgroundColor: '#f9a8d4',
+    borderRadius: 20,
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
   scrollView: {
     flex: 1,
@@ -386,8 +386,8 @@ const styles = StyleSheet.create({
     borderColor: '#f1f5f9',
   },
   primaryAction: {
-    backgroundColor: '#3b82f6',
-    borderColor: '#3b82f6',
+    backgroundColor: '#be185d',
+    borderColor: '#be185d',
   },
   actionCardText: {
     fontSize: 16,
@@ -405,15 +405,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 24,
     backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderRadius: 24,
+    padding: 28,
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 6,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -422,53 +420,57 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 4,
+    color: '#831843',
+    marginBottom: 8,
   },
   seeAllText: {
-    color: '#3b82f6',
+    color: '#be185d',
     fontSize: 16,
     fontWeight: '600',
   },
   emptyText: {
     textAlign: 'center',
-    color: '#9ca3af',
+    color: '#be185d',
     paddingVertical: 32,
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '500',
+    opacity: 0.7,
   },
   choreItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    paddingVertical: 18,
+    marginBottom: 12,
+    backgroundColor: '#fce7f3',
+    borderRadius: 16,
+    paddingHorizontal: 16,
   },
   choreInfo: {
     flex: 1,
   },
   choreTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
     marginBottom: 4,
-    color: '#1f2937',
+    color: '#831843',
   },
   choreDate: {
-    fontSize: 14,
-    color: '#6b7280',
+    fontSize: 15,
+    color: '#be185d',
     fontWeight: '500',
+    opacity: 0.8,
   },
   chorePoints: {
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#a7f3d0',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
   },
   chorePointsText: {
-    color: '#d97706',
+    color: '#065f46',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -480,57 +482,66 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   adminCard: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fce7f3',
     padding: 20,
-    borderRadius: 16,
+    borderRadius: 20,
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     minWidth: 100,
     maxWidth: 110,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   adminCardText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     textAlign: 'center',
-    color: '#475569',
+    color: '#be185d',
   },
   familyCodeSection: {
     marginHorizontal: 20,
     marginBottom: 20,
-    backgroundColor: '#f0f9ff',
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: '#bbf7d0',
+    borderRadius: 24,
+    padding: 28,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e0f2fe',
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
   },
   familyCodeLabel: {
-    fontSize: 16,
-    color: '#0369a1',
+    fontSize: 18,
+    color: '#064e3b',
     marginBottom: 8,
     fontWeight: '600',
   },
   familyCode: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '800',
-    color: '#0c4a6e',
+    color: '#022c22',
     letterSpacing: 4,
   },
   familyCodeHint: {
-    fontSize: 14,
-    color: '#0284c7',
+    fontSize: 16,
+    color: '#047857',
     marginTop: 8,
     fontWeight: '500',
   },
   testDataSection: {
     marginTop: 20,
-    padding: 16,
+    padding: 20,
     backgroundColor: '#fef3c7',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#fcd34d',
+    borderRadius: 20,
+    shadowColor: '#f59e0b',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   versionContainer: {
     alignItems: 'center',
@@ -539,8 +550,9 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: 14,
-    color: '#9ca3af',
+    color: '#be185d',
     fontWeight: '600',
     letterSpacing: 1,
+    opacity: 0.6,
   },
 });

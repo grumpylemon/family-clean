@@ -78,9 +78,9 @@ const firebaseConfig = {
 
 // Mock user data for testing
 export const mockUser = {
-  uid: 'mock-user-id',
-  email: 'demo@example.com',
-  displayName: 'Demo User',
+  uid: 'guest-admin-user',
+  email: 'guest@familyclean.app',
+  displayName: 'Guest Admin',
   photoURL: 'https://via.placeholder.com/150',
   emailVerified: true,
   isAnonymous: false,
@@ -265,7 +265,7 @@ export const auth = (() => {
       },
       signInAnonymously: async () => {
         console.log("Mock signInAnonymously called");
-        return { user: { ...mockUser, isAnonymous: true, displayName: 'Guest User' } };
+        return { user: { ...mockUser, isAnonymous: true, displayName: 'Guest Admin' } };
       },
       signOut: async () => {
         console.log("Mock signOut called");
@@ -287,7 +287,7 @@ export const auth = (() => {
         return () => {};
       },
       signInWithPopup: async () => ({ user: mockUser }),
-      signInAnonymously: async () => ({ user: { ...mockUser, isAnonymous: true, displayName: 'Guest User' } }),
+      signInAnonymously: async () => ({ user: { ...mockUser, isAnonymous: true, displayName: 'Guest Admin' } }),
       signOut: async () => {},
     } as any;
   }

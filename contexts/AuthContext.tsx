@@ -128,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Set the mock user directly with anonymous flag
         const anonymousUser = {
           ...mockUser,
-          displayName: 'Guest User',
+          displayName: 'Guest Admin',
           isAnonymous: true
         };
         setUser(anonymousUser as unknown as User);
@@ -141,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Add display name if needed
           if (result.user && !result.user.displayName) {
             Object.defineProperty(result.user, 'displayName', {
-              value: 'Guest User',
+              value: 'Guest Admin',
               writable: true
             });
           }

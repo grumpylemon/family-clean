@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/ThemedView';
 export default function ExploreScreen() {
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerBackgroundColor={{ light: '#f9a8d4', dark: '#831843' }}
       headerImage={
         <ThemedView style={styles.headerContent}>
           <ThemedText type="title" style={styles.headerTitle}>Explore</ThemedText>

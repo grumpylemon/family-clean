@@ -526,17 +526,17 @@ export const completeChore = async (choreId: string) => {
 
 // Mock family data
 const mockFamily: Family = {
-  id: 'mock-family-id',
-  name: 'Demo Family',
-  adminId: 'mock-admin-id',
-  joinCode: 'DEMO123',
+  id: 'demo-family-qj7fep',
+  name: 'Testing Family',
+  adminId: 'guest-admin-user',
+  joinCode: 'QJ7FEP',
   createdAt: new Date(),
   updatedAt: new Date(),
   members: [
     {
-      uid: 'mock-user-id',
-      name: 'Demo User',
-      email: 'demo@example.com',
+      uid: 'guest-admin-user',
+      name: 'Guest Admin',
+      email: 'guest@familyclean.app',
       role: 'admin',
       familyRole: 'parent',
       points: {
@@ -546,6 +546,36 @@ const mockFamily: Family = {
       },
       photoURL: 'https://via.placeholder.com/150',
       joinedAt: new Date(),
+      isActive: true
+    },
+    {
+      uid: 'test-user-1',
+      name: 'Alice Smith',
+      email: 'alice@example.com',
+      role: 'member',
+      familyRole: 'child',
+      points: {
+        current: 75,
+        lifetime: 200,
+        weekly: 15
+      },
+      photoURL: 'https://images.unsplash.com/photo-1494790108755-2616b9c66494?w=150',
+      joinedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      isActive: true
+    },
+    {
+      uid: 'test-user-2', 
+      name: 'Bob Johnson',
+      email: 'bob@example.com',
+      role: 'member',
+      familyRole: 'child',
+      points: {
+        current: 50,
+        lifetime: 150,
+        weekly: 10
+      },
+      photoURL: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      joinedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
       isActive: true
     }
   ],

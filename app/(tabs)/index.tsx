@@ -47,7 +47,7 @@ export default function HomeScreen() {
   if (authLoading || familyLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color="#be185d" />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
@@ -68,7 +68,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Family</Text>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color="#6b7280" />
+          <Ionicons name="log-out-outline" size={24} color="#831843" />
         </TouchableOpacity>
       </View>
 
@@ -88,7 +88,7 @@ export default function HomeScreen() {
         {/* User Profile Card */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="person-circle-outline" size={24} color="#3b82f6" />
+            <Ionicons name="person-circle-outline" size={24} color="#be185d" />
             <Text style={styles.sectionTitle}>Your Profile</Text>
           </View>
           
@@ -122,7 +122,7 @@ export default function HomeScreen() {
         {/* Family Info Card */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="people-outline" size={24} color="#3b82f6" />
+            <Ionicons name="people-outline" size={24} color="#be185d" />
             <Text style={styles.sectionTitle}>Family Info</Text>
           </View>
           
@@ -145,7 +145,7 @@ export default function HomeScreen() {
             {family.members.map((member) => (
               <View key={member.uid} style={styles.memberItem}>
                 <View style={styles.memberAvatar}>
-                  <Ionicons name="person" size={20} color="#6b7280" />
+                  <Ionicons name="person" size={20} color="#be185d" />
                 </View>
                 <View style={styles.memberInfo}>
                   <Text style={styles.memberName}>{member.name}</Text>
@@ -165,7 +165,7 @@ export default function HomeScreen() {
               style={styles.settingsButton}
               onPress={() => setShowFamilySettings(true)}
             >
-              <Ionicons name="settings-outline" size={20} color="#3b82f6" />
+              <Ionicons name="settings-outline" size={20} color="#be185d" />
               <Text style={styles.settingsButtonText}>View Settings</Text>
             </TouchableOpacity>
           )}
@@ -175,7 +175,7 @@ export default function HomeScreen() {
         {isAdmin && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="shield-outline" size={24} color="#3b82f6" />
+              <Ionicons name="shield-outline" size={24} color="#be185d" />
               <Text style={styles.sectionTitle}>Admin Tools</Text>
             </View>
             
@@ -184,7 +184,7 @@ export default function HomeScreen() {
                 style={styles.adminCard}
                 onPress={() => setShowManageMembers(true)}
               >
-                <Ionicons name="people" size={24} color="#64748b" />
+                <Ionicons name="people" size={24} color="#be185d" />
                 <Text style={styles.adminCardText}>Manage Members</Text>
               </TouchableOpacity>
               
@@ -192,7 +192,7 @@ export default function HomeScreen() {
                 style={styles.adminCard}
                 onPress={() => setShowChoreManagement(true)}
               >
-                <Ionicons name="list" size={24} color="#64748b" />
+                <Ionicons name="list" size={24} color="#be185d" />
                 <Text style={styles.adminCardText}>Manage Chores</Text>
               </TouchableOpacity>
               
@@ -200,7 +200,7 @@ export default function HomeScreen() {
                 style={styles.adminCard}
                 onPress={() => setShowFamilySettings(true)}
               >
-                <Ionicons name="settings" size={24} color="#64748b" />
+                <Ionicons name="settings" size={24} color="#be185d" />
                 <Text style={styles.adminCardText}>Family Settings</Text>
               </TouchableOpacity>
             </View>
@@ -239,31 +239,31 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fdf2f8',
   },
   header: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fdf2f8',
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
     paddingBottom: 20,
     paddingHorizontal: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
-    color: '#1f2937',
+    color: '#831843',
   },
   logoutButton: {
-    padding: 10,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 12,
+    padding: 12,
+    backgroundColor: '#f9a8d4',
+    borderRadius: 20,
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
   scrollView: {
     flex: 1,
@@ -282,15 +282,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   welcomeTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
-    color: '#1f2937',
+    color: '#831843',
     marginBottom: 8,
     textAlign: 'center',
   },
   welcomeSubtitle: {
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: 18,
+    color: '#be185d',
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -298,15 +298,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 24,
     backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderRadius: 24,
+    padding: 28,
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 6,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -315,22 +313,22 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700',
-    color: '#1f2937',
+    color: '#831843',
   },
   profileInfo: {
     marginBottom: 20,
   },
   profileName: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '600',
-    color: '#1f2937',
+    color: '#831843',
     marginBottom: 4,
   },
   profileRole: {
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: 17,
+    color: '#be185d',
     fontWeight: '500',
   },
   statsRow: {
@@ -344,15 +342,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
-    color: '#1f2937',
+    color: '#831843',
   },
   statLabel: {
-    fontSize: 12,
-    color: '#6b7280',
+    fontSize: 13,
+    color: '#be185d',
     marginTop: 4,
     fontWeight: '600',
+    opacity: 0.8,
   },
   familyDetails: {
     marginBottom: 20,
@@ -364,27 +363,30 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   familyDetailLabel: {
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: 17,
+    color: '#be185d',
     fontWeight: '500',
   },
   familyDetailValue: {
-    fontSize: 16,
-    color: '#1f2937',
+    fontSize: 17,
+    color: '#831843',
     fontWeight: '600',
   },
   joinCodeContainer: {
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#bbf7d0',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0f2fe',
+    paddingVertical: 8,
+    borderRadius: 16,
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   joinCode: {
     fontWeight: '700',
-    fontSize: 16,
-    color: '#0c4a6e',
+    fontSize: 17,
+    color: '#022c22',
     letterSpacing: 1,
   },
   memberList: {
@@ -393,9 +395,9 @@ const styles = StyleSheet.create({
     borderTopColor: '#f1f5f9',
   },
   memberListTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#1f2937',
+    color: '#831843',
     marginBottom: 12,
   },
   memberItem: {
@@ -405,36 +407,45 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   memberAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f8fafc',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#fce7f3',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   memberInfo: {
     flex: 1,
   },
   memberName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#1f2937',
+    color: '#831843',
   },
   memberRole: {
-    fontSize: 14,
-    color: '#6b7280',
+    fontSize: 15,
+    color: '#be185d',
     fontWeight: '500',
+    opacity: 0.8,
   },
   adminBadge: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#f9a8d4',
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
   },
   adminBadgeText: {
-    color: '#ffffff',
+    color: '#831843',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -445,14 +456,19 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#f0f9ff',
-    borderRadius: 12,
+    backgroundColor: '#fce7f3',
+    borderRadius: 20,
     gap: 8,
     borderWidth: 1,
-    borderColor: '#bae6fd',
+    borderColor: '#f9a8d4',
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   settingsButtonText: {
-    color: '#3b82f6',
+    color: '#be185d',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -463,20 +479,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   adminCard: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fce7f3',
     padding: 20,
-    borderRadius: 16,
+    borderRadius: 20,
     alignItems: 'center',
     gap: 10,
     minWidth: 100,
     maxWidth: 110,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#f9a8d4',
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   adminCardText: {
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
-    color: '#475569',
+    color: '#831843',
   },
 });

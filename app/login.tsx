@@ -68,7 +68,7 @@ export default function LoginScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color="#be185d" />
       </View>
     );
   }
@@ -79,7 +79,7 @@ export default function LoginScreen() {
         {/* Logo/Icon */}
         <View style={styles.logoContainer}>
           <View style={styles.iconBackground}>
-            <Ionicons name="home" size={48} color="#3b82f6" />
+            <Ionicons name="home" size={50} color="#ffffff" />
           </View>
           <Text style={styles.appTitle}>Family Clean</Text>
           <Text style={styles.tagline}>Organize chores, earn rewards</Text>
@@ -134,7 +134,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fdf2f8',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -149,31 +149,31 @@ const styles = StyleSheet.create({
     marginBottom: 60,
   },
   iconBackground: {
-    width: 100,
-    height: 100,
-    borderRadius: 20,
-    backgroundColor: '#ffffff',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#f9a8d4',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
   },
   appTitle: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#1f2937',
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#831843',
     marginBottom: 8,
+    textAlign: 'center',
   },
   tagline: {
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: 18,
+    color: '#be185d',
     fontWeight: '500',
+    textAlign: 'center',
   },
   buttonsContainer: {
     width: '100%',
@@ -184,43 +184,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#ffffff',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 28,
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
     gap: 12,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
   },
   googleIcon: {
     width: 20,
     height: 20,
   },
   googleButtonText: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#1f2937',
+    color: '#831843',
   },
   guestButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8fafc',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    backgroundColor: '#fce7f3',
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 28,
     gap: 12,
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   guestButtonText: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#6b7280',
+    color: '#be185d',
   },
   platformNote: {
     textAlign: 'center',

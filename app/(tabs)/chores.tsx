@@ -132,7 +132,7 @@ export default function ChoresScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color="#be185d" />
       </View>
     );
   }
@@ -289,7 +289,7 @@ export default function ChoresScreen() {
                           style={{ marginLeft: 6 }}
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
-                          <Ionicons name="information-circle-outline" size={18} color="#3b82f6" />
+                          <Ionicons name="information-circle-outline" size={18} color="#be185d" />
                         </TouchableOpacity>
                       </View>
                     )}
@@ -310,7 +310,7 @@ export default function ChoresScreen() {
                             style={[styles.choreActionButton, styles.claimButton]}
                             onPress={() => handleClaimChore(chore.id!)}
                           >
-                            <Ionicons name="hand-right" size={20} color="#3b82f6" />
+                            <Ionicons name="hand-right" size={20} color="#be185d" />
                             <Text style={styles.claimButtonText}>Claim</Text>
                           </TouchableOpacity>
                         ) : null}
@@ -406,8 +406,8 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   filterTabActive: {
-    backgroundColor: '#3b82f6',
-    borderColor: '#3b82f6',
+    backgroundColor: '#be185d',
+    borderColor: '#be185d',
   },
   filterTabText: {
     fontSize: 14,
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
     borderColor: '#bae6fd',
   },
   claimButtonText: {
-    color: '#3b82f6',
+    color: '#be185d',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   mainTabActive: {
-    borderBottomColor: '#3b82f6',
+    borderBottomColor: '#be185d',
     backgroundColor: '#f8fafc',
   },
   mainTabText: {
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   mainTabTextActive: {
-    color: '#3b82f6',
+    color: '#be185d',
   },
   progressBarContainer: {
     paddingHorizontal: 20,
@@ -609,6 +609,6 @@ const styles = StyleSheet.create({
   progressBarFill: {
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#be185d',
   },
 });
