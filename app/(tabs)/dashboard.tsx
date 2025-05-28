@@ -2,6 +2,7 @@ import { ChoreManagement } from '@/components/ChoreManagement';
 import { FamilySettings } from '@/components/FamilySettings';
 import { FamilySetup } from '@/components/FamilySetup';
 import { ManageMembers } from '@/components/ManageMembers';
+import { TestDataGenerator } from '@/components/TestDataGenerator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { getChores } from '@/services/firestore';
@@ -243,6 +244,13 @@ export default function DashboardScreen() {
                 <Text style={styles.adminCardText}>Settings</Text>
               </TouchableOpacity>
             </View>
+            
+            {/* Test Data Generator - Only in development */}
+            {__DEV__ && (
+              <View style={styles.testDataSection}>
+                <TestDataGenerator />
+              </View>
+            )}
           </View>
         )}
 
@@ -515,6 +523,14 @@ const styles = StyleSheet.create({
     color: '#0284c7',
     marginTop: 8,
     fontWeight: '500',
+  },
+  testDataSection: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: '#fef3c7',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fcd34d',
   },
   versionContainer: {
     alignItems: 'center',

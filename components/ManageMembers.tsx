@@ -276,8 +276,9 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                 </ThemedView>
 
                 {!isAdmin && (
-                  <ThemedView style={styles.actions}>
-                    {editingName === member.uid ? (
+                  <>
+                    <ThemedView style={styles.actions}>
+                      {editingName === member.uid ? (
                       <>
                         <TouchableOpacity
                           style={[styles.actionButton, styles.saveButton]}
@@ -367,9 +368,8 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                       </>
                     )}
                   </ThemedView>
-                )}
-                {/* Admin Promotion/Demotion - Show for current admin to manage other members */}
-                {isCurrentUserAdmin && !isAdmin && (
+                  {/* Admin Promotion/Demotion - Show for current admin to manage other members */}
+                  {isCurrentUserAdmin && (
                   <ThemedView style={styles.actions}>
                     {member.role === 'admin' ? (
                       // Only allow demotion if there's more than one admin
@@ -448,6 +448,8 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                       </TouchableOpacity>
                     )}
                   </ThemedView>
+                  )}
+                  </>
                 )}
               </ThemedView>
             );
