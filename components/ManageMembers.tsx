@@ -224,12 +224,12 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                 </View>
 
                 <View style={styles.memberDetails}>
-                  <ThemedText style={styles.detailLabel}>Email:</ThemedText>
-                  <ThemedText style={styles.detailValue}>{member.email || 'Not provided'}</ThemedText>
+                  <ThemedText lightColor="#6b7280" style={styles.detailLabel}>Email:</ThemedText>
+                  <ThemedText lightColor="#374151" style={styles.detailValue}>{member.email || 'Not provided'}</ThemedText>
                 </View>
 
                 <View style={styles.memberDetails}>
-                  <ThemedText style={styles.detailLabel}>Role:</ThemedText>
+                  <ThemedText lightColor="#6b7280" style={styles.detailLabel}>Role:</ThemedText>
                   {isEditing ? (
                     <View style={styles.roleEditContainer}>
                       {(['parent', 'child', 'other'] as FamilyRole[]).map((role) => (
@@ -254,22 +254,22 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                       ))}
                     </View>
                   ) : (
-                    <ThemedText style={[styles.detailValue, { color: getRoleColor(member.familyRole) }]}>
+                    <ThemedText lightColor={getRoleColor(member.familyRole)} style={styles.detailValue}>
                       {member.familyRole}
                     </ThemedText>
                   )}
                 </View>
 
                 <View style={styles.memberDetails}>
-                  <ThemedText style={styles.detailLabel}>Points:</ThemedText>
-                  <ThemedText style={styles.detailValue}>
+                  <ThemedText lightColor="#6b7280" style={styles.detailLabel}>Points:</ThemedText>
+                  <ThemedText lightColor="#374151" style={styles.detailValue}>
                     {member.points.current} (Lifetime: {member.points.lifetime})
                   </ThemedText>
                 </View>
 
                 <View style={styles.memberDetails}>
-                  <ThemedText style={styles.detailLabel}>Status:</ThemedText>
-                  <ThemedText style={[styles.detailValue, isExcluded && { color: '#ef4444' }]}> 
+                  <ThemedText lightColor="#6b7280" style={styles.detailLabel}>Status:</ThemedText>
+                  <ThemedText lightColor={isExcluded ? "#ef4444" : "#374151"} style={styles.detailValue}> 
                     {isExcluded ? 'Excluded' : 'Active'}
                   </ThemedText>
                 </View>
@@ -413,7 +413,11 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                       // Allow promotion to admin for regular members
                       <TouchableOpacity
                         style={[styles.actionButton, styles.adminButton]}
-                        onPress={async () => {
+                        onPress={() => {
+                          console.log('Make Admin button clicked for:', member.name, member.uid);
+                          console.log('Current user is admin:', isCurrentUserAdmin);
+                          console.log('Member current role:', member.role);
+                          
                           Alert.alert(
                             'Promote to Admin',
                             `Grant admin rights to ${member.name}? They will be able to manage family settings and members.`,
@@ -422,10 +426,12 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                               {
                                 text: 'Promote',
                                 onPress: async () => {
+                                  console.log('Promote confirmed for:', member.name);
                                   setLoading(true);
                                   try {
                                     // Update the member's role to admin
                                     const success = await updateMemberRole(member.uid, 'admin', member.familyRole);
+                                    console.log('updateMemberRole returned:', success);
                                     if (success) {
                                       Alert.alert('Success', `${member.name} is now an admin`);
                                     } else {

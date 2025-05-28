@@ -753,10 +753,7 @@ export const addFamilyMember = async (familyId: string, member: FamilyMember) =>
 };
 
 export const updateFamilyMember = async (familyId: string, userId: string, updates: Partial<FamilyMember>) => {
-  console.log('updateFamilyMember called in firestore:', { familyId, userId, updates });
-  
   if (shouldReturnMockImmediately()) {
-    console.log('Returning mock success immediately');
     return true;
   }
   
@@ -782,14 +779,10 @@ export const updateFamilyMember = async (familyId: string, userId: string, updat
       ...updates
     };
     
-    console.log(`Updating member ${userId} in family ${familyId} with updates:`, updates);
-    console.log('Updated member data:', updatedMembers[memberIndex]);
-    
     await setDoc(doc(getFamiliesCollection(), familyId), {
       members: updatedMembers
     }, { merge: true });
     
-    console.log('Successfully updated member in Firestore');
     return true;
   } catch (error) {
     console.error('Error updating family member:', error);

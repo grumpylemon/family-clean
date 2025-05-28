@@ -16,6 +16,7 @@ import {
     View
 } from 'react-native';
 import { ThemedText } from './ThemedText';
+import { TestDataGenerator } from './TestDataGenerator';
 
 interface ChoreManagementProps {
   visible: boolean;
@@ -460,6 +461,11 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
               <ThemedText style={styles.createButtonText}>+ Create New Chore</ThemedText>
             </TouchableOpacity>
 
+            {/* Test Data Generator */}
+            <View style={styles.testDataSection}>
+              <TestDataGenerator />
+            </View>
+
             <ScrollView style={styles.scrollView}>
               {loading ? (
                 <ActivityIndicator size="large" color="#4285F4" />
@@ -820,5 +826,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(248, 250, 252, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  testDataSection: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#fef3c7',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fcd34d',
   },
 });

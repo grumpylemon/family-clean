@@ -104,7 +104,7 @@ export default function DashboardScreen() {
     <View style={styles.container}>
       {/* Version Number */}
       <View style={styles.versionContainer}>
-        <Text style={styles.versionText}>v2.01</Text>
+        <Text style={styles.versionText}>v2.02</Text>
       </View>
       {/* Header */}
       <View style={styles.header}>
