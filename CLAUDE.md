@@ -108,9 +108,28 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
 
 ## Platform-Specific Considerations
 
-- **iOS**: Always uses mock Firebase due to Expo Go limitations
+- **iOS Development (Expo Go)**: Uses mock Firebase due to Expo Go limitations with native modules
+- **iOS Production (EAS Build)**: Uses **real Firebase** - standalone app has full Firebase support
 - **Web**: Uses real Firebase with IndexedDB persistence
-- **Android**: Can use real Firebase in development
+- **Android Development**: Can use real Firebase (has native module support)
+- **Android Production (EAS Build)**: Uses real Firebase
+
+### Important: Mock vs Real Firebase Detection
+
+The app automatically detects the environment and chooses the appropriate Firebase implementation:
+
+1. **Mock Firebase Used When**:
+   - Running on iOS in Expo Go (`isExpoGo = true`)
+   - Environment variable `EXPO_PUBLIC_USE_MOCK=true` is set
+   - Firebase initialization fails (fallback)
+
+2. **Real Firebase Used When**:
+   - Production builds via EAS Build (`isExpoGo = false`)
+   - Web platform (always)
+   - Android in development
+   - All other cases where mock conditions aren't met
+
+**Key Point**: Production iOS apps built with `eas build --platform ios` use **real Firebase**, not mock!
 
 ## Important Files
 
