@@ -39,7 +39,12 @@ class NetworkService {
           const networkStatus: NetworkStatus = isConnected ? 'online' : 'offline';
           
           console.log('🌐 Network status changed:', networkStatus);
-          useFamilyStore.getState().offline.setOnlineStatus(networkStatus === 'online');
+          const store = useFamilyStore.getState();
+          if (store?.offline?.setOnlineStatus) {
+            store.offline.setOnlineStatus(networkStatus === 'online');
+          } else {
+            console.warn('🌐 NetworkService: Store not ready, skipping status update');
+          }
         });
       }).catch(err => {
         console.warn('NetInfo not available:', err);
@@ -49,7 +54,12 @@ class NetworkService {
       if (typeof window !== 'undefined') {
         const updateNetworkStatus = () => {
           const networkStatus: NetworkStatus = navigator.onLine ? 'online' : 'offline';
-          useFamilyStore.getState().offline.setOnlineStatus(networkStatus === 'online');
+          const store = useFamilyStore.getState();
+          if (store?.offline?.setOnlineStatus) {
+            store.offline.setOnlineStatus(networkStatus === 'online');
+          } else {
+            console.warn('🌐 NetworkService: Store not ready, skipping status update');
+          }
         };
         
         window.addEventListener('online', updateNetworkStatus);
@@ -65,7 +75,10 @@ class NetworkService {
       } else {
         // Server-side rendering fallback
         console.log('🌐 NetworkService: Window not available, assuming online');
-        useFamilyStore.getState().offline.setOnlineStatus(true);
+        const store = useFamilyStore.getState();
+        if (store?.offline?.setOnlineStatus) {
+          store.offline.setOnlineStatus(true);
+        }
       }
     }
     
@@ -319,21 +332,24 @@ class NetworkService {
 // Export singleton instance
 export const networkService = new NetworkService();
 
-// Auto-initialize when imported (only if not in SSR)
+// Delay auto-initialization to ensure store is ready
 if (typeof window !== 'undefined') {
-  if (Platform.OS !== 'web') {
-    // Import NetInfo for React Native
-    import('@react-native-community/netinfo').then(() => {
+  // Use setTimeout to defer initialization
+  setTimeout(() => {
+    if (Platform.OS !== 'web') {
+      // Import NetInfo for React Native
+      import('@react-native-community/netinfo').then(() => {
+        networkService.init();
+      }).catch(error => {
+        console.error('🌐 Failed to initialize NetInfo:', error);
+        // Fallback to basic initialization without NetInfo
+        networkService.init();
+      });
+    } else {
+      // Web doesn't need dynamic import
       networkService.init();
-    }).catch(error => {
-      console.error('🌐 Failed to initialize NetInfo:', error);
-      // Fallback to basic initialization without NetInfo
-      networkService.init();
-    });
-  } else {
-    // Web doesn't need dynamic import
-    networkService.init();
-  }
+    }
+  }, 100); // Small delay to ensure store is initialized
 
   // Cleanup on app termination
   if (Platform.OS === 'web') {
