@@ -101,11 +101,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="admin"
         options={{
-          title: 'Admin',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="shield" size={24} color={color} />
-          ),
-          tabBarLabel: 'Admin',
+          href: null, // Hide this tab - admin moved to Settings
         }}
       />
       <Tabs.Screen

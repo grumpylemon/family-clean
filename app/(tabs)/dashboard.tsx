@@ -8,6 +8,7 @@ import WeeklyProgress from '@/components/WeeklyProgress';
 import WeeklyComparison from '@/components/WeeklyComparison';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
+import { VERSION_STRING, VERSION_DISPLAY } from '@/constants/Version';
 import { getChores, shouldResetWeeklyPoints, resetWeeklyPoints, completeChore } from '@/services/firestore';
 import { Chore, CompletionReward } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
@@ -179,7 +180,7 @@ export default function DashboardScreen() {
     <View style={styles.container}>
       {/* Version Number */}
       <View style={styles.versionContainer}>
-        <Text style={styles.versionText}>v2.04-f5dd5ed</Text>
+        <Text style={styles.versionText}>{VERSION_STRING}</Text>
       </View>
       {/* Header */}
       <View style={styles.header}>
@@ -189,7 +190,10 @@ export default function DashboardScreen() {
             <Text style={styles.userName}>{currentMember?.name || user.displayName}</Text>
           </View>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={24} color="#6b7280" />
+            <Ionicons name="log-out-outline" size={20} color="#831843" />
+            {Platform.OS === 'web' && (
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -280,24 +284,7 @@ export default function DashboardScreen() {
           />
         )}
 
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <TouchableOpacity 
-            style={[styles.actionCard, styles.primaryAction]}
-            onPress={() => router.push('/(tabs)/chores')}
-          >
-            <Ionicons name="checkmark-circle-outline" size={28} color="#ffffff" />
-            <Text style={styles.actionCardTextPrimary}>View Chores</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.actionCard}
-            onPress={() => setShowFamilySettings(true)}
-          >
-            <Ionicons name="people-outline" size={28} color="#be185d" />
-            <Text style={styles.actionCardText}>Family Info</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Quick Actions - Removed redundant buttons that are available in nav bar or admin page */}
 
         {/* Available Chores */}
         {unassignedChores.length > 0 && (
@@ -325,55 +312,11 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {/* Admin Section */}
-        {isAdmin && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Admin Tools</Text>
-            <View style={styles.adminGrid}>
-              <TouchableOpacity 
-                style={styles.adminCard}
-                onPress={() => setShowManageMembers(true)}
-              >
-                <Ionicons name="people" size={24} color="#64748b" />
-                <Text style={styles.adminCardText}>Members</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.adminCard}
-                onPress={() => setShowChoreManagement(true)}
-              >
-                <Ionicons name="list" size={24} color="#64748b" />
-                <Text style={styles.adminCardText}>Chores</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.adminCard}
-                onPress={() => setShowFamilySettings(true)}
-              >
-                <Ionicons name="settings" size={24} color="#64748b" />
-                <Text style={styles.adminCardText}>Settings</Text>
-              </TouchableOpacity>
-            </View>
-            
-            {/* Test Data Generator - Only in development */}
-            {__DEV__ && (
-              <View style={styles.testDataSection}>
-                <TestDataGenerator />
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Family Code */}
-        <View style={styles.familyCodeSection}>
-          <Text style={styles.familyCodeLabel}>Family Join Code</Text>
-          <Text style={styles.familyCode}>{family.joinCode}</Text>
-          <Text style={styles.familyCodeHint}>Share this code with family members</Text>
-        </View>
+        {/* Admin Tools and Family Code moved to Admin page */}
 
         {/* App Version */}
         <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>v2.04 • Build f5dd5ed</Text>
+          <Text style={styles.versionText}>{VERSION_DISPLAY}</Text>
         </View>
       </ScrollView>
 
@@ -543,14 +486,23 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   logoutButton: {
-    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Platform.OS === 'web' ? 16 : 12,
+    paddingHorizontal: Platform.OS === 'web' ? 20 : 12,
     backgroundColor: '#f9a8d4',
-    borderRadius: 20,
+    borderRadius: Platform.OS === 'web' ? 25 : 20,
     shadowColor: '#ec4899',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 4,
+  },
+  logoutButtonText: {
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#831843',
   },
   scrollView: {
     flex: 1,

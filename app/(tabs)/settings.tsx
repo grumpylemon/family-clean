@@ -8,14 +8,14 @@ import {
   ScrollView, 
   TextInput,
   TouchableOpacity,
-  Switch,
-  Picker
+  Switch
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
 import { Toast } from '@/components/ui/Toast';
+import AdminSettings from '@/components/AdminSettings';
 
 export default function SettingsScreen() {
   const { user } = useAuth();
@@ -29,6 +29,7 @@ export default function SettingsScreen() {
   const [allowTransfers, setAllowTransfers] = useState(family?.settings.allowPointTransfers || false);
   const [monetaryEnabled, setMonetaryEnabled] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState('Default');
+  const [showAdminSettings, setShowAdminSettings] = useState(false);
 
   const handleUpdateProfile = () => {
     Toast.show('Profile update coming soon!', 'info');
@@ -103,6 +104,56 @@ export default function SettingsScreen() {
             </View>
           </View>
 
+          {/* Admin Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Administration</Text>
+            <View style={styles.settingsCard}>
+              <TouchableOpacity 
+                style={[
+                  styles.adminItem,
+                  !canManageFamily && styles.adminItemDisabled
+                ]}
+                onPress={canManageFamily ? () => setShowAdminSettings(true) : undefined}
+                disabled={!canManageFamily}
+              >
+                <View style={styles.adminLeft}>
+                  <View style={[
+                    styles.adminIcon, 
+                    { backgroundColor: canManageFamily ? '#fdf2f8' : '#f9fafb' }
+                  ]}>
+                    <Ionicons 
+                      name="shield-checkmark" 
+                      size={24} 
+                      color={canManageFamily ? '#be185d' : '#9ca3af'} 
+                    />
+                  </View>
+                  <View style={styles.adminTextContainer}>
+                    <Text style={[
+                      styles.adminTitle,
+                      !canManageFamily && styles.adminTitleDisabled
+                    ]}>
+                      Admin Panel
+                    </Text>
+                    <Text style={[
+                      styles.adminDescription,
+                      !canManageFamily && styles.adminDescriptionDisabled
+                    ]}>
+                      {canManageFamily 
+                        ? 'Family management and administration tools'
+                        : 'Requires administrator privileges'
+                      }
+                    </Text>
+                  </View>
+                </View>
+                <Ionicons 
+                  name="chevron-forward" 
+                  size={20} 
+                  color={canManageFamily ? "#be185d" : "#9ca3af"} 
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* Family Settings Section */}
           {canManageFamily && (
             <View style={styles.section}>
@@ -167,18 +218,10 @@ export default function SettingsScreen() {
 
                 <View style={styles.settingItem}>
                   <Text style={styles.settingLabel}>App Theme Preset</Text>
-                  <View style={styles.pickerContainer}>
-                    <Picker
-                      selectedValue={selectedTheme}
-                      onValueChange={setSelectedTheme}
-                      style={styles.picker}
-                    >
-                      <Picker.Item label="Default" value="Default" />
-                      <Picker.Item label="Pink Theme" value="Pink" />
-                      <Picker.Item label="Blue Theme" value="Blue" />
-                      <Picker.Item label="Green Theme" value="Green" />
-                    </Picker>
-                  </View>
+                  <TouchableOpacity style={styles.pickerContainer}>
+                    <Text style={styles.pickerText}>{selectedTheme}</Text>
+                    <Ionicons name="chevron-down" size={20} color="#9ca3af" />
+                  </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity style={styles.saveButton} onPress={handleSaveSettings}>
@@ -195,27 +238,18 @@ export default function SettingsScreen() {
               <View style={styles.transferCard}>
                 <View style={styles.transferRow}>
                   <Text style={styles.transferLabel}>Transfer From</Text>
-                  <View style={styles.pickerContainer}>
-                    <Picker style={styles.picker}>
-                      <Picker.Item label={user?.displayName || 'John'} value="current-user" />
-                    </Picker>
-                  </View>
+                  <TouchableOpacity style={styles.pickerContainer}>
+                    <Text style={styles.pickerText}>{user?.displayName || 'John'}</Text>
+                    <Ionicons name="chevron-down" size={20} color="#9ca3af" />
+                  </TouchableOpacity>
                 </View>
 
                 <View style={styles.transferRow}>
                   <Text style={styles.transferLabel}>Transfer To</Text>
-                  <View style={styles.pickerContainer}>
-                    <Picker style={styles.picker}>
-                      <Picker.Item label="Select recipient" value="" />
-                      {family?.members?.map((member) => (
-                        <Picker.Item 
-                          key={member.uid} 
-                          label={member.name} 
-                          value={member.uid} 
-                        />
-                      ))}
-                    </Picker>
-                  </View>
+                  <TouchableOpacity style={styles.pickerContainer}>
+                    <Text style={styles.pickerText}>Select recipient</Text>
+                    <Ionicons name="chevron-down" size={20} color="#9ca3af" />
+                  </TouchableOpacity>
                 </View>
 
                 <View style={styles.transferRow}>
@@ -236,6 +270,12 @@ export default function SettingsScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Admin Settings Modal */}
+      <AdminSettings 
+        visible={showAdminSettings}
+        onClose={() => setShowAdminSettings(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -380,9 +420,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#f9a8d4',
     borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  picker: {
+  pickerText: {
+    fontSize: 16,
     color: '#831843',
+    flex: 1,
   },
   saveButton: {
     backgroundColor: '#be185d',
@@ -436,5 +483,45 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  adminItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  adminItemDisabled: {
+    opacity: 0.5,
+  },
+  adminLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  adminIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  adminTextContainer: {
+    flex: 1,
+  },
+  adminTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#831843',
+    marginBottom: 4,
+  },
+  adminTitleDisabled: {
+    color: '#9ca3af',
+  },
+  adminDescription: {
+    fontSize: 14,
+    color: '#9f1239',
+  },
+  adminDescriptionDisabled: {
+    color: '#d1d5db',
   },
 });

@@ -1004,3 +1004,5 @@ const styles = StyleSheet.create({
     borderColor: '#fcd34d',
   },
 });
+
+export default ChoreManagement;

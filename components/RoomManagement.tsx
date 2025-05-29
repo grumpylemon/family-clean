@@ -38,7 +38,6 @@ import {
 } from '../types';
 import { LoadingSpinner } from './ui/LoadingSpinner';
 import { Toast } from './ui/Toast';
-import { ConfirmDialog } from './ui/ConfirmDialog';
 import { Avatar } from './ui/Avatar';
 
 const ROOM_TYPES: RoomType[] = [
@@ -56,7 +55,7 @@ interface RoomFormData {
 }
 
 const RoomManagement: React.FC = () => {
-  const { family, refreshFamily } = useFamily();
+  const { family } = useFamily();
   const { canManageMembers } = useAccessControl();
   
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -77,8 +76,7 @@ const RoomManagement: React.FC = () => {
   const [saveLoading, setSaveLoading] = useState(false);
   const [assignLoading, setAssignLoading] = useState(false);
   
-  // Toast state
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  // Toast is now handled globally via Toast utility
 
   useEffect(() => {
     loadRooms();
@@ -116,7 +114,7 @@ const RoomManagement: React.FC = () => {
       setAssignments(roomAssignments);
     } catch (error) {
       console.error('Error loading rooms:', error);
-      setToast({ message: 'Failed to load rooms', type: 'error' });
+      Toast.error('Failed to load rooms');
     } finally {
       setLoading(false);
     }
@@ -150,7 +148,7 @@ const RoomManagement: React.FC = () => {
 
   const handleSaveRoom = async () => {
     if (!family?.id || !formData.name.trim()) {
-      setToast({ message: 'Room name is required', type: 'error' });
+      Toast.error('Room name is required');
       return;
     }
 
@@ -165,7 +163,7 @@ const RoomManagement: React.FC = () => {
           sharingType: formData.sharingType,
           description: formData.description.trim()
         });
-        setToast({ message: 'Room updated successfully', type: 'success' });
+        Toast.success('Room updated successfully');
       } else {
         // Create new room
         await createRoom({
@@ -175,9 +173,10 @@ const RoomManagement: React.FC = () => {
           description: formData.description.trim(),
           familyId: family.id,
           assignedMembers: [],
-          createdBy: family.adminId
+          createdBy: family.adminId,
+          isActive: true
         });
-        setToast({ message: 'Room created successfully', type: 'success' });
+        Toast.success('Room created successfully');
       }
 
       setShowAddModal(false);
@@ -185,7 +184,7 @@ const RoomManagement: React.FC = () => {
       await loadRooms();
     } catch (error) {
       console.error('Error saving room:', error);
-      setToast({ message: 'Failed to save room', type: 'error' });
+      Toast.error('Failed to save room');
     } finally {
       setSaveLoading(false);
     }
@@ -194,23 +193,34 @@ const RoomManagement: React.FC = () => {
   const handleDeleteRoom = async (room: Room) => {
     if (!room.id) return;
 
-    const confirm = await ConfirmDialog({
-      title: 'Delete Room',
-      message: `Are you sure you want to delete "${room.name}"? This will remove all assignments and related chores.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel'
-    });
-
-    if (!confirm) return;
-
-    try {
-      await deleteRoom(room.id);
-      setToast({ message: 'Room deleted successfully', type: 'success' });
-      await loadRooms();
-    } catch (error) {
-      console.error('Error deleting room:', error);
-      setToast({ message: 'Failed to delete room', type: 'error' });
-    }
+    Alert.alert(
+      'Delete Room',
+      `Are you sure you want to delete "${room.name}"? This will remove all assignments and related chores.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (room.id) {
+                await deleteRoom(room.id);
+              } else {
+                throw new Error('Room ID is undefined');
+              }
+              Toast.success('Room deleted successfully');
+              await loadRooms();
+            } catch (error) {
+              console.error('Error deleting room:', error);
+              Toast.error('Failed to delete room');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleAssignMember = async (member: FamilyMember, isPrimary: boolean = false) => {
@@ -226,15 +236,12 @@ const RoomManagement: React.FC = () => {
         isPrimary
       );
       
-      setToast({ 
-        message: `${member.name} assigned to ${selectedRoom.name}`, 
-        type: 'success' 
-      });
+      Toast.success(`${member.name} assigned to ${selectedRoom.name}`);
       
       await loadRooms();
     } catch (error) {
       console.error('Error assigning member:', error);
-      setToast({ message: 'Failed to assign member', type: 'error' });
+      Toast.error('Failed to assign member');
     } finally {
       setAssignLoading(false);
     }
@@ -245,15 +252,12 @@ const RoomManagement: React.FC = () => {
 
     try {
       await removeMemberFromRoom(selectedRoom.id, member.uid);
-      setToast({ 
-        message: `${member.name} removed from ${selectedRoom.name}`, 
-        type: 'success' 
-      });
+      Toast.success(`${member.name} removed from ${selectedRoom.name}`);
       
       await loadRooms();
     } catch (error) {
       console.error('Error unassigning member:', error);
-      setToast({ message: 'Failed to remove member', type: 'error' });
+      Toast.error('Failed to remove member');
     }
   };
 
@@ -264,7 +268,7 @@ const RoomManagement: React.FC = () => {
       const generatedChores = await generateRoomChores(family.id, room.id);
       
       if (generatedChores.length === 0) {
-        setToast({ message: 'No chores to generate for this room', type: 'error' });
+        Toast.error('No chores to generate for this room');
         return;
       }
 
@@ -274,13 +278,10 @@ const RoomManagement: React.FC = () => {
         await addDoc(choresCollection, chore);
       }
 
-      setToast({ 
-        message: `Generated ${generatedChores.length} chores for ${room.name}`, 
-        type: 'success' 
-      });
+      Toast.success(`Generated ${generatedChores.length} chores for ${room.name}`);
     } catch (error) {
       console.error('Error generating chores:', error);
-      setToast({ message: 'Failed to generate chores', type: 'error' });
+      Toast.error('Failed to generate chores');
     }
   };
 
@@ -342,11 +343,8 @@ const RoomManagement: React.FC = () => {
               {roomAssignments.map((assignment) => (
                 <View key={assignment.userId} style={styles.memberItem}>
                   <Avatar 
-                    user={{ 
-                      uid: assignment.userId, 
-                      displayName: assignment.userName,
-                      photoURL: family?.members.find(m => m.uid === assignment.userId)?.photoURL 
-                    } as any}
+                    photoURL={family?.members.find(m => m.uid === assignment.userId)?.photoURL}
+                    name={assignment.userName}
                     size={32}
                     showStatus={false}
                   />
@@ -585,7 +583,11 @@ const RoomManagement: React.FC = () => {
                   
                   return (
                     <View key={member.uid} style={styles.assignMemberItem}>
-                      <Avatar user={member as any} size={40} />
+                      <Avatar 
+                        photoURL={member.photoURL}
+                        name={member.name}
+                        size={40}
+                      />
                       <View style={styles.assignMemberInfo}>
                         <Text style={styles.assignMemberName}>{member.name}</Text>
                         <Text style={styles.assignMemberRole}>{member.familyRole}</Text>
@@ -629,13 +631,7 @@ const RoomManagement: React.FC = () => {
         </View>
       </Modal>
 
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onHide={() => setToast(null)}
-        />
-      )}
+      {/* Toast is now handled globally */}
     </View>
   );
 };

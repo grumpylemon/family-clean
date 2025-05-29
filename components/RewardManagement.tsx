@@ -18,14 +18,15 @@ import {
   deleteReward,
   getFamilyRedemptions
 } from '@/services/firestore';
+import { useFamily } from '@/contexts/FamilyContext';
 
 interface RewardManagementProps {
-  familyId: string;
+  visible: boolean;
   onClose: () => void;
 }
 
 const REWARD_CATEGORIES: { value: RewardCategory; label: string; icon: string }[] = [
-  { value: 'privilege', label: 'Privilege', icon: 'crown-outline' },
+  { value: 'privilege', label: 'Privilege', icon: 'star-outline' },
   { value: 'item', label: 'Item', icon: 'gift-outline' },
   { value: 'experience', label: 'Experience', icon: 'happy-outline' },
   { value: 'money', label: 'Money', icon: 'cash-outline' },
@@ -33,7 +34,10 @@ const REWARD_CATEGORIES: { value: RewardCategory; label: string; icon: string }[
   { value: 'other', label: 'Other', icon: 'ellipsis-horizontal-outline' }
 ];
 
-export default function RewardManagement({ familyId, onClose }: RewardManagementProps) {
+export default function RewardManagement({ visible, onClose }: RewardManagementProps) {
+  const { family } = useFamily();
+  const familyId = family?.id || '';
+  
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -53,8 +57,10 @@ export default function RewardManagement({ familyId, onClose }: RewardManagement
   });
 
   useEffect(() => {
-    loadRewards();
-  }, [familyId]);
+    if (familyId && visible) {
+      loadRewards();
+    }
+  }, [familyId, visible]);
 
   const loadRewards = async () => {
     try {
@@ -197,8 +203,12 @@ export default function RewardManagement({ familyId, onClose }: RewardManagement
     return categoryData?.label || category;
   };
 
+  if (!familyId) {
+    return null;
+  }
+
   return (
-    <Modal visible={true} animationType="slide" presentationStyle="pageSheet">
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <View style={{
         flex: 1,
         backgroundColor: '#fdf2f8',

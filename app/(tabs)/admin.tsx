@@ -2,19 +2,23 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAccessControl } from '@/hooks/useAccessControl';
+import { useFamily } from '@/contexts/FamilyContext';
 import RoomManagement from '@/components/RoomManagement';
 import ChoreManagement from '@/components/ChoreManagement';
 import ManageMembers from '@/components/ManageMembers';
 import RewardManagement from '@/components/RewardManagement';
+import FamilySettings from '@/components/FamilySettings';
 
 export default function AdminScreen() {
   const { canManageFamily, canManageChores, canManageRewards } = useAccessControl();
+  const { family } = useFamily();
   
   // Modal states
   const [showRoomManagement, setShowRoomManagement] = useState(false);
   const [showChoreManagement, setShowChoreManagement] = useState(false);
   const [showMemberManagement, setShowMemberManagement] = useState(false);
   const [showRewardManagement, setShowRewardManagement] = useState(false);
+  const [showFamilySettings, setShowFamilySettings] = useState(false);
 
   if (!canManageFamily) {
     return (
@@ -67,6 +71,15 @@ export default function AdminScreen() {
       onPress: () => setShowRewardManagement(true),
       enabled: canManageRewards,
     },
+    {
+      id: 'family-settings',
+      title: 'Family Settings',
+      description: 'Configure family preferences and settings',
+      icon: 'settings' as const,
+      color: '#64748b',
+      onPress: () => setShowFamilySettings(true),
+      enabled: canManageFamily,
+    },
   ];
 
   return (
@@ -117,6 +130,16 @@ export default function AdminScreen() {
               />
             </TouchableOpacity>
           ))}
+        </View>
+
+        {/* Family Code Section */}
+        <View style={styles.familyCodeSection}>
+          <Text style={styles.familyCodeTitle}>Family Join Code</Text>
+          <View style={styles.familyCodeCard}>
+            <Text style={styles.familyCodeLabel}>Share this code with family members:</Text>
+            <Text style={styles.familyCode}>{family?.joinCode || 'Loading...'}</Text>
+            <Text style={styles.familyCodeHint}>New members can use this code to join your family</Text>
+          </View>
         </View>
 
         <View style={styles.infoSection}>
@@ -185,6 +208,11 @@ export default function AdminScreen() {
       <RewardManagement 
         visible={showRewardManagement}
         onClose={() => setShowRewardManagement(false)}
+      />
+      
+      <FamilySettings 
+        visible={showFamilySettings}
+        onClose={() => setShowFamilySettings(false)}
       />
     </SafeAreaView>
   );
@@ -317,5 +345,49 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
     backgroundColor: '#f9a8d4',
+  },
+  familyCodeSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  familyCodeTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#831843',
+    marginBottom: 16,
+  },
+  familyCodeCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  familyCodeLabel: {
+    fontSize: 14,
+    color: '#9f1239',
+    marginBottom: 8,
+  },
+  familyCode: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#be185d',
+    letterSpacing: 2,
+    textAlign: 'center',
+    marginVertical: 12,
+    padding: 16,
+    backgroundColor: '#fdf2f8',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
+  },
+  familyCodeHint: {
+    fontSize: 12,
+    color: '#9f1239',
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
