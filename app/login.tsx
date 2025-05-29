@@ -22,16 +22,20 @@ const { width, height } = Dimensions.get('window');
 export default function LoginScreen() {
   const { user, loading, error, signInWithGoogle, signInAsGuest } = useAuth();
   const [isIOS, setIsIOS] = useState(false);
-  const [isMock, setIsMock] = useState(false);
+  // Get mock status immediately and synchronously
+  const [isMock, setIsMock] = useState(isMockImplementation());
   
   // Check platform and mock status
   useEffect(() => {
     setIsIOS(Platform.OS === 'ios');
+    // Re-check mock status in case it changed during initialization
     setIsMock(isMockImplementation());
     
-    if (isIOS) {
-      console.log("Login on iOS, using mock implementation");
-    }
+    console.log("🔍 LOGIN SCREEN DEBUG:");
+  console.log("  Platform:", Platform.OS);
+  console.log("  Mock:", isMockImplementation());
+  console.log("  User:", user?.email || 'No user');
+  console.log("  Loading:", loading);
   }, []);
   
   // Redirect to home if already logged in

@@ -1,129 +1,305 @@
-import React from 'react';
-import { Platform, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Platform, Text, StyleProp, TextStyle, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface WebIconProps {
   name: string;
   size?: number;
   color?: string;
+  style?: StyleProp<TextStyle | ViewStyle>;
 }
 
-// Unicode fallbacks for web when icons don't load
-const unicodeIcons: { [key: string]: string } = {
-  home: '🏠',
-  list: '📋',
-  heart: '💖',
-  gift: '🎁',
-  trophy: '🏆',
-  podium: '🥇',
-  settings: '⚙️',
+// Comprehensive emoji fallbacks for web when vector icons fail to load
+const EMOJI_FALLBACKS: { [key: string]: string } = {
+  // Navigation & UI
+  'home': '🏠',
+  'house': '🏠',
+  'menu': '☰',
+  'list': '📋',
+  'grid': '⊞',
+  'search': '🔍',
+  'filter': '🔽',
+  'settings': '⚙️',
   'chevron-forward': '▶',
   'chevron-back': '◀',
+  'chevron-up': '▲',
+  'chevron-down': '▼',
+  'arrow-forward': '→',
+  'arrow-back': '←',
+  'arrow-up': '↑',
+  'arrow-down': '↓',
+  
+  // Actions
+  'add': '➕',
   'add-circle': '➕',
-  checkmark: '✅',
-  close: '✖',
-  star: '⭐',
-  'star-outline': '☆',
-  person: '👤',
-  people: '👥',
-  calendar: '📅',
-  time: '⏰',
-  notifications: '🔔',
-  search: '🔍',
-  filter: '🔽',
-  'ellipsis-vertical': '⋮',
-  trash: '🗑️',
-  edit: '✏️',
-  save: '💾',
-  refresh: '🔄',
-  download: '⬇️',
-  upload: '⬆️',
-  share: '📤',
-  copy: '📋',
-  link: '🔗',
-  camera: '📷',
-  image: '🖼️',
-  document: '📄',
-  folder: '📁',
-  mail: '✉️',
-  phone: '📞',
-  location: '📍',
-  map: '🗺️',
-  car: '🚗',
-  airplane: '✈️',
-  wifi: '📶',
-  bluetooth: '📘',
-  battery: '🔋',
-  power: '⚡',
-  lock: '🔒',
-  unlock: '🔓',
-  key: '🔑',
-  shield: '🛡️',
-  'shield-checkmark': '🛡️',
-  warning: '⚠️',
-  information: 'ℹ️',
-  help: '❓',
-  'help-circle': '❓',
-  'information-circle': 'ℹ️',
-  'warning-outline': '⚠️',
-  'checkmark-circle': '✅',
+  'remove': '➖',
+  'remove-circle': '➖',
+  'close': '✖',
   'close-circle': '❌',
+  'checkmark': '✅',
+  'checkmark-circle': '✅',
+  'log-out-outline': '👋',
+  'log-out': '👋',
+  'edit': '✏️',
+  'create': '✏️',
+  'save': '💾',
+  'download': '⬇️',
+  'upload': '⬆️',
+  'share': '📤',
+  'copy': '📋',
+  'refresh': '🔄',
+  'sync': '🔄',
+  'reload': '🔄',
+  
+  // People & Social
+  'person': '👤',
+  'people': '👥',
+  'person-add': '👤➕',
+  'person-remove': '👤➖',
+  'contact': '👤',
+  'account': '👤',
+  'profile': '👤',
+  
+  // Communication
+  'mail': '✉️',
+  'email': '✉️',
+  'call': '📞',
+  'phone': '📞',
+  'chat': '💬',
+  'chatbubble': '💬',
+  'notifications': '🔔',
   'notifications-outline': '🔔',
-  'language-outline': '🌐',
-  'lock-closed-outline': '🔒',
-  'add-outline': '➕',
-  'remove-outline': '➖',
-  play: '▶️',
-  pause: '⏸️',
-  stop: '⏹️',
-  'play-circle': '▶️',
-  'pause-circle': '⏸️',
-  'stop-circle': '⏹️',
-  'volume-high': '🔊',
-  'volume-low': '🔉',
-  'volume-mute': '🔇',
-  'musical-notes': '🎵',
-  headset: '🎧',
-  microphone: '🎤',
-  videocam: '📹',
-  'videocam-off': '🚫',
-  'mic-off': '🔇',
-  flashlight: '🔦',
-  sunny: '☀️',
-  moon: '🌙',
-  cloudy: '☁️',
-  rainy: '🌧️',
-  snow: '❄️',
-  thermometer: '🌡️',
-  umbrella: '☂️',
-  rainbow: '🌈'
+  'alert': '⚠️',
+  'warning': '⚠️',
+  'information': 'ℹ️',
+  'help': '❓',
+  'help-circle': '❓',
+  
+  // Media & Files
+  'camera': '📷',
+  'image': '🖼️',
+  'images': '🖼️',
+  'document': '📄',
+  'documents': '📄',
+  'folder': '📁',
+  'folder-open': '📂',
+  'file': '📄',
+  'attach': '📎',
+  'link': '🔗',
+  
+  // Time & Calendar
+  'calendar': '📅',
+  'calendar-outline': '📅',
+  'time': '⏰',
+  'clock': '🕐',
+  'timer': '⏱️',
+  'stopwatch': '⏱️',
+  'alarm': '⏰',
+  'today': '📅',
+  
+  // Entertainment & Rewards
+  'heart': '💖',
+  'heart-outline': '🤍',
+  'star': '⭐',
+  'star-outline': '☆',
+  'trophy': '🏆',
+  'medal': '🏅',
+  'gift': '🎁',
+  'ribbon': '🎀',
+  'diamond': '💎',
+  'sparkles': '✨',
+  
+  // Technology
+  'wifi': '📶',
+  'bluetooth': '📘',
+  'battery': '🔋',
+  'power': '⚡',
+  'flash': '⚡',
+  'flashlight': '🔦',
+  'bulb': '💡',
+  'desktop': '🖥️',
+  'laptop': '💻',
+  'phone-portrait': '📱',
+  'tablet': '📱',
+  
+  // Security & Privacy
+  'lock': '🔒',
+  'unlock': '🔓',
+  'key': '🔑',
+  'shield': '🛡️',
+  'shield-checkmark': '🛡️',
+  'eye': '👁️',
+  'eye-off': '🙈',
+  'fingerprint': '👆',
+  
+  // Status & Indicators
+  'radio-button-on': '🔘',
+  'radio-button-off': '⚪',
+  'checkbox': '☑️',
+  'checkbox-outline': '☐',
+  'checkmark-done-outline': '✅',
+  'toggle': '🔘',
+  'ellipsis-horizontal': '⋯',
+  'ellipsis-vertical': '⋮',
+  'more': '⋯',
+  'hand-right': '👉',
+  'lock-closed': '🔒',
+  'information-circle-outline': 'ℹ️',
+  'person-outline': '👤',
+  
+  // Transportation & Location
+  'location': '📍',
+  'pin': '📍',
+  'map': '🗺️',
+  'navigate': '🧭',
+  'compass': '🧭',
+  'car': '🚗',
+  'bus': '🚌',
+  'train': '🚊',
+  'airplane': '✈️',
+  'walk': '🚶',
+  'bicycle': '🚴',
+  
+  // Weather & Nature
+  'sunny': '☀️',
+  'moon': '🌙',
+  'cloud': '☁️',
+  'cloudy': '☁️',
+  'rain': '🌧️',
+  'rainy': '🌧️',
+  'snow': '❄️',
+  'thunderstorm': '⛈️',
+  'wind': '💨',
+  'rainbow': '🌈',
+  'umbrella': '☂️',
+  'thermometer': '🌡️',
+  
+  // Business & Finance
+  'business': '🏢',
+  'storefront': '🏪',
+  'card': '💳',
+  'wallet': '👛',
+  'cash': '💰',
+  'calculator': '🧮',
+  'receipt': '🧾',
+  'trending-up': '📈',
+  'trending-down': '📉',
+  'stats': '📊',
+  'analytics': '📊',
+  
+  // Gaming & Fun
+  'game-controller': '🎮',
+  'dice': '🎲',
+  'puzzle': '🧩',
+  'balloon': '🎈',
+  'party': '🎉',
+  'celebration': '🎊',
+  'confetti': '🎊',
+  'fireworks': '🎆',
+  
+  // Tools & Objects
+  'hammer': '🔨',
+  'wrench': '🔧',
+  'screwdriver': '🪛',
+  'gear': '⚙️',
+  'cog': '⚙️',
+  'tool': '🔧',
+  'brush': '🖌️',
+  'paint': '🎨',
+  'scissors': '✂️',
+  'magnet': '🧲',
+  
+  // Default fallback
+  'default': '⚫'
 };
 
-export const WebIcon: React.FC<WebIconProps> = ({ name, size = 24, color = '#000' }) => {
-  // Try to render the Ionicon first
+/**
+ * Checks if Ionicons font is properly loaded by testing if it renders correctly
+ */
+function checkIoniconsAvailable(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (Platform.OS !== 'web') {
+      resolve(true);
+      return;
+    }
+
+    // Check if font is loaded by creating a test element
+    const testElement = document.createElement('div');
+    testElement.style.fontFamily = 'Ionicons';
+    testElement.style.fontSize = '24px';
+    testElement.style.position = 'absolute';
+    testElement.style.left = '-9999px';
+    testElement.innerHTML = '&#xf11c;'; // test character
+    
+    document.body.appendChild(testElement);
+    
+    // Check if font loaded by measuring width
+    const fallbackWidth = testElement.offsetWidth;
+    
+    // Wait for fonts to potentially load
+    setTimeout(() => {
+      const loadedWidth = testElement.offsetWidth;
+      document.body.removeChild(testElement);
+      
+      // If width changed, font is likely loaded
+      resolve(loadedWidth !== fallbackWidth);
+    }, 100);
+  });
+}
+
+/**
+ * Web-optimized icon component that reliably falls back to emoji when vector icons fail
+ */
+export const WebIcon: React.FC<WebIconProps> = ({ 
+  name, 
+  size = 24, 
+  color = '#000', 
+  style 
+}) => {
+  const [useEmoji, setUseEmoji] = useState(false);
+  const [isChecking, setIsChecking] = useState(Platform.OS === 'web');
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      checkIoniconsAvailable().then((available) => {
+        setUseEmoji(!available);
+        setIsChecking(false);
+      });
+    }
+  }, []);
+
+  // On native platforms, always use Ionicons
   if (Platform.OS !== 'web') {
-    return <Ionicons name={name as any} size={size} color={color} />;
+    return <Ionicons name={name as any} size={size} color={color} style={style} />;
   }
 
-  // For web, try Ionicons first, but have fallback
-  try {
-    return <Ionicons name={name as any} size={size} color={color} />;
-  } catch (error) {
-    // Fallback to Unicode emoji if Ionicons fails
-    const unicode = unicodeIcons[name] || '⚫';
+  // On web, while checking or if should use emoji
+  if (isChecking || useEmoji) {
+    const emoji = EMOJI_FALLBACKS[name] || EMOJI_FALLBACKS['default'];
     return (
-      <Text style={{ 
-        fontSize: size * 0.8, 
-        color: color,
-        textAlign: 'center',
-        lineHeight: size,
-        width: size,
-        height: size,
-      }}>
-        {unicode}
+      <Text 
+        style={[
+          {
+            fontSize: size * 0.8,
+            color: color,
+            textAlign: 'center',
+            lineHeight: size,
+            width: size,
+            height: size,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+          style
+        ]}
+      >
+        {emoji}
       </Text>
     );
   }
+
+  // On web with fonts available, use Ionicons
+  return <Ionicons name={name as any} size={size} color={color} style={style} />;
 };
 
 export default WebIcon;

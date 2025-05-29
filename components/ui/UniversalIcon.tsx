@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Platform, Text, StyleProp, TextStyle, ViewStyle } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
@@ -214,8 +214,42 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
 };
 
 /**
+ * Checks if Ionicons font is properly loaded by testing if it renders correctly
+ */
+function checkIoniconsAvailable(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (Platform.OS !== 'web') {
+      resolve(true);
+      return;
+    }
+
+    // Check if font is loaded by creating a test element
+    const testElement = document.createElement('div');
+    testElement.style.fontFamily = 'Ionicons';
+    testElement.style.fontSize = '24px';
+    testElement.style.position = 'absolute';
+    testElement.style.left = '-9999px';
+    testElement.innerHTML = '&#xf11c;'; // test character
+    
+    document.body.appendChild(testElement);
+    
+    // Check if font loaded by measuring width
+    const fallbackWidth = testElement.offsetWidth;
+    
+    // Wait for fonts to potentially load
+    setTimeout(() => {
+      const loadedWidth = testElement.offsetWidth;
+      document.body.removeChild(testElement);
+      
+      // If width changed, font is likely loaded
+      resolve(loadedWidth !== fallbackWidth);
+    }, 100);
+  });
+}
+
+/**
  * Universal icon component that works reliably across all platforms
- * Uses Ionicons on native platforms and falls back to emoji on web if icons fail to load
+ * Uses proper font loading detection on web and falls back to emoji when icons fail to load
  */
 export const UniversalIcon: React.FC<UniversalIconProps> = ({ 
   name, 
@@ -223,38 +257,49 @@ export const UniversalIcon: React.FC<UniversalIconProps> = ({
   color = '#000', 
   style 
 }) => {
-  // On web, use emoji fallback system for reliability
-  if (Platform.OS === 'web') {
-    try {
-      // First try to render the Ionicon
-      return <Ionicons name={name as any} size={size} color={color} style={style} />;
-    } catch (error) {
-      // Fallback to emoji if Ionicons fails to load
-      const emoji = EMOJI_FALLBACKS[name] || EMOJI_FALLBACKS['default'];
-      return (
-        <Text 
-          style={[
-            {
-              fontSize: size * 0.8,
-              color: color,
-              textAlign: 'center',
-              lineHeight: size,
-              width: size,
-              height: size,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            },
-            style
-          ]}
-        >
-          {emoji}
-        </Text>
-      );
+  const [useEmoji, setUseEmoji] = useState(false);
+  const [isChecking, setIsChecking] = useState(Platform.OS === 'web');
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      checkIoniconsAvailable().then((available) => {
+        setUseEmoji(!available);
+        setIsChecking(false);
+      });
     }
+  }, []);
+
+  // On native platforms, always use Ionicons
+  if (Platform.OS !== 'web') {
+    return <Ionicons name={name as any} size={size} color={color} style={style} />;
   }
-  
-  // On native platforms, use Ionicons directly
+
+  // On web, while checking or if should use emoji
+  if (isChecking || useEmoji) {
+    const emoji = EMOJI_FALLBACKS[name] || EMOJI_FALLBACKS['default'];
+    return (
+      <Text 
+        style={[
+          {
+            fontSize: size * 0.8,
+            color: color,
+            textAlign: 'center',
+            lineHeight: size,
+            width: size,
+            height: size,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+          style
+        ]}
+      >
+        {emoji}
+      </Text>
+    );
+  }
+
+  // On web with fonts available, use Ionicons
   return <Ionicons name={name as any} size={size} color={color} style={style} />;
 };
 

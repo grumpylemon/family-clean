@@ -462,7 +462,7 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                     />
                   </View>
                   <Text style={styles.helperText}>
-                    Allow members to "steal" urgent chores for bonus points
+                    Allow members to &quot;steal&quot; urgent chores for bonus points
                   </Text>
                 </View>
                 

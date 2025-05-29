@@ -1,4 +1,4 @@
-import { auth, googleProvider, shouldUseMock } from '@/config/firebase';
+import { auth, googleProvider, isMockImplementation } from '@/config/firebase';
 import { GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup, signOut, User } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
@@ -31,8 +31,11 @@ export const useAuth = () => useContext(AuthContext);
 
 // Provider component that wraps app and provides auth context
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Always start with no user and let the auth state listener handle initialization
-  const isMockMode = shouldUseMock();
+  // Get mock status immediately and synchronously
+  const isMockMode = isMockImplementation();
+  
+  console.log('🔍 AuthContext: isMockMode =', isMockMode);
+  console.log('🔍 AuthContext: Platform =', Platform.OS);
   
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
