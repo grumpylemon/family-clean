@@ -64,6 +64,10 @@ console.log('\n📦 Running expo export...\n');
 try {
   execSync('npx expo export --platform web', { stdio: 'inherit' });
   
+  // Patch import.meta in the bundle
+  console.log('\n🔧 Patching import.meta in bundle...\n');
+  execSync('node scripts/patch-import-meta.js', { stdio: 'inherit' });
+  
   // After successful export, deploy to Firebase
   console.log('\n🚀 Deploying to Firebase Hosting...\n');
   execSync('firebase deploy --only hosting', { stdio: 'inherit' });
