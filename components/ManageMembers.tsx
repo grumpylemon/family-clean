@@ -512,14 +512,32 @@ function EditMemberModal({
   const [editedName, setEditedName] = useState(member?.name || '');
   const [editedRole, setEditedRole] = useState<FamilyRole>(member?.familyRole || 'child');
 
-  useEffect(() => {
-    if (member) {
-      setEditedName(member.name);
-      setEditedRole(member.familyRole);
-    }
-  }, [member]);
+  // Get the most current member data from the family members list
+  const currentMemberData = familyMembers.find(m => m.uid === member?.uid) || member;
 
-  if (!member) return null;
+  useEffect(() => {
+    if (currentMemberData) {
+      setEditedName(currentMemberData.name);
+      setEditedRole(currentMemberData.familyRole);
+    }
+  }, [currentMemberData]);
+
+  if (!currentMemberData) return null;
+
+  // Computed styles to force re-render when data changes
+  const isCurrentlyAdmin = currentMemberData.role === 'admin';
+  const toggleButtonStyle = [
+    styles.toggleButton,
+    isCurrentlyAdmin ? styles.toggleButtonActive : styles.toggleButtonInactive
+  ];
+  const toggleSliderStyle = [
+    styles.toggleSlider,
+    isCurrentlyAdmin && styles.toggleSliderActive
+  ];
+  const toggleStatusStyle = [
+    styles.toggleStatus,
+    isCurrentlyAdmin && styles.toggleStatusActive
+  ];
 
   const showSuccessMessage = (message: string) => {
     Toast.success(message);
@@ -537,7 +555,7 @@ function EditMemberModal({
 
     setLoading(true);
     try {
-      const success = await updateMemberName(member.uid, editedName.trim());
+      const success = await updateMemberName(currentMemberData.uid, editedName.trim());
       if (success) {
         showSuccessMessage('Name updated successfully');
         onUpdate();
@@ -555,7 +573,7 @@ function EditMemberModal({
   const handleSaveRole = async () => {
     setLoading(true);
     try {
-      const success = await updateMemberRole(member.uid, 'member', editedRole);
+      const success = await updateMemberRole(currentMemberData.uid, 'member', editedRole);
       if (success) {
         showSuccessMessage('Role updated successfully');
         onUpdate();
@@ -573,7 +591,7 @@ function EditMemberModal({
   const handleRemoveMember = () => {
     Alert.alert(
       'Remove Member',
-      `Are you sure you want to remove ${member.name} from the family?`,
+      `Are you sure you want to remove ${currentMemberData.name} from the family?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -582,7 +600,7 @@ function EditMemberModal({
           onPress: async () => {
             setLoading(true);
             try {
-              const success = await removeMember(member.uid);
+              const success = await removeMember(currentMemberData.uid);
               if (success) {
                 showSuccessMessage('Member removed from family');
                 onClose();
@@ -602,11 +620,11 @@ function EditMemberModal({
   };
 
   const handleToggleExclude = async () => {
-    const newStatus = !member.isActive;
+    const newStatus = !currentMemberData.isActive;
     const action = newStatus ? 'Re-include' : 'Exclude';
     const message = newStatus 
-      ? `Re-include ${member.name} in rotation and active chores?`
-      : `Are you sure you want to exclude ${member.name} from rotation and active chores?`;
+      ? `Re-include ${currentMemberData.name} in rotation and active chores?`
+      : `Are you sure you want to exclude ${currentMemberData.name} from rotation and active chores?`;
 
     Alert.alert(
       `${action} Member`,
@@ -619,7 +637,7 @@ function EditMemberModal({
           onPress: async () => {
             setLoading(true);
             try {
-              const success = await updateFamilyMember(familyId!, member.uid, { isActive: newStatus });
+              const success = await updateFamilyMember(familyId!, currentMemberData.uid, { isActive: newStatus });
               if (success) {
                 showSuccessMessage(`Member ${newStatus ? 're-included' : 'excluded'}`);
                 onUpdate();
@@ -639,19 +657,19 @@ function EditMemberModal({
   };
 
   const handleToggleAdmin = async () => {
-    const isCurrentlyAdmin = member.role === 'admin';
+    // Use the computed value for consistency
     const action = isCurrentlyAdmin ? 'Demote' : 'Promote';
     const message = isCurrentlyAdmin
-      ? `Are you sure you want to remove admin rights from ${member.name}?`
-      : `Grant admin rights to ${member.name}? They will be able to manage family settings and members.`;
+      ? `Are you sure you want to remove admin rights from ${currentMemberData.name}?`
+      : `Grant admin rights to ${currentMemberData.name}? They will be able to manage family settings and members.`;
 
     // Enhanced console logging for debugging
     console.log('=== Admin Toggle Debug Info ===');
     console.log('Member:', {
-      uid: member.uid,
-      name: member.name,
-      currentRole: member.role,
-      familyRole: member.familyRole
+      uid: currentMemberData.uid,
+      name: currentMemberData.name,
+      currentRole: currentMemberData.role,
+      familyRole: currentMemberData.familyRole
     });
     console.log('Current admin count:', familyMembers.filter(m => m.role === 'admin').length);
     console.log('Action:', action);
@@ -664,46 +682,43 @@ function EditMemberModal({
       return;
     }
 
-    Alert.alert(
-      `${action} Admin`,
-      message,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: action,
-          style: isCurrentlyAdmin ? 'destructive' : 'default',
-          onPress: async () => {
-            console.log('✅ User confirmed admin toggle');
-            setLoading(true);
-            try {
-              const newRole = isCurrentlyAdmin ? 'member' : 'admin';
-              console.log('Calling updateMemberRole with:', {
-                userId: member.uid,
-                newRole,
-                familyRole: member.familyRole
-              });
-              
-              const success = await updateMemberRole(member.uid, newRole, member.familyRole);
-              console.log('updateMemberRole result:', success);
-              
-              if (success) {
-                console.log('✅ Admin role updated successfully');
-                showSuccessMessage(isCurrentlyAdmin ? 'Admin rights removed' : `${member.name} is now an admin`);
-                onUpdate();
-              } else {
-                console.log('❌ updateMemberRole returned false');
-                showErrorMessage(`Failed to ${action.toLowerCase()} admin`);
-              }
-            } catch (error) {
-              console.error(`❌ Error ${action}ing admin:`, error);
-              showErrorMessage('An error occurred');
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
+    console.log('📱 About to show confirmation for admin toggle');
+    
+    // Use web-compatible confirmation
+    const userConfirmed = confirm(`${action} Admin\n\n${message}`);
+    console.log('User confirmation result:', userConfirmed);
+    
+    if (userConfirmed) {
+      console.log('✅ User confirmed admin toggle');
+      setLoading(true);
+      try {
+        const newRole = isCurrentlyAdmin ? 'member' : 'admin';
+        console.log('Calling updateMemberRole with:', {
+          userId: currentMemberData.uid,
+          newRole,
+          familyRole: currentMemberData.familyRole
+        });
+        
+        const success = await updateMemberRole(currentMemberData.uid, newRole, currentMemberData.familyRole);
+        console.log('updateMemberRole result:', success);
+        
+        if (success) {
+          console.log('✅ Admin role updated successfully');
+          showSuccessMessage(isCurrentlyAdmin ? 'Admin rights removed' : `${currentMemberData.name} is now an admin`);
+          onUpdate();
+        } else {
+          console.log('❌ updateMemberRole returned false');
+          showErrorMessage(`Failed to ${action.toLowerCase()} admin`);
+        }
+      } catch (error) {
+        console.error(`❌ Error ${action}ing admin:`, error);
+        showErrorMessage('An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      console.log('❌ User cancelled admin toggle');
+    }
   };
 
   const getRoleColor = (role: FamilyRole) => {
@@ -748,9 +763,9 @@ function EditMemberModal({
                   placeholderTextColor="#f9a8d4"
                 />
                 <TouchableOpacity
-                  style={[styles.smallSaveButton, { opacity: editedName !== member.name ? 1 : 0.5 }]}
+                  style={[styles.smallSaveButton, { opacity: editedName !== currentMemberData.name ? 1 : 0.5 }]}
                   onPress={handleSaveName}
-                  disabled={loading || editedName === member.name}
+                  disabled={loading || editedName === currentMemberData.name}
                 >
                   <Text style={styles.smallSaveButtonText}>Save</Text>
                 </TouchableOpacity>
@@ -782,7 +797,7 @@ function EditMemberModal({
                   </TouchableOpacity>
                 ))}
               </View>
-              {editedRole !== member.familyRole && (
+              {editedRole !== currentMemberData.familyRole && (
                 <TouchableOpacity
                   style={styles.updateRoleButton}
                   onPress={handleSaveRole}
@@ -798,35 +813,43 @@ function EditMemberModal({
               <Text style={styles.editSectionTitle}>Member Actions</Text>
               <View style={styles.actionButtons}>
                 {/* Admin Role Toggle - More compact design */}
-                {canPromoteDemoteMembers && member.uid !== currentUserId && (
+                {canPromoteDemoteMembers && currentMemberData.uid !== currentUserId && (
                   <View style={styles.toggleSection}>
                     <Text style={styles.toggleLabel}>Admin Access</Text>
                     <TouchableOpacity
-                      style={[styles.toggleButton, member.role === 'admin' ? styles.toggleButtonActive : styles.toggleButtonInactive]}
-                      onPress={handleToggleAdmin}
+                      style={toggleButtonStyle}
+                      onPress={() => {
+                        console.log('🔘 Toggle button pressed');
+                        console.log('Toggle pressed - current role:', currentMemberData.role);
+                        console.log('Is admin?', isCurrentlyAdmin);
+                        console.log('Toggle style should be:', isCurrentlyAdmin ? 'active (pink)' : 'inactive (gray)');
+                        console.log('About to call handleToggleAdmin...');
+                        handleToggleAdmin();
+                        console.log('handleToggleAdmin called');
+                      }}
                       disabled={loading}
                     >
-                      <View style={[styles.toggleSlider, member.role === 'admin' && styles.toggleSliderActive]} />
+                      <View style={toggleSliderStyle} />
                     </TouchableOpacity>
-                    <Text style={[styles.toggleStatus, member.role === 'admin' && styles.toggleStatusActive]}>
-                      {member.role === 'admin' ? 'Admin' : 'User'}
+                    <Text style={toggleStatusStyle}>
+                      {isCurrentlyAdmin ? 'Admin' : 'User'}
                     </Text>
                   </View>
                 )}
 
                 {/* Exclude/Include Toggle */}
                 <TouchableOpacity
-                  style={[styles.compactActionButton, member.isActive ? styles.excludeButton : styles.includeButton]}
+                  style={[styles.compactActionButton, currentMemberData.isActive ? styles.excludeButton : styles.includeButton]}
                   onPress={handleToggleExclude}
                   disabled={loading}
                 >
                   <Ionicons 
-                    name={member.isActive ? "person-remove" : "person-add"} 
+                    name={currentMemberData.isActive ? "person-remove" : "person-add"} 
                     size={16} 
                     color="#ffffff" 
                   />
                   <Text style={styles.compactActionButtonText}>
-                    {member.isActive ? 'Exclude from Rotation' : 'Re-include in Rotation'}
+                    {currentMemberData.isActive ? 'Exclude from Rotation' : 'Re-include in Rotation'}
                   </Text>
                 </TouchableOpacity>
 

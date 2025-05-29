@@ -271,7 +271,10 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateMemberRole = async (userId: string, role: UserRole, familyRole: FamilyRole): Promise<boolean> => {
+    console.log('🔄 updateMemberRole called with:', { userId, role, familyRole });
+    
     if (!family || !isAdmin) {
+      console.log('❌ updateMemberRole failed: no family or not admin', { hasFamily: !!family, isAdmin });
       return false;
     }
 
@@ -280,6 +283,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       const adminCount = family.members.filter(m => m.role === 'admin').length;
       const targetMember = family.members.find(m => m.uid === userId);
       if (targetMember?.role === 'admin' && adminCount <= 1) {
+        console.log('❌ Cannot demote last admin');
         setError('Cannot demote the last admin');
         return false;
       }
@@ -287,8 +291,10 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
+      console.log('🚀 Starting role update process...');
       
       // Update both family member AND user profile for consistency
+      console.log('📝 Updating family member and user profile in parallel...');
       const [familySuccess, profileSuccess] = await Promise.all([
         updateFamilyMember(family.id!, userId, {
           role,
@@ -300,15 +306,20 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         })
       ]);
       
+      console.log('📊 Update results:', { familySuccess, profileSuccess });
+      
       if (familySuccess && profileSuccess) {
+        console.log('✅ Both updates successful, refreshing family...');
         await refreshFamily();
+        console.log('🔄 Family refreshed');
         return true;
       } else {
+        console.log('❌ One or both updates failed');
         setError('Failed to update member role - partial update');
         return false;
       }
     } catch (err) {
-      console.error('Error updating member role:', err);
+      console.error('💥 Error updating member role:', err);
       setError(err instanceof Error ? err.message : 'Failed to update member');
       return false;
     }
