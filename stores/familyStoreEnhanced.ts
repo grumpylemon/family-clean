@@ -1,10 +1,15 @@
 // Enhanced Family Store - Zustand Store with Advanced Caching Integration
 // Integrates the new cache service for improved performance and offline capabilities
 
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Import Zustand with CommonJS fallback for web
+const zustand = require('zustand');
+const zustandMiddleware = require('zustand/middleware');
+
+const create = zustand.create || zustand.default?.create || zustand;
+const { persist, createJSONStorage } = zustandMiddleware;
 
 import { 
   FamilyStore, 

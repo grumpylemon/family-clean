@@ -1,10 +1,15 @@
 // Family Store - Main Zustand Store with Offline-First Architecture
 // Combines all slices for complete state management
 
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Import Zustand with CommonJS fallback for web
+const zustand = require('zustand');
+const zustandMiddleware = require('zustand/middleware');
+
+const create = zustand.create || zustand.default?.create || zustand;
+const { persist, createJSONStorage } = zustandMiddleware;
 
 import { FamilyStore } from './types';
 import { createAuthSlice } from './authSlice';
