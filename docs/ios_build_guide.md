@@ -175,34 +175,18 @@ EXPO_PUBLIC_USE_MOCK=true
 ### "GoogleService-Info.plist is missing" Build Error
 This error occurs when EAS Build cannot find the GoogleService-Info.plist file. Common causes and solutions:
 
-1. **File not tracked by Git**:
-   ```bash
-   # Check if file is tracked
-   git ls-files | grep GoogleService-Info.plist
+1. **Prebuild Error - File Copy Failed**:
+   If you see: `ENOENT: no such file or directory, copyfile '/Users/expo/workingdir/build/ios/GoogleService-Info.plist'`
    
-   # If not listed, add it to git
-   git add ios/GoogleService-Info.plist
-   git commit -m "Add GoogleService-Info.plist for iOS builds"
-   git push
-   ```
-
-2. **File in .gitignore**:
-   - Check your .gitignore file
-   - GoogleService-Info.plist should NOT be ignored for EAS builds
-   - Remove any entries that might exclude it
-
-3. **Wrong file path in app.json**:
-   - Ensure the path is correct: `"googleServicesFile": "./ios/GoogleService-Info.plist"`
-   - The path is relative to your project root
-
-4. **Using Environment Variables (Alternative)**:
-   If you prefer not to commit the file to git, use EAS environment variables:
+   This happens because Expo prebuild expects the file in the project root during build. Solutions:
+   
+   **Option A: Use EAS Secrets (Recommended for sensitive files)**:
    ```bash
    # Base64 encode the file
    base64 -i ios/GoogleService-Info.plist | pbcopy
    
    # Set as EAS secret
-   eas secret:create --name GOOGLE_SERVICE_INFO_PLIST --value "paste-base64-here"
+   eas secret:create --name GOOGLE_SERVICE_INFO_PLIST --value "paste-base64-here" --type file
    ```
    
    Then update eas.json:
@@ -217,6 +201,43 @@ This error occurs when EAS Build cannot find the GoogleService-Info.plist file. 
      }
    }
    ```
+   
+   **Option B: Copy file to root during build**:
+   Create a file `.easignore` and ensure it doesn't exclude the ios folder.
+   
+   Then update eas.json with a pre-build hook:
+   ```json
+   {
+     "build": {
+       "production": {
+         "ios": {
+           "buildConfiguration": "Release"
+         }
+       }
+     }
+   }
+   ```
+
+2. **File not tracked by Git**:
+   ```bash
+   # Check if file is tracked
+   git ls-files | grep GoogleService-Info.plist
+   
+   # If not listed, add it to git
+   git add ios/GoogleService-Info.plist
+   git commit -m "Add GoogleService-Info.plist for iOS builds"
+   git push
+   ```
+
+3. **File in .gitignore**:
+   - Check your .gitignore file
+   - GoogleService-Info.plist should NOT be ignored for EAS builds
+   - Remove any entries that might exclude it
+
+4. **Wrong file path in app.json**:
+   - For managed workflow, the file should be at the project root
+   - Update app.json: `"googleServicesFile": "./GoogleService-Info.plist"`
+   - Copy the file: `cp ios/GoogleService-Info.plist ./`
 
 ### "Firebase not initialized" Error
 - Ensure `GoogleService-Info.plist` is in the `ios/` directory
