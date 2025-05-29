@@ -1,5 +1,29 @@
-// Import polyfill first to ensure import.meta is available for all modules
-import '@/config/importMetaPolyfill';
+// Inline polyfill to ensure it runs before any module evaluation
+if (typeof window !== 'undefined') {
+  (function() {
+    const importMetaPolyfill = {
+      url: window.location?.href || 'http://localhost:8081',
+      env: {
+        MODE: 'production',
+        DEV: false,
+        PROD: true,
+        SSR: false
+      }
+    };
+    
+    if (!window.import) {
+      Object.defineProperty(window, 'import', {
+        value: { meta: importMetaPolyfill },
+        writable: false,
+        configurable: true
+      });
+    }
+    
+    if (typeof globalThis !== 'undefined' && !globalThis.import) {
+      globalThis.import = window.import;
+    }
+  })();
+}
 
 import { initializeFirebase, isMockImplementation } from '@/config/firebase';
 import { AuthProvider } from '@/contexts/AuthContext';

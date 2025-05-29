@@ -11,16 +11,21 @@ config.resolver.blockList = [
   /.*\/@react-native\/debugger-frontend\/.*/,
 ];
 
-// Use custom transformer to replace import.meta at build time
+// Configure transformer options
 config.transformer = {
   ...config.transformer,
-  babelTransformerPath: require.resolve('./metro.transformer.js'),
   minifierConfig: {
     keep_fnames: true,
     mangle: {
       keep_fnames: true,
     },
   },
+  getTransformOptions: async () => ({
+    transform: {
+      experimentalImportSupport: false,
+      inlineRequires: true,
+    },
+  }),
 };
 
 module.exports = config;
