@@ -4,9 +4,9 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Use dynamic imports to handle different module systems
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+// Import Zustand using CommonJS to avoid import.meta issues on web
+const { create } = require('zustand');
+const { persist, createJSONStorage } = require('zustand/middleware');
 
 import { FamilyStore } from './types';
 import { createAuthSlice } from './authSlice';
