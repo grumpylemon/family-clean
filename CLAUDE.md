@@ -123,12 +123,48 @@ The app automatically detects the environment and chooses the appropriate Fireba
 
 **Key Point**: Production iOS apps built with `eas build --platform ios` use **real Firebase**, not mock!
 
+## State Management with Zustand (Added May 29, 2025)
+
+The app now uses Zustand for offline-first state management with React Context compatibility:
+
+1. **Store Architecture** (`stores/`):
+   - `familyStore.ts` - Main store combining all slices with persistence
+   - `authSlice.ts` - Authentication state with Firebase integration
+   - `familySlice.ts` - Family management state and operations
+   - `offlineSlice.ts` - Offline queue, sync status, and network monitoring
+   - `choreSlice.ts` - Chore state with offline completion support
+   - `rewardSlice.ts` - Reward state with redemption tracking
+
+2. **Offline-First Features**:
+   - Automatic action queuing when offline
+   - Optimistic UI updates with pending states
+   - Intelligent sync with conflict resolution
+   - Cross-platform network detection
+   - Cached data with expiration policies
+   - 50MB cache limit with cleanup
+
+3. **Migration Strategy**:
+   - Drop-in replacement hooks: `useAuthZustand`, `useFamilyZustand`
+   - Feature flag `USE_ZUSTAND_ONLY` for gradual rollout
+   - Maintains exact same API as React Context
+   - `StoreProvider.tsx` bridges Context and Zustand
+
+4. **Enhanced Sync System** (`stores/enhancedSyncService.ts`):
+   - Real-time conflict detection with Firebase listeners
+   - 5 conflict resolution strategies (server_wins, local_wins, merge_changes, etc.)
+   - Intelligent field-level merging for complex data
+   - Comprehensive sync metrics and analytics
+
 ## Important Files
 
 ### Core Architecture
 - `config/firebase.ts` - Firebase initialization and mock/real switching logic
-- `contexts/AuthContext.tsx` - Authentication state management
-- `contexts/FamilyContext.tsx` - Family state management
+- `contexts/AuthContext.tsx` - Authentication state management (bridges with Zustand)
+- `contexts/FamilyContext.tsx` - Family state management (bridges with Zustand)
+- `stores/familyStore.ts` - Main Zustand store with offline-first architecture
+- `stores/StoreProvider.tsx` - Integration layer between React Context and Zustand
+- `hooks/useAuthZustand.ts` - Drop-in replacement for useAuth hook
+- `hooks/useFamilyZustand.ts` - Drop-in replacement for useFamily hook
 - `services/firestore.ts` - All database operations (v9 modular syntax)
 - `services/gamification.ts` - XP calculation, achievements, and level progression
 - `types/index.ts` - TypeScript type definitions with gamification types
