@@ -91,10 +91,10 @@ class EnhancedSyncService {
   // Set up real-time listeners for conflict detection
   private setupConflictDetection() {
     const store = useFamilyStore.getState();
-    const user = store.user;
-    const family = store.family;
+    const user = store.auth.user;
+    const family = store.family.family;
 
-    if (!user || !family?.data.id) {
+    if (!user || !family?.id) {
       console.log('🔄 Conflict detection skipped: No user or family');
       return;
     }
@@ -324,7 +324,7 @@ class EnhancedSyncService {
     const store = useFamilyStore.getState();
     
     // Remove the conflicting action from queue
-    store.removePendingAction(conflict.localAction.id);
+    store.offline.removePendingAction(conflict.localAction.id);
     
     // Update local store with server data
     switch (conflict.localAction.type) {
@@ -538,7 +538,7 @@ class EnhancedSyncService {
     console.log('🔄 Starting enhanced sync...');
     
     const store = useFamilyStore.getState();
-    const actionsToSync = store.getActionsForSync();
+    const actionsToSync = store.offline.getActionsForSync();
     
     const result: SyncResult = {
       success: false,
@@ -564,13 +564,13 @@ class EnhancedSyncService {
         try {
           const actionResult = await this.syncActionWithConflictDetection(action);
           if (actionResult.success) {
-            store.removePendingAction(action.id);
+            store.offline.removePendingAction(action.id);
             result.syncedActions++;
           } else if (actionResult.conflict) {
             result.conflicts.push(actionResult.conflict);
             result.metrics.conflictsDetected++;
           } else {
-            store.movePendingToFailed(action.id, actionResult.error || 'Unknown error');
+            store.offline.movePendingToFailed(action.id, actionResult.error || 'Unknown error');
             result.failedActions++;
             result.errors.push(actionResult.error || 'Unknown error');
           }

@@ -65,7 +65,7 @@ class NetworkService {
       } else {
         // Server-side rendering fallback
         console.log('🌐 NetworkService: Window not available, assuming online');
-        useFamilyStore.getState().setNetworkStatus('online');
+        useFamilyStore.getState().offline.setOnlineStatus(true);
       }
     }
     
@@ -97,7 +97,7 @@ class NetworkService {
     // Sync every 30 seconds when online
     this.syncInterval = setInterval(() => {
       const store = useFamilyStore.getState();
-      if (store.isOnline && store.pendingActions.length > 0) {
+      if (store.offline.isOnline && store.offline.pendingActions.length > 0) {
         this.syncPendingActions();
       }
     }, 30000);
@@ -112,7 +112,7 @@ class NetworkService {
       
       // Update store with enhanced sync results
       const store = useFamilyStore.getState();
-      store.updateSyncStatus({
+      store.offline.updateSyncStatus({
         isActive: false,
         totalActions: result.syncedActions + result.failedActions,
         syncedActions: result.syncedActions,
@@ -140,12 +140,12 @@ class NetworkService {
   private async basicSyncPendingActions(): Promise<void> {
     const store = useFamilyStore.getState();
     
-    if (!store.isOnline || store.syncStatus.isActive) {
+    if (!store.offline.isOnline || store.offline.syncStatus.isActive) {
       console.log('🌐 Sync skipped: offline or already syncing');
       return;
     }
     
-    const actionsToSync = store.getActionsForSync();
+    const actionsToSync = store.offline.getActionsForSync();
     if (actionsToSync.length === 0) {
       console.log('🌐 No actions to sync');
       return;
@@ -154,7 +154,7 @@ class NetworkService {
     console.log(`🔄 Starting basic sync of ${actionsToSync.length} actions`);
     
     // Update sync status
-    store.updateSyncStatus({
+    store.offline.updateSyncStatus({
       isActive: true,
       totalActions: actionsToSync.length,
       syncedActions: 0,
@@ -174,24 +174,24 @@ class NetworkService {
         const success = await this.executeAction(action);
         
         if (success) {
-          store.removePendingAction(action.id);
+          store.offline.removePendingAction(action.id);
           syncedCount++;
           console.log(`✅ Action synced successfully: ${action.id}`);
         } else {
-          store.movePendingToFailed(action.id, 'Sync failed - unknown error');
+          store.offline.movePendingToFailed(action.id, 'Sync failed - unknown error');
           failedCount++;
           console.log(`❌ Action sync failed: ${action.id}`);
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        store.movePendingToFailed(action.id, errorMessage);
+        store.offline.movePendingToFailed(action.id, errorMessage);
         failedCount++;
         console.error(`❌ Action sync error:`, error);
       }
       
       // Update progress
       const progress = Math.round(((syncedCount + failedCount) / actionsToSync.length) * 100);
-      store.updateSyncStatus({
+      store.offline.updateSyncStatus({
         progress,
         syncedActions: syncedCount,
         failedActions: failedCount
@@ -199,7 +199,7 @@ class NetworkService {
     }
     
     // Final sync status update
-    store.updateSyncStatus({
+    store.offline.updateSyncStatus({
       isActive: false,
       lastSyncTime: new Date(),
       lastError: failedCount > 0 ? `${failedCount} actions failed to sync` : undefined
@@ -250,7 +250,7 @@ class NetworkService {
     
     if (result.success) {
       // Remove from pending completions
-      useFamilyStore.getState().removePendingCompletion(choreId);
+      useFamilyStore.getState().chores.removePendingCompletion(choreId);
       
       // Refresh chores data
       // Note: In a full implementation, we'd refresh from server here
@@ -306,6 +306,7 @@ class NetworkService {
     }
     
     try {
+      const { default: NetInfo } = await import('@react-native-community/netinfo');
       const state = await NetInfo.fetch();
       return !!(state.isConnected && state.isInternetReachable);
     } catch (error) {
