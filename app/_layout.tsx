@@ -1,3 +1,6 @@
+// Import version logging first thing
+import '../constants/Version';
+
 // Inline polyfill to ensure it runs before any module evaluation
 if (typeof window !== 'undefined') {
   (function() {
@@ -54,9 +57,17 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
   const [firebaseInitialized, setFirebaseInitialized] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
-  // Initialize Firebase on app start
+  // Initialize client-side state to prevent hydration mismatch
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Initialize Firebase on app start (only on client side)
+  useEffect(() => {
+    if (!isClient) return;
+    
     const initFirebase = async () => {
       try {
         // Initialize Firebase - this will handle mock mode detection
@@ -78,10 +89,15 @@ export default function RootLayout() {
     };
     
     initFirebase();
-  }, []);
+  }, [isClient]);
 
   if (!loaded) {
     // Async font loading only occurs in development.
+    return null;
+  }
+
+  // Prevent hydration mismatch by not rendering until client-side
+  if (!isClient) {
     return null;
   }
 

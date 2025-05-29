@@ -2,13 +2,18 @@ import { getApps, initializeApp } from 'firebase/app';
 import {
   connectAuthEmulator,
   getAuth,
+  initializeAuth,
+  getReactNativePersistence,
   GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   collection,
   connectFirestoreEmulator,
-  enableIndexedDbPersistence,
-  getFirestore
+  getFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
 } from 'firebase/firestore';
 import { Platform } from 'react-native';
 
@@ -448,34 +453,32 @@ export const initializeFirebase = async () => {
     // Get the active app
     const app = apps.length > 0 ? apps[0] : getApps()[0];
     
-    // Initialize Firestore with persistence for web
+    // Initialize Firestore with modern cache persistence for web
     if (Platform.OS === 'web') {
-      console.log("Initializing Firestore with persistence for web");
+      console.log("Initializing Firestore with modern cache persistence for web");
       try {
-        // Initialize Firestore with persistence using the simpler approach
-        console.log("Using simplified persistence approach");
-        _firestoreDb = getFirestore(app);
+        // Initialize Firestore with modern cache persistence using the new API
+        console.log("Using modern cache-based persistence approach");
         
-        // Try to enable persistence with multi-tab support
-        await enableIndexedDbPersistence(_firestoreDb, {
-          forceOwnership: false // Allow multiple tabs to share persistence
-        }).catch((err) => {
-          if (err.code === 'failed-precondition') {
-            // Multiple tabs open, persistence can only be enabled in one tab at a time
-            console.warn('Persistence failed: Multiple tabs open. Using memory cache instead.');
-          } else if (err.code === 'unimplemented') {
-            // The current browser doesn't support persistence
-            console.warn('Persistence failed: Browser doesn\'t support IndexedDB');
-          }
-          throw err;
-        });
-        console.log("Successfully enabled IndexedDB persistence for Firestore");
+        // Configure Firestore with persistent cache and multi-tab support
+        try {
+          _firestoreDb = getFirestore(app, {
+            localCache: persistentLocalCache({
+              tabManager: persistentMultipleTabManager()
+            })
+          });
+        } catch (cacheError) {
+          console.warn("Cache initialization failed, using standard Firestore:", cacheError);
+          _firestoreDb = getFirestore(app);
+        }
+        
+        console.log("Successfully initialized Firestore with cache persistence");
       } catch (error) {
-        console.error("Error enabling Firestore persistence:", error);
+        console.error("Error initializing Firestore with cache persistence:", error);
         
         // Fall back to regular Firestore without persistence
         console.log("Falling back to standard Firestore without persistence");
-        // No need to reinitialize, just continue with the existing instance
+        _firestoreDb = getFirestore(app);
       }
     } else {
       // For native platforms, use regular Firestore
@@ -620,7 +623,36 @@ export const auth = (() => {
   
   try {
     console.log("Getting real Firebase auth instance");
-    return getAuth();
+    console.log("Platform.OS:", Platform.OS);
+    console.log("typeof window:", typeof window);
+    console.log("navigator.userAgent:", typeof navigator !== 'undefined' ? navigator.userAgent : 'undefined');
+    
+    // More robust web detection
+    const isWeb = Platform.OS === 'web' || typeof window !== 'undefined';
+    console.log("isWeb:", isWeb);
+    
+    // For web, use standard getAuth (no AsyncStorage needed)
+    if (isWeb) {
+      console.log("Using standard getAuth for web platform");
+      return getAuth();
+    }
+    
+    // For native platforms, use initializeAuth with AsyncStorage persistence
+    const app = getApps()[0];
+    if (!app) {
+      throw new Error('Firebase app not initialized');
+    }
+    
+    try {
+      // Try to get existing auth instance first
+      return getAuth(app);
+    } catch {
+      // If no auth instance exists, initialize with AsyncStorage persistence
+      console.log("Initializing auth with AsyncStorage persistence for React Native");
+      return initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage)
+      });
+    }
   } catch (error) {
     console.error("Error getting auth instance:", error);
     // Return mock auth as fallback with proper state management

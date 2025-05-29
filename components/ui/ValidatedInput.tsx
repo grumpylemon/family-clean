@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,9 +24,9 @@ export const ValidatedInput: React.FC<ValidatedInputProps> = ({
   style,
   ...props
 }) => {
-  const animatedValue = React.useRef(new Animated.Value(0)).current;
+  const animatedValue = useRef(new Animated.Value(0)).current;
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (error) {
       // Shake animation on error
       Animated.sequence([

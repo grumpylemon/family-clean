@@ -73,3 +73,25 @@ export const useFamilyStore = create<FamilyStore>()(
     }
   )
 );
+
+// Initialize NetworkService with callback-based integration
+setTimeout(() => {
+  try {
+    const { networkService } = require('./networkService');
+    
+    // Set up callback for network status updates
+    networkService.setStatusUpdateCallback((isOnline: boolean) => {
+      useFamilyStore.setState((state) => ({
+        offline: {
+          ...state.offline,
+          isOnline,
+          networkStatus: isOnline ? 'online' : 'offline'
+        }
+      }));
+    });
+    
+    console.log('🌐 NetworkService: Callback integration set successfully');
+  } catch (error) {
+    console.warn('🌐 NetworkService: Failed to set callback integration', error);
+  }
+}, 100);

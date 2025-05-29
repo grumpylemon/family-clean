@@ -5,17 +5,43 @@ module.exports = function (api) {
     plugins: [
       // Transform import.meta before any other transformations
       ['babel-plugin-transform-import-meta', { module: 'ES6' }],
-      // Additional plugin to handle any remaining import.meta
+      // Enhanced import.meta transformer that works with Metro CommonJS resolution
       function() {
         return {
           visitor: {
-            MetaProperty(path) {
-              if (path.node.meta.name === 'import' && path.node.property.name === 'meta') {
-                const replacement = api.template.expression(`
-                  (typeof globalThis !== 'undefined' && globalThis.import && globalThis.import.meta) ||
-                  { url: "http://localhost:8081", env: { MODE: "production", DEV: false, PROD: true } }
-                `)();
-                path.replaceWith(replacement);
+            MetaProperty(path, state) {
+              try {
+                if (path.node.meta && path.node.meta.name === 'import' && 
+                    path.node.property && path.node.property.name === 'meta') {
+                  
+                  // More robust polyfill that handles various execution contexts
+                  const replacement = api.template.expression(`
+                    (function() {
+                      if (typeof globalThis !== 'undefined' && globalThis.import && globalThis.import.meta) {
+                        return globalThis.import.meta;
+                      }
+                      if (typeof window !== 'undefined' && window.import && window.import.meta) {
+                        return window.import.meta;
+                      }
+                      // Fallback for production builds
+                      return { 
+                        url: typeof window !== 'undefined' ? window.location.href : "http://localhost:8081",
+                        env: { MODE: "production", DEV: false, PROD: true } 
+                      };
+                    })()
+                  `)();
+                  path.replaceWith(replacement);
+                  
+                  // Log successful transformation in development
+                  if (process.env.NODE_ENV !== 'production') {
+                    console.log('✅ Transformed import.meta in:', state.filename?.split('/').pop() || 'unknown file');
+                  }
+                }
+              } catch (error) {
+                // Log errors in development, silently skip in production
+                if (process.env.NODE_ENV !== 'production') {
+                  console.warn('❌ Failed to transform import.meta:', error.message);
+                }
               }
             }
           }

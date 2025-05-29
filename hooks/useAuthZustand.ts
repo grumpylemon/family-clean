@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { useFamilyStore } from '@/stores/familyStore';
 import { User } from '@/types';
 
@@ -35,7 +35,7 @@ export function useAuth() {
   }));
 
   // Check auth state on mount
-  React.useEffect(() => {
+  useEffect(() => {
     checkAuthState();
   }, [checkAuthState]);
 

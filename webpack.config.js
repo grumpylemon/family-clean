@@ -4,6 +4,15 @@ const webpack = require('webpack');
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
   
+  // Add font file handling for Expo Vector Icons
+  config.module.rules.push({
+    test: /\.(woff|woff2|eot|ttf|otf)$/,
+    type: 'asset/resource',
+    generator: {
+      filename: 'assets/fonts/[name][ext]'
+    }
+  });
+  
   // Ensure proper module ordering
   config.optimization = {
     ...config.optimization,
