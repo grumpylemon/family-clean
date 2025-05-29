@@ -11,16 +11,11 @@ interface StoreProviderProps {
 }
 
 export function StoreProvider({ children }: StoreProviderProps) {
-  const initializeStore = useFamilyStore(state => state.calculateCacheSize);
-
   useEffect(() => {
     console.log('🏪 StoreProvider: Initializing Zustand store');
     
     // Initialize network monitoring
     networkService.init();
-    
-    // Calculate initial cache size
-    initializeStore();
     
     // Platform-specific initialization
     if (Platform.OS === 'web') {
@@ -33,7 +28,7 @@ export function StoreProvider({ children }: StoreProviderProps) {
     return () => {
       networkService.cleanup();
     };
-  }, [initializeStore]);
+  }, []);
 
   return <>{children}</>;
 }

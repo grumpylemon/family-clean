@@ -2,7 +2,6 @@
 // Integrates with Zustand store for offline-first functionality
 
 import { Platform } from 'react-native';
-import NetInfo from '@react-native-community/netinfo';
 import { useFamilyStore } from './familyStore';
 import { OfflineAction, NetworkStatus } from './types';
 
@@ -33,20 +32,24 @@ class NetworkService {
     console.log('🌐 NetworkService: Initializing network monitoring');
     
     if (Platform.OS !== 'web') {
-      // Use NetInfo for React Native
-      this.unsubscribe = NetInfo.addEventListener(state => {
-        const isConnected = state.isConnected && state.isInternetReachable;
-        const networkStatus: NetworkStatus = isConnected ? 'online' : 'offline';
-        
-        console.log('🌐 Network status changed:', networkStatus);
-        useFamilyStore.getState().setNetworkStatus(networkStatus);
+      // Use NetInfo for React Native - dynamically import to avoid web issues
+      import('@react-native-community/netinfo').then(({ default: NetInfo }) => {
+        this.unsubscribe = NetInfo.addEventListener(state => {
+          const isConnected = state.isConnected && state.isInternetReachable;
+          const networkStatus: NetworkStatus = isConnected ? 'online' : 'offline';
+          
+          console.log('🌐 Network status changed:', networkStatus);
+          useFamilyStore.getState().offline.setOnlineStatus(networkStatus === 'online');
+        });
+      }).catch(err => {
+        console.warn('NetInfo not available:', err);
       });
     } else {
       // Use navigator.onLine for web (only if window is available)
       if (typeof window !== 'undefined') {
         const updateNetworkStatus = () => {
           const networkStatus: NetworkStatus = navigator.onLine ? 'online' : 'offline';
-          useFamilyStore.getState().setNetworkStatus(networkStatus);
+          useFamilyStore.getState().offline.setOnlineStatus(networkStatus === 'online');
         };
         
         window.addEventListener('online', updateNetworkStatus);
