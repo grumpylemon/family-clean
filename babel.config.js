@@ -3,24 +3,24 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      // Transform import.meta for web compatibility
-      ['babel-plugin-transform-import-meta', {
-        // Replace import.meta with a polyfill
-        replacements: [
-          {
-            identifier: 'import.meta.env',
-            replacement: 'process.env'
-          },
-          {
-            identifier: 'import.meta.url',
-            replacement: '"http://localhost:8081"'
-          },
-          {
-            identifier: 'import.meta',
-            replacement: '{ url: "http://localhost:8081", env: process.env }'
+      // Transform import.meta before any other transformations
+      ['babel-plugin-transform-import-meta', { module: 'ES6' }],
+      // Additional plugin to handle any remaining import.meta
+      function() {
+        return {
+          visitor: {
+            MetaProperty(path) {
+              if (path.node.meta.name === 'import' && path.node.property.name === 'meta') {
+                const replacement = api.template.expression(`
+                  (typeof globalThis !== 'undefined' && globalThis.import && globalThis.import.meta) ||
+                  { url: "http://localhost:8081", env: { MODE: "production", DEV: false, PROD: true } }
+                `)();
+                path.replaceWith(replacement);
+              }
+            }
           }
-        ]
-      }]
+        };
+      }
     ]
   };
 };
