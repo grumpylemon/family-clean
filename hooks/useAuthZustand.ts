@@ -1,58 +1,73 @@
 import { useEffect } from 'react';
 import { useFamilyStore } from '@/stores/familyStore';
 import { User } from '@/types';
+import { shallow } from 'zustand/shallow';
 
 /**
  * Zustand-based replacement for useAuth hook
  * Provides the same API as the React Context version for seamless migration
  */
 export function useAuth() {
-  const {
-    // Auth state
-    user,
-    isAuthenticated,
-    isLoading: loading,
-    error,
-    
-    // Auth actions
-    signInWithGoogle,
-    signInAsGuest,
-    logout: logoutAction,
-    clearError,
-    
-    // Sync state
-    checkAuthState,
-  } = useFamilyStore((state) => ({
-    user: state.auth.user,
-    isAuthenticated: state.auth.isAuthenticated,
-    isLoading: state.auth.isLoading,
-    error: state.auth.error,
-    signInWithGoogle: state.auth.signInWithGoogle,
-    signInAsGuest: state.auth.signInAsGuest,
-    logout: state.auth.logout,
-    clearError: state.auth.clearError,
-    checkAuthState: state.auth.checkAuthState,
-  }));
+  // Use a single selector with shallow comparison to prevent unnecessary re-renders
+  // and ensure function references are stable
+  const authData = useFamilyStore(
+    (state) => ({
+      user: state.auth.user,
+      isAuthenticated: state.auth.isAuthenticated,
+      isLoading: state.auth.isLoading,
+      error: state.auth.error,
+      signInWithGoogle: state.auth.signInWithGoogle,
+      signInAsGuest: state.auth.signInAsGuest,
+      logout: state.auth.logout,
+      clearError: state.auth.clearError,
+    }),
+    shallow
+  );
 
-  // Check auth state on mount
-  useEffect(() => {
-    checkAuthState();
-  }, [checkAuthState]);
+  // Debug logging in development and production for troubleshooting
+  if (typeof window !== 'undefined') {
+    console.log('[useAuth] authData:', authData);
+    console.log('[useAuth] signInWithGoogle type:', typeof authData.signInWithGoogle);
+    console.log('[useAuth] signInWithGoogle value:', authData.signInWithGoogle);
+    
+    // Additional debugging for production
+    if (typeof authData.signInWithGoogle === 'undefined') {
+      console.error('[useAuth] ERROR: signInWithGoogle is undefined!');
+      console.log('[useAuth] Full store state:', useFamilyStore.getState());
+      console.log('[useAuth] Auth slice:', useFamilyStore.getState().auth);
+    }
+  }
+
+  // Note: checkAuthState is handled by AuthContext, not here
+  // This prevents circular updates between context and store
 
   // Maintain backward compatibility with error as a string
-  const errorMessage = error ? (typeof error === 'string' ? error : error.message || 'An error occurred') : null;
+  const errorMessage = authData.error 
+    ? (typeof authData.error === 'string' ? authData.error : authData.error.message || 'An error occurred') 
+    : null;
 
   // Provide the same API as the React Context version
+  // Add fallback functions if they're undefined (due to minification issues)
+  const signInWithGoogle = authData.signInWithGoogle || (() => {
+    console.error('[useAuth] signInWithGoogle is undefined, using direct store access');
+    return useFamilyStore.getState().auth.signInWithGoogle?.();
+  });
+  
+  const signInAsGuest = authData.signInAsGuest || (() => {
+    console.error('[useAuth] signInAsGuest is undefined, using direct store access');
+    return useFamilyStore.getState().auth.signInAsGuest?.();
+  });
+  
   return {
-    user,
-    loading,
+    user: authData.user,
+    loading: authData.isLoading,
     error: errorMessage,
-    authLoading: loading, // Alias for compatibility
+    authLoading: authData.isLoading, // Alias for compatibility
     signInWithGoogle,
     signInAsGuest,
-    logout: logoutAction,
-    clearError,
-    isAuthenticated,
+    logout: authData.logout,
+    clearError: authData.clearError,
+    isAuthenticated: authData.isAuthenticated,
   };
 }
 

@@ -70,6 +70,71 @@ export const useFamilyStore = create<FamilyStore>()(
       version: 1,
       // Skip hydration on SSR
       skipHydration: typeof window === 'undefined',
+      // Custom merge function to ensure actions are not lost during hydration
+      merge: (persistedState, currentState) => {
+        // Deep merge that preserves functions
+        const merged = { ...currentState };
+        
+        // Merge auth slice carefully to preserve actions
+        if (persistedState && (persistedState as any).auth) {
+          merged.auth = {
+            ...currentState.auth, // Keep all functions
+            // Only override state values
+            user: (persistedState as any).auth.user || currentState.auth.user,
+            isAuthenticated: (persistedState as any).auth.isAuthenticated !== undefined 
+              ? (persistedState as any).auth.isAuthenticated 
+              : currentState.auth.isAuthenticated
+          };
+        }
+        
+        // Merge family slice - preserve actions
+        if (persistedState && (persistedState as any).family) {
+          merged.family = {
+            ...currentState.family, // Keep all functions
+            // Only override state values
+            family: (persistedState as any).family.family || currentState.family.family,
+            members: (persistedState as any).family.members || currentState.family.members,
+            currentMember: (persistedState as any).family.currentMember || currentState.family.currentMember,
+            isAdmin: (persistedState as any).family.isAdmin !== undefined 
+              ? (persistedState as any).family.isAdmin 
+              : currentState.family.isAdmin
+          };
+        }
+        
+        // Merge offline slice - preserve actions
+        if (persistedState && (persistedState as any).offline) {
+          merged.offline = {
+            ...currentState.offline, // Keep all functions
+            // Only override state values
+            pendingActions: (persistedState as any).offline.pendingActions || currentState.offline.pendingActions,
+            failedActions: (persistedState as any).offline.failedActions || currentState.offline.failedActions,
+            lastSyncTime: (persistedState as any).offline.lastSyncTime || currentState.offline.lastSyncTime
+          };
+        }
+        
+        // Merge chores slice - preserve actions
+        if (persistedState && (persistedState as any).chores) {
+          merged.chores = {
+            ...currentState.chores, // Keep all functions
+            // Only override state values
+            chores: (persistedState as any).chores.chores || currentState.chores.chores,
+            pendingCompletions: (persistedState as any).chores.pendingCompletions || currentState.chores.pendingCompletions,
+            filter: (persistedState as any).chores.filter || currentState.chores.filter
+          };
+        }
+        
+        // Merge rewards slice - preserve actions
+        if (persistedState && (persistedState as any).rewards) {
+          merged.rewards = {
+            ...currentState.rewards, // Keep all functions
+            // Only override state values
+            rewards: (persistedState as any).rewards.rewards || currentState.rewards.rewards,
+            redemptionHistory: (persistedState as any).rewards.redemptionHistory || currentState.rewards.redemptionHistory
+          };
+        }
+        
+        return merged;
+      },
     }
   )
 );

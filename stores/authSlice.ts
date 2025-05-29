@@ -3,17 +3,17 @@
 
 import { StateCreator } from 'zustand';
 import { User } from '@/types';
-import { 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  signInAnonymously,
-  signOut,
-  onAuthStateChanged,
-  User as FirebaseUser
-} from 'firebase/auth';
-import { auth, isMockImplementation, mockAuth } from '@/config/firebase';
+import { auth, isMockImplementation } from '@/config/firebase';
 import { createOrUpdateUserProfile, getUserProfile } from '@/services/firestore';
+import { authService } from '@/services/authService';
 import { FamilyStore } from './types';
+
+// Import types only
+import type { 
+  Auth,
+  User as FirebaseUser,
+  UserCredential 
+} from 'firebase/auth';
 
 export interface AuthSlice {
   // State
@@ -36,14 +36,19 @@ export const createAuthSlice: StateCreator<
   [],
   [],
   AuthSlice
-> = (set, get) => ({
-  auth: {
-    user: null,
-    isAuthenticated: false,
-    isLoading: false,
-    error: null,
+> = (set, get) => {
+  // Log slice creation for debugging
+  console.log('[AuthSlice] Creating auth slice');
+  
+  return {
+    auth: {
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
 
-    signInWithGoogle: async () => {
+      signInWithGoogle: async () => {
+        console.log('[AuthSlice] signInWithGoogle called');
       const isMock = isMockImplementation();
       
       set((state) => ({
@@ -51,98 +56,51 @@ export const createAuthSlice: StateCreator<
       }));
 
       try {
-        if (isMock && mockAuth?.signInWithGoogle) {
-          // Use mock auth
-          const result = await mockAuth.signInWithGoogle();
-          const mockUser = result.user;
-          
-          // Create User object from mock
-          const user: User = {
-            uid: mockUser.uid,
-            email: mockUser.email || null,
-            displayName: mockUser.displayName || null,
-            photoURL: mockUser.photoURL || null,
-            familyId: null,
-            points: {
-              current: 0,
-              weekly: 0,
-              lifetime: 0,
-              lastReset: new Date().toISOString()
-            },
-            level: 1,
-            xp: 0,
-            achievements: [],
-            streakDays: 0,
-            lastActiveDate: new Date().toISOString(),
-            preferences: {
-              notifications: true,
-              theme: 'light',
-              defaultChoreDifficulty: 'medium'
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
+        // Use centralized auth service
+        const result = await authService.signInWithGoogle(auth);
+        
+        const firebaseUser = result.user;
+        
+        // Create User object from Firebase user
+        const user: User = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || null,
+          displayName: firebaseUser.displayName || null,
+          photoURL: firebaseUser.photoURL || null,
+          familyId: null,
+          points: {
+            current: 0,
+            weekly: 0,
+            lifetime: 0,
+            lastReset: new Date().toISOString()
+          },
+          level: 1,
+          xp: 0,
+          achievements: [],
+          streakDays: 0,
+          lastActiveDate: new Date().toISOString(),
+          preferences: {
+            notifications: true,
+            theme: 'light',
+            defaultChoreDifficulty: 'medium'
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
 
-          // Update auth state
-          set((state) => ({
-            auth: {
-              ...state.auth,
-              user,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null
-            }
-          }));
+        // Update auth state
+        set((state) => ({
+          auth: {
+            ...state.auth,
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null
+          }
+        }));
 
-          // Create/update user profile
-          await createOrUpdateUserProfile(user.uid, user);
-          
-        } else {
-          // Use real Firebase auth
-          const provider = new GoogleAuthProvider();
-          const result = await signInWithPopup(auth, provider);
-          
-          // Create User object from Firebase user
-          const user: User = {
-            uid: result.user.uid,
-            email: result.user.email,
-            displayName: result.user.displayName,
-            photoURL: result.user.photoURL,
-            familyId: null,
-            points: {
-              current: 0,
-              weekly: 0,
-              lifetime: 0,
-              lastReset: new Date().toISOString()
-            },
-            level: 1,
-            xp: 0,
-            achievements: [],
-            streakDays: 0,
-            lastActiveDate: new Date().toISOString(),
-            preferences: {
-              notifications: true,
-              theme: 'light',
-              defaultChoreDifficulty: 'medium'
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-
-          // Update auth state
-          set((state) => ({
-            auth: {
-              ...state.auth,
-              user,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null
-            }
-          }));
-
-          // Create/update user profile
-          await createOrUpdateUserProfile(user.uid, user);
-        }
+        // Create/update user profile
+        await createOrUpdateUserProfile(user.uid, user);
       } catch (error) {
         console.error('Error signing in with Google:', error);
         set((state) => ({
@@ -163,97 +121,51 @@ export const createAuthSlice: StateCreator<
       }));
 
       try {
-        if (isMock && mockAuth?.signInAsGuest) {
-          // Use mock auth
-          const result = await mockAuth.signInAsGuest();
-          const mockUser = result.user;
-          
-          // Create User object from mock
-          const user: User = {
-            uid: mockUser.uid,
-            email: mockUser.email || null,
-            displayName: mockUser.displayName || 'Guest',
-            photoURL: mockUser.photoURL || null,
-            familyId: null,
-            points: {
-              current: 0,
-              weekly: 0,
-              lifetime: 0,
-              lastReset: new Date().toISOString()
-            },
-            level: 1,
-            xp: 0,
-            achievements: [],
-            streakDays: 0,
-            lastActiveDate: new Date().toISOString(),
-            preferences: {
-              notifications: true,
-              theme: 'light',
-              defaultChoreDifficulty: 'medium'
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
+        // Use centralized auth service
+        const result = await authService.signInAnonymously(auth);
+        
+        const firebaseUser = result.user;
+        
+        // Create User object from Firebase user
+        const user: User = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || null,
+          displayName: firebaseUser.displayName || 'Guest',
+          photoURL: firebaseUser.photoURL || null,
+          familyId: null,
+          points: {
+            current: 0,
+            weekly: 0,
+            lifetime: 0,
+            lastReset: new Date().toISOString()
+          },
+          level: 1,
+          xp: 0,
+          achievements: [],
+          streakDays: 0,
+          lastActiveDate: new Date().toISOString(),
+          preferences: {
+            notifications: true,
+            theme: 'light',
+            defaultChoreDifficulty: 'medium'
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
 
-          // Update auth state
-          set((state) => ({
-            auth: {
-              ...state.auth,
-              user,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null
-            }
-          }));
+        // Update auth state
+        set((state) => ({
+          auth: {
+            ...state.auth,
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null
+          }
+        }));
 
-          // Create/update user profile
-          await createOrUpdateUserProfile(user.uid, user);
-          
-        } else {
-          // Use real Firebase auth
-          const result = await signInAnonymously(auth);
-          
-          // Create User object from Firebase user
-          const user: User = {
-            uid: result.user.uid,
-            email: null,
-            displayName: 'Guest',
-            photoURL: null,
-            familyId: null,
-            points: {
-              current: 0,
-              weekly: 0,
-              lifetime: 0,
-              lastReset: new Date().toISOString()
-            },
-            level: 1,
-            xp: 0,
-            achievements: [],
-            streakDays: 0,
-            lastActiveDate: new Date().toISOString(),
-            preferences: {
-              notifications: true,
-              theme: 'light',
-              defaultChoreDifficulty: 'medium'
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-
-          // Update auth state
-          set((state) => ({
-            auth: {
-              ...state.auth,
-              user,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null
-            }
-          }));
-
-          // Create/update user profile
-          await createOrUpdateUserProfile(user.uid, user);
-        }
+        // Create/update user profile
+        await createOrUpdateUserProfile(user.uid, user);
       } catch (error) {
         console.error('Error signing in as guest:', error);
         set((state) => ({
@@ -274,11 +186,8 @@ export const createAuthSlice: StateCreator<
       }));
 
       try {
-        if (isMock && mockAuth?.logout) {
-          await mockAuth.logout();
-        } else {
-          await signOut(auth);
-        }
+        // Use centralized auth service
+        await authService.signOut(auth);
 
         // Clear all user data
         set((state) => ({
@@ -317,9 +226,9 @@ export const createAuthSlice: StateCreator<
         auth: { ...state.auth, isLoading: true }
       }));
 
-      if (isMock && mockAuth) {
+      if (isMock) {
         // For mock auth, check current user
-        const currentUser = mockAuth.currentUser;
+        const currentUser = auth.currentUser;
         if (currentUser) {
           // Create User object from mock
           const user: User = {
@@ -367,8 +276,8 @@ export const createAuthSlice: StateCreator<
           }));
         }
       } else {
-        // Use Firebase auth state listener
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        // Use Firebase auth state listener from centralized service
+        const unsubscribe = authService.onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
           if (firebaseUser) {
             try {
               // Try to get existing user profile
@@ -455,4 +364,5 @@ export const createAuthSlice: StateCreator<
       }));
     }
   }
-});
+  };
+};

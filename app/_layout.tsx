@@ -121,7 +121,11 @@ export default function RootLayout() {
   );
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary onError={(error, errorInfo) => {
+      console.error('App crashed with error:', error);
+      console.error('Error stack:', error.stack);
+      console.error('Component stack:', errorInfo.componentStack);
+    }}>
       <StoreProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           {wrappedContent}

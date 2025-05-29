@@ -1,5 +1,5 @@
-import { auth, googleProvider, isMockImplementation } from '@/config/firebase';
-import { GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup, signOut, User } from 'firebase/auth';
+import { auth, isMockImplementation } from '@/config/firebase';
+import type { User } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { useAuthContextIntegration } from '@/stores/StoreProvider';
@@ -75,9 +75,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     try {
       console.log("Setting up auth state listener");
-      unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        console.log("Auth state changed:", currentUser ? "User logged in" : "No user");
-        setUser(currentUser);
+      
+      // Import authService to handle auth state changes properly
+      import('@/services/authService').then(({ authService }) => {
+        unsubscribe = authService.onAuthStateChanged(auth, (currentUser) => {
+          console.log("Auth state changed:", currentUser ? "User logged in" : "No user");
+          setUser(currentUser);
+          setLoading(false);
+        });
+      }).catch(err => {
+        console.error("Error importing authService:", err);
         setLoading(false);
       });
     } catch (err) {
@@ -125,10 +132,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         // For web with valid Firebase config
         try {
-          const result = await signInWithPopup(auth, googleProvider as GoogleAuthProvider);
+          const { authService } = await import('@/services/authService');
+          const result = await authService.signInWithGoogle(auth);
           console.log("Google sign in successful", result.user ? "with user" : "but no user returned");
-        } catch (authError) {
+        } catch (authError: any) {
           console.error("Error during Google sign in:", authError);
+          console.error("Auth error details:", {
+            code: authError?.code,
+            message: authError?.message,
+            stack: authError?.stack
+          });
           throw authError;
         }
       }
@@ -179,7 +192,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         // Try real anonymous auth
         try {
-          const result = await signInAnonymously(auth);
+          const { authService } = await import('@/services/authService');
+          const result = await authService.signInAnonymously(auth);
           console.log("Anonymous sign in successful", result.user ? "with user" : "but no user returned");
           
           // Add display name if needed
@@ -224,7 +238,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       } else {
         // Use Firebase signOut for real mode
-        await signOut(auth);
+        const { authService } = await import('@/services/authService');
+        await authService.signOut(auth);
       }
       
     } catch (err) {

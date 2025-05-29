@@ -59,7 +59,7 @@ export function useFamily() {
 
   // Refresh family data when user changes
   useEffect(() => {
-    if (user && family?.id) {
+    if (user && family?.id && fetchFamily && typeof fetchFamily === 'function') {
       fetchFamily(family.id);
     }
   }, [user?.uid, family?.id, fetchFamily]);

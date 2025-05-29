@@ -5,7 +5,6 @@ import {
   initializeAuth,
   getReactNativePersistence,
   GoogleAuthProvider,
-  signInWithPopup,
 } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -634,7 +633,11 @@ export const auth = (() => {
     // For web, use standard getAuth (no AsyncStorage needed)
     if (isWeb) {
       console.log("Using standard getAuth for web platform");
-      return getAuth();
+      const app = getApps()[0];
+      if (!app) {
+        throw new Error('Firebase app not initialized');
+      }
+      return getAuth(app);
     }
     
     // For native platforms, use initializeAuth with AsyncStorage persistence
@@ -696,30 +699,6 @@ export const auth = (() => {
   }
 })();
 
-// Create Google Auth Provider
-export const googleProvider = (() => {
-  if (isMockImplementation()) {
-    // Return a minimal mock provider
-    console.log("Using mock Google provider");
-    return { 
-      addScope: () => {},
-      providerId: 'google.com'
-    } as any;
-  }
-  
-  try {
-    console.log("Creating real Google auth provider");
-    const provider = new GoogleAuthProvider();
-    provider.addScope('profile');
-    provider.addScope('email');
-    return provider;
-  } catch (error) {
-    console.error("Error creating Google provider:", error);
-    // Return mock provider as fallback
-    return { 
-      addScope: () => {},
-      providerId: 'google.com'
-    } as any;
-  }
-})();
+// Note: GoogleAuthProvider is now created dynamically in authService to avoid bundling issues
+// The bundler was having trouble preserving the function references when exported directly
 

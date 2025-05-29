@@ -6,6 +6,9 @@ const config = getDefaultConfig(__dirname);
 // Fix for Expo Vector Icons on web
 config.resolver.assetExts.push('ttf');
 
+// Fix for Firebase SDK bundling (v9.7.x and above)
+config.resolver.sourceExts.push('cjs');
+
 // Exclude debugger frontend from web builds to avoid import.meta issues
 config.resolver.blockList = [
   /.*\/@react-native\/debugger-frontend\/.*/,
@@ -17,6 +20,11 @@ config.resolver.unstable_conditionNames = ['browser', 'require', 'react-native']
 
 // Ensure package exports resolution works correctly
 config.resolver.unstable_enablePackageExports = true;
+
+// CRITICAL FIX for Firebase Auth on Web
+// Force browser version of Firebase Auth for web builds
+config.resolver.resolverMainFields = ['browser', 'module', 'main'];
+
 
 // Configure transformer options with ZUSTAND V5 optimized minification
 config.transformer = {
@@ -41,7 +49,16 @@ config.transformer = {
         // State management functions that could be minified to single letters
         'state', 'prev', 'next', 'partial', 'replace', 'selector',
         // Common variable names that cause issues when minified
-        'store', 'api', 'get', 'set', 'initialState'
+        'store', 'api', 'get', 'set', 'initialState',
+        // Firebase Auth functions
+        'signInWithPopup', 'GoogleAuthProvider', 'signInAnonymously', 'signOut',
+        'onAuthStateChanged', 'getAuth', 'initializeAuth', 'auth', 'provider',
+        // Auth action names that must be preserved
+        'signInWithGoogle', 'signInAsGuest', 'logout', 'clearError', 'checkAuthState',
+        // Auth state properties
+        'user', 'isAuthenticated', 'isLoading', 'error', 'authData',
+        // Family store slices
+        'auth', 'family', 'offline', 'chores', 'rewards'
       ],
     },
     compress: {
