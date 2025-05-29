@@ -5,12 +5,14 @@
 - Apple ID: chris@grumpylemon.com
 
 ## App Configuration
-- Bundle ID: com.grumpylemon.familyclean
-- App Name: Family Clean
-- SKU: family-clean-001
+- Bundle ID: com.grumpylemon.familyfun
+- App Name: Family Compass
+- Subtitle: Guide your family to success
+- SKU: family-fun-001
 
 ## App Store Connect
-- App ID: 6746467670
+- App ID: 6746528405 (Family Compass)
+- Previous App ID: 6746467670 (Family Clean - old bundle ID)
 
 ## Important URLs
 - Apple Developer Portal: https://developer.apple.com
@@ -18,8 +20,8 @@
 - Certificates, Identifiers & Profiles: https://developer.apple.com/account/resources/
 
 ## Build Information
-- Current Version: 1.0.0
-- Current Build Number: 1
+- Current Version: 1.1.0
+- Current Build Number: 7
 
 ## Notes
 - Bundle ID format: reverse domain notation (com.companyname.appname)
@@ -28,9 +30,9 @@
 
 ## Quick Reference
 - Team ID: 87699862N5
-- Bundle ID: com.grumpylemon.familyclean
-- App Store Connect ID: 6746467670
-- SKU: family-clean-001
+- Bundle ID: com.grumpylemon.familyfun
+- App Store Connect ID: 6746528405
+- SKU: family-fun-001
 
 ## EAS Build Commands
 ```bash
@@ -44,10 +46,10 @@ eas build --platform ios --profile production
 eas submit --platform ios --latest
 ```Team ID: 87699862N5
 
-Project Credentials Configuration
+## Current Production Credentials (Updated: May 28, 2025)
 
 Project                   @grumpylemon/family-chores
-Bundle Identifier         com.grumpylemon.familyclean
+Bundle Identifier         com.grumpylemon.familyfun
                           
 App Store Configuration   
                           
@@ -55,21 +57,21 @@ Distribution Certificate
 Serial Number             2A396F5F1E92B3B5611D85413CB430BF
 Expiration Date           Wed, 27 May 2026 23:26:34 EDT
 Apple Team                87699862N5 (Christian Stoehr (Individual))
-Updated                   12 seconds ago
+Updated                   1 day ago
                           
 Provisioning Profile      
-Developer Portal ID       RLLZ7B64UA
+Developer Portal ID       W6DFF4J8AX
 Status                    active
 Expiration                Wed, 27 May 2026 23:26:34 EDT
 Apple Team                87699862N5 (Christian Stoehr (Individual))
-Updated                   0 second ago
+Updated                   Just now
                           
-All credentials are ready to build @grumpylemon/family-chores (com.grumpylemon.familyclean)
+All credentials are ready to build @grumpylemon/family-chores (com.grumpylemon.familyfun)
 
 Your binary has been successfully uploaded to App Store Connect!
 - It is now being processed by Apple - you will receive an email when the processing finishes.
 - It usually takes about 5-10 minutes depending on how busy Apple servers are.
-- When it's done, you can see your build here: https://appstoreconnect.apple.com/apps/6746467670/testflight/ios
+- When it's done, you can see your build here: https://appstoreconnect.apple.com/apps/6746528405/testflight/ios
 
 
 ow to Test Your App on iPhone
@@ -88,7 +90,7 @@ ow to Test Your App on iPhone
   Step 3: Add Yourself as a Tester
 
   Once you get the email that processing is complete:
-  1. Go to https://appstoreconnect.apple.com/apps/6746467670/testflight/ios on your computer
+  1. Go to https://appstoreconnect.apple.com/apps/6746528405/testflight/ios on your computer
   2. Click on "Internal Testing" in the left sidebar
   3. Create a new Internal Group (e.g., "Developers")
   4. Add your email (mailto:chris@grumpylemon.com) as a tester

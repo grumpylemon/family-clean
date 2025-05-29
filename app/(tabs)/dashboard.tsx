@@ -6,12 +6,13 @@ import { ManageMembers } from '@/components/ManageMembers';
 import { TestDataGenerator } from '@/components/TestDataGenerator';
 import WeeklyProgress from '@/components/WeeklyProgress';
 import WeeklyComparison from '@/components/WeeklyComparison';
+import { XPProgressBar } from '@/components/ui/XPProgressBar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { VERSION_STRING, VERSION_DISPLAY } from '@/constants/Version';
 import { getChores, shouldResetWeeklyPoints, resetWeeklyPoints, completeChore } from '@/services/firestore';
 import { Chore, CompletionReward } from '@/types';
-import { Ionicons } from '@expo/vector-icons';
+import { UniversalIcon } from '@/components/ui/UniversalIcon';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -190,7 +191,7 @@ export default function DashboardScreen() {
             <Text style={styles.userName}>{currentMember?.name || user.displayName}</Text>
           </View>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={20} color="#831843" />
+            <UniversalIcon name="log-out-outline" size={20} color="#831843" />
             {Platform.OS === 'web' && (
               <Text style={styles.logoutButtonText}>Logout</Text>
             )}
@@ -216,6 +217,17 @@ export default function DashboardScreen() {
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{family.members.length}</Text>
             <Text style={styles.statLabel}>Members</Text>
+          </View>
+        </View>
+
+        {/* Level Progress */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Progress</Text>
+          <View style={styles.xpCard}>
+            <XPProgressBar 
+              currentXP={user?.xp?.total || 0}
+              size="medium"
+            />
           </View>
         </View>
 
@@ -259,7 +271,7 @@ export default function DashboardScreen() {
                     <View style={styles.chorePoints}>
                       <Text style={styles.chorePointsText}>{chore.points} pts</Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color="#be185d" style={styles.choreArrow} />
+                    <UniversalIcon name="chevron-forward" size={20} color="#be185d" style={styles.choreArrow} />
                   </View>
                 </TouchableOpacity>
               ))
@@ -354,7 +366,7 @@ export default function DashboardScreen() {
         <View style={styles.choreModalContainer}>
           <View style={styles.choreModalHeader}>
             <TouchableOpacity onPress={closeChoreModal} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#be185d" />
+              <UniversalIcon name="close" size={24} color="#be185d" />
             </TouchableOpacity>
             <Text style={styles.choreModalTitle}>Chore Details</Text>
             <View style={styles.headerSpacer} />
@@ -446,7 +458,7 @@ export default function DashboardScreen() {
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : (
                 <>
-                  <Ionicons name="checkmark-circle" size={20} color="#ffffff" />
+                  <UniversalIcon name="checkmark-circle" size={20} color="#ffffff" />
                   <Text style={styles.choreModalCompleteText}>Mark Complete</Text>
                 </>
               )}
@@ -536,6 +548,13 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#f1f5f9',
+    position: 'relative',
+  },
+  statIcon: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    opacity: 0.7,
   },
   statValue: {
     fontSize: 32,
@@ -907,5 +926,15 @@ const styles = StyleSheet.create({
   },
   choreModalButtonDisabled: {
     opacity: 0.6,
+  },
+  xpCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
 });

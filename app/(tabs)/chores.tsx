@@ -3,7 +3,7 @@ import { useFamily } from '@/contexts/FamilyContext';
 import { completeChore, getChores } from '@/services/firestore';
 import { Chore, ChoreStatus, CompletionReward } from '@/types';
 import { CompletionRewardModal } from '@/components/CompletionRewardModal';
-import { Ionicons } from '@expo/vector-icons';
+import { UniversalIcon } from '@/components/ui/UniversalIcon';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -234,7 +234,7 @@ export default function ChoresScreen() {
           >
             {filteredChores.length === 0 ? (
               <View style={styles.emptyState}>
-                <Ionicons name="checkbox-outline" size={48} color="#f9a8d4" />
+                <UniversalIcon name="checkbox-outline" size={48} color="#f9a8d4" />
                 <Text style={styles.emptyText}>No chores found</Text>
               </View>
             ) : (
@@ -244,7 +244,7 @@ export default function ChoresScreen() {
                   <View key={chore.id} style={styles.choreCard}>
                     <View style={styles.choreHeader}>
                       <View style={styles.choreTypeIcon}>
-                        <Ionicons 
+                        <UniversalIcon 
                           name={getChoreTypeIcon(chore.type) as any} 
                           size={20} 
                           color="#be185d" 
@@ -264,7 +264,7 @@ export default function ChoresScreen() {
 
                     <View style={styles.choreDetails}>
                       <View style={styles.choreDetailRow}>
-                        <Ionicons name="calendar-outline" size={16} color="#9f1239" />
+                        <UniversalIcon name="calendar-outline" size={16} color="#9f1239" />
                         <Text style={styles.choreDetailText}>
                           Due: {new Date(chore.dueDate).toLocaleDateString()}
                         </Text>
@@ -281,7 +281,7 @@ export default function ChoresScreen() {
 
                       {chore.assignedTo && (
                         <View style={styles.choreDetailRow}>
-                          <Ionicons name="person-outline" size={16} color="#9f1239" />
+                          <UniversalIcon name="person-outline" size={16} color="#9f1239" />
                           <Text style={styles.choreDetailText}>
                             {family?.members.find(m => m.uid === chore.assignedTo)?.name || 'Unknown'}
                           </Text>
@@ -290,7 +290,7 @@ export default function ChoresScreen() {
 
                       {chore.status === 'completed' && chore.completedAt && (
                         <View style={styles.choreDetailRow}>
-                          <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+                          <UniversalIcon name="checkmark-circle" size={16} color="#10b981" />
                           <Text style={[styles.choreDetailText, { color: '#10b981' }]}>
                             Completed {new Date(chore.completedAt).toLocaleDateString()}
                           </Text>
@@ -300,7 +300,7 @@ export default function ChoresScreen() {
 
                     {locked && (
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                        <Ionicons name="lock-closed" size={16} color="#ef4444" />
+                        <UniversalIcon name="lock-closed" size={16} color="#ef4444" />
                         <Text style={{ color: '#ef4444', marginLeft: 4 }}>
                           Locked until {new Date(chore.lockedUntil!).toLocaleString()}
                         </Text>
@@ -314,7 +314,7 @@ export default function ChoresScreen() {
                           style={{ marginLeft: 6 }}
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
-                          <Ionicons name="information-circle-outline" size={18} color="#be185d" />
+                          <UniversalIcon name="information-circle-outline" size={18} color="#be185d" />
                         </TouchableOpacity>
                       </View>
                     )}
@@ -327,7 +327,7 @@ export default function ChoresScreen() {
                             style={[styles.choreActionButton, styles.completeButton]}
                             onPress={() => handleCompleteChore(chore.id!)}
                           >
-                            <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                            <UniversalIcon name="checkmark-circle" size={20} color="#fff" />
                             <Text style={styles.completeButtonText}>Complete</Text>
                           </TouchableOpacity>
                         ) : !chore.assignedTo ? (
@@ -335,7 +335,7 @@ export default function ChoresScreen() {
                             style={[styles.choreActionButton, styles.claimButton]}
                             onPress={() => handleClaimChore(chore.id!)}
                           >
-                            <Ionicons name="hand-right" size={20} color="#be185d" />
+                            <UniversalIcon name="hand-right" size={20} color="#be185d" />
                             <Text style={styles.claimButtonText}>Claim</Text>
                           </TouchableOpacity>
                         ) : null}
@@ -351,7 +351,7 @@ export default function ChoresScreen() {
         <ScrollView style={styles.choresList}>
           {getUserCompletedChores().length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="checkmark-done-outline" size={48} color="#f9a8d4" />
+              <UniversalIcon name="checkmark-done-outline" size={48} color="#f9a8d4" />
               <Text style={styles.emptyText}>No completed chores yet</Text>
             </View>
           ) : (
@@ -360,7 +360,7 @@ export default function ChoresScreen() {
               .map((chore) => (
                 <View key={chore.id} style={styles.choreCard}>
                   <View style={styles.choreHeader}>
-                    <Ionicons name={getChoreTypeIcon(chore.type) as any} size={20} color="#be185d" style={{ marginRight: 8 }} />
+                    <UniversalIcon name={getChoreTypeIcon(chore.type) as any} size={20} color="#be185d" style={{ marginRight: 8 }} />
                     <View style={styles.choreHeaderInfo}>
                       <Text style={styles.choreTitle}>{chore.title}</Text>
                       <Text style={styles.choreDescription}>{chore.description}</Text>
@@ -372,7 +372,7 @@ export default function ChoresScreen() {
                   </View>
                   <View style={styles.choreDetails}>
                     <View style={styles.choreDetailRow}>
-                      <Ionicons name="calendar-outline" size={16} color="#9f1239" />
+                      <UniversalIcon name="calendar-outline" size={16} color="#9f1239" />
                       <Text style={styles.choreDetailText}>
                         Completed: {chore.completedAt ? new Date(chore.completedAt).toLocaleString() : '—'}
                       </Text>

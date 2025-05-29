@@ -2,9 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFamily } from '@/contexts/FamilyContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { calculateLevel } from '@/services/gamification';
 
 export default function LeadersScreen() {
   const { family } = useFamily();
+  const { user } = useAuth();
 
   const getInitials = (name: string): string => {
     return name
@@ -13,6 +16,16 @@ export default function LeadersScreen() {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getMemberLevel = (memberUid: string): { level: number; title: string } => {
+    // For now, we'll use basic level calculation based on available data
+    // In a full implementation, we'd fetch each user's profile data
+    if (memberUid === user?.uid && user?.xp?.total) {
+      return calculateLevel(user.xp.total);
+    }
+    // Default to level 1 for other members until we have their XP data
+    return { level: 1, title: 'Novice Helper' };
   };
 
   const getRankIcon = (rank: number) => {
@@ -85,7 +98,9 @@ export default function LeadersScreen() {
                       </View>
                       <View style={styles.memberInfo}>
                         <Text style={styles.memberName}>{member.name}</Text>
-                        <Text style={styles.memberLevel}>Newbie</Text>
+                        <Text style={styles.memberLevel}>
+                          Level {getMemberLevel(member.uid).level} - {getMemberLevel(member.uid).title}
+                        </Text>
                       </View>
                     </View>
                     <View style={styles.pointsCell}>

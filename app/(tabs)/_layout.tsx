@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
+import { WebIcon } from '@/components/ui/WebIcon';
 
 // Version tracking for updates
 console.log("Tabs Layout version: v3");
@@ -40,7 +40,7 @@ export default function TabLayout() {
         options={{
           title: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={24} color={color} />
+            <WebIcon name="home" size={24} color={color} />
           ),
         }}
       />
@@ -49,7 +49,7 @@ export default function TabLayout() {
         options={{
           title: 'Chores',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list" size={24} color={color} />
+            <WebIcon name="list" size={24} color={color} />
           ),
         }}
       />
@@ -58,7 +58,7 @@ export default function TabLayout() {
         options={{
           title: 'Pets',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="heart" size={24} color={color} />
+            <WebIcon name="heart" size={24} color={color} />
           ),
         }}
       />
@@ -67,7 +67,7 @@ export default function TabLayout() {
         options={{
           title: 'Rewards',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="gift" size={24} color={color} />
+            <WebIcon name="gift" size={24} color={color} />
           ),
         }}
       />
@@ -76,7 +76,7 @@ export default function TabLayout() {
         options={{
           title: 'Achievements',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trophy" size={24} color={color} />
+            <WebIcon name="trophy" size={24} color={color} />
           ),
         }}
       />
@@ -85,7 +85,7 @@ export default function TabLayout() {
         options={{
           title: 'Leaders',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="podium" size={24} color={color} />
+            <WebIcon name="podium" size={24} color={color} />
           ),
         }}
       />
@@ -94,7 +94,7 @@ export default function TabLayout() {
         options={{
           title: 'Settings',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings" size={24} color={color} />
+            <WebIcon name="settings" size={24} color={color} />
           ),
         }}
       />

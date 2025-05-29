@@ -2,6 +2,86 @@
 export type UserRole = 'admin' | 'member';
 export type FamilyRole = 'parent' | 'child' | 'other';
 
+// Streak System Types
+export type StreakType = 'overall' | 'category' | 'perfect_day' | 'early_bird' | 'room' | 'pet_care';
+export type StreakCategory = 'kitchen' | 'bathroom' | 'bedroom' | 'outdoor' | 'pet' | 'general';
+
+// Streak Multiplier System
+export interface StreakMultiplier {
+  type: StreakType;
+  days: number;
+  multiplier: number;
+  category?: StreakCategory;
+  roomId?: string;
+}
+
+export interface StreakBonus {
+  type: 'completion' | 'milestone' | 'compound' | 'special_event';
+  streakType: StreakType;
+  days: number;
+  bonusPoints?: number;
+  bonusXP?: number;
+  multiplier?: number;
+  description: string;
+}
+
+// Streak Milestone System
+export interface StreakMilestone {
+  days: number;
+  title: string;
+  description: string;
+  bonusPoints: number;
+  bonusXP: number;
+  badge?: string; // Badge ID awarded
+  isSpecial?: boolean; // For major milestones (100, 365 days)
+}
+
+export interface StreakData {
+  current: number;
+  longest: number;
+  lastCompletedDate?: string;
+  multiplier?: number; // Current active multiplier
+  freezeTokens?: number; // Grace periods available
+  isProtected?: boolean; // Has streak protection active
+}
+
+export interface EnhancedStreak {
+  // Overall streak (legacy compatibility)
+  overall: StreakData;
+  
+  // Category-specific streaks
+  categories: {
+    [key in StreakCategory]?: StreakData;
+  };
+  
+  // Special streak types
+  perfectDay: StreakData; // All assigned chores completed in a day
+  earlyBird: StreakData; // Completed before noon
+  
+  // Room-specific streaks (for room-based chores)
+  rooms: {
+    [roomId: string]: StreakData;
+  };
+  
+  // Analytics and insights
+  analytics?: {
+    bestStreakMonth?: string;
+    averageStreakLength?: number;
+    streakRecoveryRate?: number; // How often streaks are rebuilt after breaking
+    totalStreakDays?: number;
+    streakMilestones?: number[]; // Days achieved (7, 30, 100, etc.)
+  };
+  
+  // Streak milestones and bonuses
+  milestones?: {
+    [days: number]: {
+      achieved: boolean;
+      achievedAt?: Date | string;
+      bonusAwarded?: number; // Extra points/XP received
+    };
+  };
+}
+
 export interface User {
   uid: string;
   email: string | null;
@@ -20,6 +100,8 @@ export interface User {
     longest: number;
     lastCompletedDate?: string;
   };
+  // Enhanced streak system (new)
+  streaks?: EnhancedStreak;
   level?: number;
   xp?: {
     current: number;
@@ -52,6 +134,8 @@ export interface FamilyMember {
     longest: number;
     lastCompletedDate?: string;
   };
+  // Enhanced streak system (new)
+  streaks?: EnhancedStreak;
   level?: number;
   xp?: {
     current: number;
@@ -189,8 +273,15 @@ export interface Achievement {
   icon: string;
   xpReward: number;
   criteria: {
-    type: 'chores_completed' | 'streak_days' | 'points_earned' | 'level_reached';
+    type: 'chores_completed' | 'streak_days' | 'points_earned' | 'level_reached' | 
+          'category_streak' | 'perfect_day_streak' | 'early_bird_streak' | 'room_streak' | 
+          'streak_recovery' | 'multiple_streaks' | 'streak_milestone';
     value: number;
+    // Additional criteria for streak-specific achievements
+    streakType?: StreakType;
+    category?: StreakCategory;
+    roomId?: string;
+    timeRequirement?: string; // For early bird (e.g., "12:00")
   };
 }
 
@@ -264,6 +355,61 @@ export interface DailyPointsRecord {
   choreCount: number;
   createdAt: Date | string;
   updatedAt: Date | string;
+}
+
+// Point Transaction Log
+export interface PointTransaction {
+  id?: string;
+  userId: string;
+  familyId: string;
+  type: 'earned' | 'spent' | 'transferred' | 'bonus' | 'penalty' | 'milestone';
+  amount: number;
+  source: 'chore' | 'reward' | 'transfer' | 'achievement' | 'streak' | 'milestone' | 'admin';
+  sourceId?: string; // ID of the chore, reward, etc.
+  description: string;
+  metadata?: {
+    choreTitle?: string;
+    rewardName?: string;
+    fromUserId?: string;
+    toUserId?: string;
+    streakBonus?: number;
+    milestoneLevel?: number;
+    adminNote?: string;
+  };
+  createdAt: Date | string;
+}
+
+// Point Milestones
+export interface PointMilestone {
+  id: string;
+  level: number;
+  pointsRequired: number;
+  title: string;
+  description: string;
+  icon: string;
+  xpReward: number;
+  unlockRewards?: {
+    bonusPoints?: number;
+    specialBadge?: string;
+    unlockFeature?: string;
+  };
+}
+
+// Point Transfer Request
+export interface PointTransferRequest {
+  id?: string;
+  fromUserId: string;
+  fromUserName: string;
+  toUserId: string;
+  toUserName: string;
+  amount: number;
+  reason?: string;
+  status: 'pending' | 'approved' | 'declined' | 'completed';
+  requestedAt: Date | string;
+  reviewedBy?: string;
+  reviewedAt?: Date | string;
+  reviewNotes?: string;
+  familyId: string;
 }
 
 export interface WeeklyPointsData {

@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   Switch
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { WebIcon } from '@/components/ui/WebIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
@@ -77,7 +77,7 @@ export default function SettingsScreen() {
                   )}
                 </View>
                 <TouchableOpacity style={styles.changeAvatarButton}>
-                  <Ionicons name="camera" size={16} color="#be185d" />
+                  <WebIcon name="camera" size={16} color="#be185d" />
                   <Text style={styles.changeAvatarText}>Change Avatar</Text>
                 </TouchableOpacity>
               </View>
@@ -116,7 +116,7 @@ export default function SettingsScreen() {
                     styles.adminIcon, 
                     { backgroundColor: canManageFamily ? '#fdf2f8' : '#f9fafb' }
                   ]}>
-                    <Ionicons 
+                    <WebIcon 
                       name="shield-checkmark" 
                       size={24} 
                       color={canManageFamily ? '#be185d' : '#9ca3af'} 
@@ -140,7 +140,7 @@ export default function SettingsScreen() {
                     </Text>
                   </View>
                 </View>
-                <Ionicons 
+                <WebIcon 
                   name="chevron-forward" 
                   size={20} 
                   color={canManageFamily ? "#be185d" : "#9ca3af"} 
@@ -156,7 +156,7 @@ export default function SettingsScreen() {
               <View style={styles.settingItem}>
                 <View style={styles.settingLeft}>
                   <View style={styles.settingIconContainer}>
-                    <Ionicons 
+                    <WebIcon 
                       name={isDarkMode ? "moon" : "sunny"} 
                       size={20} 
                       color="#be185d" 
@@ -182,21 +182,21 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Coming Soon</Text>
             <View style={styles.settingsCard}>
               <View style={styles.comingSoonItem}>
-                <Ionicons name="notifications-outline" size={24} color="#9f1239" />
+                <WebIcon name="notifications-outline" size={24} color="#9f1239" />
                 <View style={styles.comingSoonText}>
                   <Text style={styles.comingSoonTitle}>Notifications</Text>
                   <Text style={styles.comingSoonDescription}>Customize notification preferences</Text>
                 </View>
               </View>
               <View style={styles.comingSoonItem}>
-                <Ionicons name="language-outline" size={24} color="#9f1239" />
+                <WebIcon name="language-outline" size={24} color="#9f1239" />
                 <View style={styles.comingSoonText}>
                   <Text style={styles.comingSoonTitle}>Language</Text>
                   <Text style={styles.comingSoonDescription}>Choose your preferred language</Text>
                 </View>
               </View>
               <View style={styles.comingSoonItem}>
-                <Ionicons name="lock-closed-outline" size={24} color="#9f1239" />
+                <WebIcon name="lock-closed-outline" size={24} color="#9f1239" />
                 <View style={styles.comingSoonText}>
                   <Text style={styles.comingSoonTitle}>Privacy</Text>
                   <Text style={styles.comingSoonDescription}>Manage privacy settings</Text>

@@ -12,13 +12,26 @@ import {
   WeeklyPointsData,
   Pet,
   PetChore,
-  PetCareRecord
+  PetCareRecord,
+  EnhancedStreak
 } from '@/types';
 import { 
   processChoreCompletion, 
   applyCompletionRewards,
-  calculateStreakBonus 
+  calculateStreakBonus,
+  updateEnhancedStreak,
+  initializeEnhancedStreak,
+  calculateCompoundStreakMultiplier,
+  checkStreakMilestones,
+  getChoreCategory,
+  countActiveStreaks
 } from './gamification';
+import {
+  logPointTransaction,
+  checkPointMilestones,
+  calculateAdvancedPoints,
+  PointCalculationFactors
+} from './pointsService';
 import {
   addDoc,
   collection,
@@ -497,7 +510,8 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
 
     const today = new Date();
 
-    // 1. Update streak tracking
+    // 1. Update enhanced streak tracking
+    // Maintain legacy streak for backward compatibility
     let streak = userProfile.streak || { current: 0, longest: 0 };
     const lastCompleted = streak.lastCompletedDate ? new Date(streak.lastCompletedDate) : null;
     
@@ -517,37 +531,128 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
     streak.longest = Math.max(streak.longest, streak.current);
     streak.lastCompletedDate = today.toISOString();
 
+    // Enhanced streak tracking
+    let enhancedStreaks = userProfile.streaks || initializeEnhancedStreak();
+    
+    // Check if this is a perfect day (all assigned chores completed)
+    // For now, we'll assume it's not perfect unless we can verify
+    // In the future, we could query for all user's assigned chores and check completion status
+    const isAllChoresCompleted = false; // TODO: Implement perfect day detection
+    
+    // Update enhanced streaks
+    enhancedStreaks = updateEnhancedStreak(
+      enhancedStreaks,
+      chore,
+      today,
+      isAllChoresCompleted
+    );
+    
+    // Check for streak milestones
+    const achievedMilestones = checkStreakMilestones(enhancedStreaks);
+
     // 2. Calculate completion count
     const completionCount = (chore.completionCount || 0) + 1;
 
-    // 3. Process gamification rewards (XP, achievements, levels)
+    // 3. Calculate advanced points with dynamic factors
+    const pointFactors: PointCalculationFactors = {
+      basePoints: chore.points,
+      difficulty: chore.difficulty,
+      timeOfDay: today,
+      isEarlyCompletion: new Date(chore.dueDate) > today,
+      isWeekend: today.getDay() === 0 || today.getDay() === 6,
+      // Add more factors as needed based on chore metadata
+    };
+    
+    const advancedPoints = calculateAdvancedPoints(pointFactors);
+    
+    // 4. Process gamification rewards (XP, achievements, levels)
     const reward = await processChoreCompletion(
       currentUser.uid,
-      chore.points,
+      advancedPoints, // Use enhanced point calculation
       chore.difficulty,
       completionCount,
-      getUserProfile
+      getUserProfile,
+      enhancedStreaks // Pass enhanced streaks for achievement checking
     );
 
     console.log('Completion reward calculated:', reward);
 
-    // 4. Apply streak bonus to points
-    const streakBonus = calculateStreakBonus(streak.current);
+    // 5. Apply enhanced streak bonus to points
+    const compoundStreakMultiplier = calculateCompoundStreakMultiplier(enhancedStreaks);
+    const legacyStreakBonus = calculateStreakBonus(streak.current); // Keep for backward compatibility
+    
+    // Use the higher of the two bonuses (enhanced or legacy)
+    const streakBonus = Math.max(compoundStreakMultiplier, legacyStreakBonus);
     const finalPoints = Math.round(reward.pointsEarned * streakBonus);
+    
+    // Add milestone bonus points if any were achieved
+    const milestoneBonus = achievedMilestones.reduce((total, milestone) => total + milestone.bonusPoints, 0);
+    const totalFinalPoints = finalPoints + milestoneBonus;
+    
+    // 6. Log detailed point transaction (including milestone bonuses)
+    await logPointTransaction({
+      userId: currentUser.uid,
+      familyId: chore.familyId,
+      type: 'earned',
+      amount: totalFinalPoints,
+      source: 'chore',
+      sourceId: choreId,
+      description: `Completed chore: ${chore.title}${milestoneBonus > 0 ? ` + streak milestone bonus` : ''}`,
+      metadata: {
+        choreTitle: chore.title,
+        basePoints: reward.pointsEarned,
+        streakBonus: streakBonus > 1 ? streakBonus : undefined,
+        compoundMultiplier: compoundStreakMultiplier > 1 ? compoundStreakMultiplier : undefined,
+        milestoneBonus: milestoneBonus > 0 ? milestoneBonus : undefined,
+        achievedMilestones: achievedMilestones.length > 0 ? achievedMilestones.map(m => m.title) : undefined
+      }
+    });
 
-    // 5. Update user profile with all rewards and streak
+    // 7. Check for point milestones
+    const previousLifetimePoints = userProfile.points?.lifetime || 0;
+    const newLifetimePoints = previousLifetimePoints + totalFinalPoints;
+    const newMilestones = await checkPointMilestones(
+      currentUser.uid,
+      newLifetimePoints,
+      previousLifetimePoints
+    );
+    
+    // Award milestone bonus points
+    let milestoneBonus = 0;
+    for (const milestone of newMilestones) {
+      if (milestone.unlockRewards?.bonusPoints) {
+        milestoneBonus += milestone.unlockRewards.bonusPoints;
+        await logPointTransaction({
+          userId: currentUser.uid,
+          familyId: chore.familyId,
+          type: 'bonus',
+          amount: milestone.unlockRewards.bonusPoints,
+          source: 'milestone',
+          sourceId: milestone.id,
+          description: `Milestone bonus: ${milestone.title}`,
+          metadata: {
+            milestoneLevel: milestone.level
+          }
+        });
+      }
+    }
+    
+    // 8. Update user profile with all rewards and enhanced streaks
+    const streakMilestoneBonusAdjustment = achievedMilestones.reduce((total, milestone) => total + milestone.bonusPoints, 0);
+    const totalPointsEarned = totalFinalPoints + milestoneBonus;
     const updatedUserProfile = {
       points: {
-        current: (userProfile.points?.current || 0) + finalPoints,
-        lifetime: (userProfile.points?.lifetime || 0) + finalPoints,
-        weekly: (userProfile.points?.weekly || 0) + finalPoints,
+        current: (userProfile.points?.current || 0) + totalPointsEarned,
+        lifetime: newLifetimePoints + milestoneBonus,
+        weekly: (userProfile.points?.weekly || 0) + totalPointsEarned,
       },
-      streak,
+      streak, // Keep legacy streak for backward compatibility
+      streaks: enhancedStreaks, // Add enhanced streak system
       updatedAt: today,
     };
 
     // Apply gamification rewards (XP, level, achievements)
-    await applyCompletionRewards(currentUser.uid, reward, streak.current, getUserProfile, createOrUpdateUserProfile);
+    await applyCompletionRewards(currentUser.uid, reward, streak.current, getUserProfile, createOrUpdateUserProfile, enhancedStreaks);
     
     // Update basic profile data
     await createOrUpdateUserProfile(currentUser.uid, updatedUserProfile);
@@ -557,15 +662,17 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
     if (memberInFamily) {
       await updateFamilyMember(family.id!, currentUser.uid, {
         points: {
-          current: (memberInFamily.points?.current || 0) + finalPoints,
-          lifetime: (memberInFamily.points?.lifetime || 0) + finalPoints,
-          weekly: (memberInFamily.points?.weekly || 0) + finalPoints,
-        }
+          current: (memberInFamily.points?.current || 0) + totalPointsEarned,
+          lifetime: (memberInFamily.points?.lifetime || 0) + totalPointsEarned,
+          weekly: (memberInFamily.points?.weekly || 0) + totalPointsEarned,
+        },
+        streak, // Update legacy streak for compatibility
+        streaks: enhancedStreaks, // Update enhanced streaks
       });
     }
 
     // Update daily points tracking for the 7-day rolling window
-    await updateDailyPoints(currentUser.uid, chore.familyId, finalPoints);
+    await updateDailyPoints(currentUser.uid, chore.familyId, totalPointsEarned);
 
     // 6. Set cooldown (lockedUntil)
     const cooldownHours = chore.cooldownHours || family.settings?.defaultChoreCooldownHours || 24;
@@ -581,17 +688,26 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
     });
     await setDoc(doc(getChoresCollection(), choreId), completionData, { merge: true });
 
-    // 8. Log completion record for analytics
+    // 8. Log completion record for analytics (with enhanced streak data)
     const completionRecord: Omit<ChoreCompletionRecord, 'id'> = {
       choreId,
       userId: currentUser.uid,
       completedAt: today,
-      pointsEarned: finalPoints,
-      xpEarned: reward.xpEarned,
+      pointsEarned: totalPointsEarned, // Include all bonuses
+      xpEarned: reward.xpEarned + achievedMilestones.reduce((total, milestone) => total + milestone.bonusXP, 0),
       streakDay: streak.current,
       bonusMultiplier: streakBonus > 1 ? streakBonus : undefined,
       achievementsUnlocked: reward.achievementsUnlocked?.map(a => a.id),
       familyId: chore.familyId,
+      // Enhanced streak analytics
+      enhancedStreaks: {
+        overallStreak: enhancedStreaks.overall.current,
+        categoryStreak: enhancedStreaks.categories[getChoreCategory(chore)]?.current || 0,
+        perfectDayStreak: enhancedStreaks.perfectDay.current,
+        earlyBirdStreak: enhancedStreaks.earlyBird.current,
+        compoundMultiplier: compoundStreakMultiplier > 1 ? compoundStreakMultiplier : undefined,
+        milestonesAchieved: achievedMilestones.length > 0 ? achievedMilestones.map(m => m.title) : undefined
+      },
     };
 
     try {
@@ -618,8 +734,18 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
       success: true, 
       reward: {
         ...reward,
-        pointsEarned: finalPoints, // Update with streak bonus
-        streakBonus: streakBonus > 1 ? streakBonus : undefined
+        pointsEarned: totalPointsEarned, // Update with all bonuses (streak + milestones)
+        streakBonus: streakBonus > 1 ? streakBonus : undefined,
+        compoundStreakMultiplier: compoundStreakMultiplier > 1 ? compoundStreakMultiplier : undefined,
+        milestonesAchieved: achievedMilestones,
+        enhancedStreaks: {
+          overallStreak: enhancedStreaks.overall.current,
+          longestStreak: enhancedStreaks.overall.longest,
+          categoryStreak: enhancedStreaks.categories[getChoreCategory(chore)]?.current || 0,
+          perfectDayStreak: enhancedStreaks.perfectDay.current,
+          earlyBirdStreak: enhancedStreaks.earlyBird.current,
+          activeStreaksCount: countActiveStreaks(enhancedStreaks)
+        }
       }
     };
   } catch (error) {

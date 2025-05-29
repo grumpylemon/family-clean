@@ -72,7 +72,7 @@ export default function LoginScreen() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#be185d" />
           <Text style={styles.loadingText}>
-            {isIOS ? "Setting up demo mode..." : "Loading..."}
+            {isMock ? "Setting up demo mode..." : "Connecting to Family Compass..."}
           </Text>
         </View>
       </View>
@@ -87,8 +87,8 @@ export default function LoginScreen() {
           <View style={styles.iconBackground}>
             <Ionicons name="home" size={50} color="#ffffff" />
           </View>
-          <Text style={styles.appTitle}>Family Clean</Text>
-          <Text style={styles.tagline}>Organize chores, earn rewards</Text>
+          <Text style={styles.appTitle}>Family Compass</Text>
+          <Text style={styles.tagline}>Guide your family to success</Text>
         </View>
 
         {/* Login Buttons */}
@@ -118,10 +118,10 @@ export default function LoginScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Platform indicator */}
-          {isIOS && (
+          {/* Platform indicator - only show if actually using mock */}
+          {isMock && (
             <Text style={styles.platformNote}>
-              iOS: Using demo mode
+              Demo mode active
             </Text>
           )}
         </View>
@@ -130,7 +130,7 @@ export default function LoginScreen() {
         {error && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{error}</Text>
-            {isIOS && (
+            {isMock && (
               <TouchableOpacity
                 style={styles.refreshButton}
                 onPress={() => {
@@ -139,7 +139,7 @@ export default function LoginScreen() {
                 }}
               >
                 <Text style={styles.refreshButtonText}>
-                  Refresh / Already have a family?
+                  Try Demo Mode
                 </Text>
               </TouchableOpacity>
             )}

@@ -1,11 +1,177 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, StatusBar, ScrollView } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  SafeAreaView, 
+  StatusBar, 
+  ScrollView, 
+  TouchableOpacity,
+  Dimensions
+} from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
+import { XPProgressBar } from '@/components/ui/XPProgressBar';
+import { 
+  calculateLevel, 
+  getAllAchievements, 
+  getAchievementProgress 
+} from '@/services/gamification';
+import { Achievement } from '@/types';
+
+type AchievementCategory = 'all' | 'chores' | 'levels' | 'points' | 'streaks' | 'special' | 'teamwork';
+
+interface AchievementCardProps {
+  achievement: Achievement;
+  isEarned: boolean;
+  progress: number;
+}
+
+const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, isEarned, progress }) => {
+  return (
+    <View style={[styles.achievementCard, isEarned && styles.achievementCardEarned]}>
+      <View style={styles.achievementIcon}>
+        <Text style={styles.achievementEmoji}>{achievement.icon}</Text>
+        {isEarned && (
+          <View style={styles.earnedBadge}>
+            <Text style={styles.earnedCheck}>✓</Text>
+          </View>
+        )}
+      </View>
+      
+      <View style={styles.achievementContent}>
+        <Text style={[styles.achievementName, isEarned && styles.achievementNameEarned]}>
+          {achievement.name}
+        </Text>
+        <Text style={[styles.achievementDescription, isEarned && styles.achievementDescriptionEarned]}>
+          {achievement.description}
+        </Text>
+        
+        {!isEarned && (
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+            </View>
+            <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>
+          </View>
+        )}
+        
+        <View style={styles.xpReward}>
+          <Text style={styles.xpText}>+{achievement.xpReward} XP</Text>
+        </View>
+      </View>
+    </View>
+  );
+};
 
 export default function AchievementsScreen() {
   const { user } = useAuth();
   const { family } = useFamily();
+  const [selectedCategory, setSelectedCategory] = useState<AchievementCategory>('all');
+
+  // Get user's current level and XP data
+  const userXP = user?.xp?.total || 0;
+  const { level, title } = calculateLevel(userXP);
+  const userAchievements = user?.achievements || [];
+  
+  // Calculate user stats for achievement progress
+  const userStats = useMemo(() => {
+    const familyMember = family?.members?.find(m => m.uid === user?.uid);
+    return {
+      choreCompletions: familyMember?.level || 0, // Approximation based on level
+      streakCurrent: familyMember?.streak?.current || 0,
+      pointsLifetime: familyMember?.points?.lifetime || 0,
+      level: familyMember?.level || level
+    };
+  }, [family, user, level]);
+
+  // Get all achievements with progress
+  const achievementProgress = useMemo(() => {
+    return getAchievementProgress(
+      userStats, 
+      userAchievements,
+      user?.streaks // Enhanced streaks data
+    );
+  }, [userStats, userAchievements, user?.streaks]);
+
+  // Categorize achievements
+  const categorizedAchievements = useMemo(() => {
+    const categories = {
+      chores: [] as typeof achievementProgress,
+      levels: [] as typeof achievementProgress,
+      points: [] as typeof achievementProgress,
+      streaks: [] as typeof achievementProgress,
+      special: [] as typeof achievementProgress,
+      teamwork: [] as typeof achievementProgress,
+    };
+
+    achievementProgress.forEach(item => {
+      const { achievement } = item;
+      
+      // Categorize based on criteria type and achievement name
+      if (
+        achievement.criteria.type === 'chores_completed' ||
+        achievement.name.toLowerCase().includes('chore') ||
+        achievement.name.toLowerCase().includes('worker')
+      ) {
+        categories.chores.push(item);
+      } else if (
+        achievement.criteria.type === 'level_reached' ||
+        achievement.name.toLowerCase().includes('level') ||
+        achievement.name.toLowerCase().includes('star') ||
+        achievement.name.toLowerCase().includes('hero')
+      ) {
+        categories.levels.push(item);
+      } else if (
+        achievement.criteria.type === 'points_earned' ||
+        achievement.name.toLowerCase().includes('point') ||
+        achievement.name.toLowerCase().includes('score')
+      ) {
+        categories.points.push(item);
+      } else if (
+        achievement.criteria.type.includes('streak') ||
+        achievement.name.toLowerCase().includes('streak') ||
+        achievement.name.toLowerCase().includes('consistency') ||
+        achievement.name.toLowerCase().includes('warrior') ||
+        achievement.name.toLowerCase().includes('champion')
+      ) {
+        categories.streaks.push(item);
+      } else if (
+        achievement.name.toLowerCase().includes('early') ||
+        achievement.name.toLowerCase().includes('morning') ||
+        achievement.name.toLowerCase().includes('dawn') ||
+        achievement.name.toLowerCase().includes('perfect') ||
+        achievement.name.toLowerCase().includes('specialist')
+      ) {
+        categories.special.push(item);
+      } else {
+        // Default to special for any uncategorized
+        categories.special.push(item);
+      }
+    });
+
+    return categories;
+  }, [achievementProgress]);
+
+  // Filter achievements based on selected category
+  const filteredAchievements = useMemo(() => {
+    if (selectedCategory === 'all') {
+      return achievementProgress;
+    }
+    return categorizedAchievements[selectedCategory] || [];
+  }, [selectedCategory, achievementProgress, categorizedAchievements]);
+
+  const totalAchievements = getAllAchievements().length;
+  const earnedCount = userAchievements.length;
+
+  const categories = [
+    { key: 'all' as const, label: 'All', count: totalAchievements },
+    { key: 'chores' as const, label: 'Chores', count: categorizedAchievements.chores.length },
+    { key: 'levels' as const, label: 'Levels', count: categorizedAchievements.levels.length },
+    { key: 'points' as const, label: 'Points', count: categorizedAchievements.points.length },
+    { key: 'streaks' as const, label: 'Streaks', count: categorizedAchievements.streaks.length },
+    { key: 'special' as const, label: 'Special', count: categorizedAchievements.special.length },
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -16,47 +182,94 @@ export default function AchievementsScreen() {
         </View>
         
         <View style={styles.content}>
+          {/* Profile Card */}
           <View style={styles.profileCard}>
             <Text style={styles.profileName}>{user?.displayName || 'User'}</Text>
-            <Text style={styles.profileLevel}>Newbie</Text>
-            <Text style={styles.profileSubtitle}>Level 1</Text>
-            <Text style={styles.achievementStats}>Total Achievements Unlocked: 0 / 27</Text>
+            <Text style={styles.profileLevel}>{title}</Text>
+            <Text style={styles.profileSubtitle}>Level {level}</Text>
+            
+            <View style={styles.xpProgressContainer}>
+              <XPProgressBar 
+                currentXP={userXP} 
+                showLevel={false} 
+                size="medium" 
+                style={styles.xpProgress}
+              />
+            </View>
+            
+            <Text style={styles.achievementStats}>
+              {earnedCount} / {totalAchievements} Achievements Unlocked
+            </Text>
+            
+            <View style={styles.completionBar}>
+              <View style={styles.completionProgress}>
+                <View style={[styles.completionFill, { width: `${(earnedCount / totalAchievements) * 100}%` }]} />
+              </View>
+              <Text style={styles.completionText}>
+                {Math.round((earnedCount / totalAchievements) * 100)}% Complete
+              </Text>
+            </View>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Chores Achievements</Text>
-            <Text style={styles.comingSoon}>Achievement system coming soon!</Text>
+          {/* Category Filter */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            style={styles.categoriesContainer}
+            contentContainerStyle={styles.categoriesContent}
+          >
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category.key}
+                style={[
+                  styles.categoryButton,
+                  selectedCategory === category.key && styles.categoryButtonActive
+                ]}
+                onPress={() => setSelectedCategory(category.key)}
+              >
+                <Text style={[
+                  styles.categoryButtonText,
+                  selectedCategory === category.key && styles.categoryButtonTextActive
+                ]}>
+                  {category.label}
+                </Text>
+                <Text style={[
+                  styles.categoryCount,
+                  selectedCategory === category.key && styles.categoryCountActive
+                ]}>
+                  {category.count}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* Achievements Grid */}
+          <View style={styles.achievementsGrid}>
+            {filteredAchievements.map(({ achievement, progress, isCompleted }) => (
+              <AchievementCard
+                key={achievement.id}
+                achievement={achievement}
+                isEarned={isCompleted}
+                progress={progress}
+              />
+            ))}
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Levels Achievements</Text>
-            <Text style={styles.comingSoon}>Level progression achievements coming soon!</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Points Achievements</Text>
-            <Text style={styles.comingSoon}>Points milestone achievements coming soon!</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Special Achievements</Text>
-            <Text style={styles.comingSoon}>Special category achievements coming soon!</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Streaks Achievements</Text>
-            <Text style={styles.comingSoon}>Streak achievements coming soon!</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Teamwork Achievements</Text>
-            <Text style={styles.comingSoon}>Collaboration achievements coming soon!</Text>
-          </View>
+          {filteredAchievements.length === 0 && (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyIcon}>🏆</Text>
+              <Text style={styles.emptyTitle}>No achievements in this category</Text>
+              <Text style={styles.emptySubtitle}>Try selecting a different category</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const { width } = Dimensions.get('window');
+const cardWidth = (width - 60) / 2; // 2 columns with 20px margin + 20px gap
 
 const styles = StyleSheet.create({
   container: {
@@ -84,6 +297,11 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 24,
     alignItems: 'center',
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   profileName: {
     fontSize: 24,
@@ -102,28 +320,207 @@ const styles = StyleSheet.create({
     color: '#f9a8d4',
     marginBottom: 12,
   },
+  xpProgressContainer: {
+    width: '100%',
+    marginVertical: 16,
+    paddingHorizontal: 8,
+  },
+  xpProgress: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 12,
+    borderRadius: 12,
+  },
   achievementStats: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '600',
     color: '#ffffff',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#831843',
     marginBottom: 12,
   },
-  comingSoon: {
-    fontSize: 16,
+  completionBar: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  completionProgress: {
+    width: '100%',
+    height: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  completionFill: {
+    height: '100%',
+    backgroundColor: '#ffffff',
+    borderRadius: 4,
+  },
+  completionText: {
+    fontSize: 14,
+    color: '#ffffff',
+    fontWeight: '500',
+  },
+  categoriesContainer: {
+    marginBottom: 20,
+  },
+  categoriesContent: {
+    paddingHorizontal: 0,
+  },
+  categoryButton: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginRight: 12,
+    alignItems: 'center',
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  categoryButtonActive: {
+    backgroundColor: '#be185d',
+  },
+  categoryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#831843',
+  },
+  categoryButtonTextActive: {
+    color: '#ffffff',
+  },
+  categoryCount: {
+    fontSize: 12,
     color: '#9f1239',
-    fontStyle: 'italic',
+    marginTop: 2,
+  },
+  categoryCountActive: {
+    color: '#f9a8d4',
+  },
+  achievementsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 16,
+  },
+  achievementCard: {
+    width: cardWidth,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    opacity: 0.7,
+  },
+  achievementCardEarned: {
+    opacity: 1,
+    borderWidth: 2,
+    borderColor: '#10b981',
+    shadowColor: '#10b981',
+    shadowOpacity: 0.3,
+  },
+  achievementIcon: {
+    alignItems: 'center',
+    marginBottom: 12,
+    position: 'relative',
+  },
+  achievementEmoji: {
+    fontSize: 32,
+  },
+  earnedBadge: {
+    position: 'absolute',
+    top: -4,
+    right: 12,
+    backgroundColor: '#10b981',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  earnedCheck: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  achievementContent: {
+    flex: 1,
+  },
+  achievementName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#831843',
+    marginBottom: 4,
     textAlign: 'center',
-    paddingVertical: 20,
+  },
+  achievementNameEarned: {
+    color: '#10b981',
+  },
+  achievementDescription: {
+    fontSize: 12,
+    color: '#9f1239',
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 16,
+  },
+  achievementDescriptionEarned: {
+    color: '#059669',
+  },
+  progressContainer: {
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: '#f9a8d4',
+    borderRadius: 3,
+    marginBottom: 4,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#be185d',
+    borderRadius: 3,
+  },
+  progressText: {
+    fontSize: 10,
+    color: '#9f1239',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  xpReward: {
+    alignItems: 'center',
+  },
+  xpText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#be185d',
+    backgroundColor: '#fbcfe8',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#831843',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#9f1239',
+    textAlign: 'center',
   },
 });

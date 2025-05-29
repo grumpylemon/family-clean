@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a React Native/Expo app called "Family Clean" - a family chore management application with Firebase integration. The app uses Expo Router for navigation and includes authentication and real-time data synchronization.
+This is a React Native/Expo app called "Family Compass" - a family chore management application with Firebase integration. The app uses Expo Router for navigation and includes authentication and real-time data synchronization.
 
 ## Key Commands
 
@@ -27,7 +27,7 @@ This is a React Native/Expo app called "Family Clean" - a family chore managemen
 - Apple Developer Account: stoehr@gmail.com
 - Apple Team ID: 87699862N5
 - App Store Connect App ID: 6746467670
-- Bundle Identifier: com.grumpylemon.family-clean
+- Bundle Identifier: com.grumpylemon.familyfun
 - Requires interactive authentication during build process
 - Build configuration in `app.json` with iOS-specific settings
 

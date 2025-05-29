@@ -242,10 +242,11 @@ let _firestoreDb: any = null;
 // 1. On iOS in Expo Go (due to Expo Go limitations with Firebase native modules)
 // 2. During development/testing if explicitly requested
 export const shouldUseMock = (): boolean => {
-  console.log('--- shouldUseMock() Debug Info ---');
+  console.log('=== FIREBASE DEBUG: shouldUseMock() ===');
   console.log('Platform.OS:', Platform.OS);
   console.log('__DEV__:', __DEV__);
-  console.log('process.env.EXPO_PUBLIC_USE_MOCK:', process.env.EXPO_PUBLIC_USE_MOCK);
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('EXPO_PUBLIC_USE_MOCK:', process.env.EXPO_PUBLIC_USE_MOCK);
   
   // Check environment variable first - explicit override
   if (process.env.EXPO_PUBLIC_USE_MOCK === 'true') {
@@ -253,19 +254,38 @@ export const shouldUseMock = (): boolean => {
     return true;
   }
   
-  // For production builds, never use mock unless explicitly requested
+  // For production builds, NEVER use mock implementation
   if (!__DEV__) {
-    console.log('Production build detected, using real Firebase implementation');
+    console.log('Production build detected (__DEV__ = false), forcing real Firebase implementation');
     return false;
+  }
+  
+  // Additional check: if we have a complete Firebase config, prefer real Firebase
+  const hasCompleteConfig = !!(
+    process.env.EXPO_PUBLIC_FIREBASE_API_KEY &&
+    process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID &&
+    process.env.EXPO_PUBLIC_FIREBASE_APP_ID
+  );
+  
+  if (hasCompleteConfig) {
+    console.log('Complete Firebase config detected, preferring real Firebase');
   }
   
   // Only in development, check if running in Expo Go
   try {
-    const isExpoGo = !(global as any).expo?.modules?.ExpoUpdates?.isEmbeddedLaunch;
-    console.log('isExpoGo (development only):', isExpoGo);
+    // Check if we're in Expo Go vs a standalone build
+    // In standalone builds, isEmbeddedLaunch should be true
+    // In Expo Go, isEmbeddedLaunch is false or undefined
+    const isEmbeddedLaunch = (global as any).expo?.modules?.ExpoUpdates?.isEmbeddedLaunch;
+    const isExpoGo = isEmbeddedLaunch === false;
     
-    if (Platform.OS === 'ios' && isExpoGo) {
-      console.log('iOS Expo Go detected in development, using mock implementation');
+    console.log('isEmbeddedLaunch:', isEmbeddedLaunch);
+    console.log('isExpoGo (development only):', isExpoGo);
+    console.log('hasCompleteConfig:', hasCompleteConfig);
+    
+    // Only use mock if we're truly in Expo Go AND we don't have config
+    if (Platform.OS === 'ios' && isExpoGo && !hasCompleteConfig) {
+      console.log('iOS Expo Go detected in development WITHOUT complete config, using mock implementation');
       return true;
     }
   } catch (error) {
@@ -307,8 +327,14 @@ export const initializeFirebase = async () => {
     // Check if Firebase is already initialized
     const apps = getApps();
     if (apps.length === 0) {
-      console.log("Initializing Firebase with config:", firebaseConfig);
+      console.log("=== FIREBASE DEBUG: Initializing Firebase ===");
+      console.log("Firebase config:", {
+        ...firebaseConfig,
+        apiKey: firebaseConfig.apiKey ? '***' : 'MISSING'
+      });
+      console.log("Full config keys:", Object.keys(firebaseConfig));
       initializeApp(firebaseConfig);
+      console.log("Firebase app initialized successfully");
     } else {
       console.log("Firebase app already initialized, using existing app");
     }
