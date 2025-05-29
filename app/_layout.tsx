@@ -1,3 +1,6 @@
+// Import polyfill first to ensure import.meta is available for all modules
+import '@/config/importMetaPolyfill';
+
 import { initializeFirebase, isMockImplementation } from '@/config/firebase';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { FamilyProvider } from '@/contexts/FamilyContext';
