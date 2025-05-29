@@ -1048,6 +1048,39 @@ const mockFamily: Family = {
 // Family functions
 export const getFamily = async (familyId: string) => {
   if (shouldReturnMockImmediately()) {
+    // For mock mode, ensure the current user is included in the family
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      // Check if current user is already in the mock family
+      const isUserInFamily = mockFamily.members.some(m => m.uid === currentUser.uid);
+      
+      if (!isUserInFamily) {
+        // Add current user as admin to the mock family
+        const userMember = {
+          uid: currentUser.uid,
+          name: currentUser.displayName || 'Guest User',
+          email: currentUser.email || 'guest@familyclean.app',
+          role: 'admin' as const,
+          familyRole: 'parent' as const,
+          points: {
+            current: 100,
+            lifetime: 100,
+            weekly: 25
+          },
+          photoURL: currentUser.photoURL,
+          joinedAt: new Date(),
+          isActive: true
+        };
+        
+        // Return mock family with current user as the admin
+        return {
+          ...mockFamily,
+          adminId: currentUser.uid,
+          members: [userMember, ...mockFamily.members.slice(1)] // Replace first member with current user
+        };
+      }
+    }
+    
     return mockFamily;
   }
   
@@ -1163,7 +1196,8 @@ export const getUserFamily = async (userId: string) => {
 
 export const createFamily = async (family: Omit<Family, 'id' | 'createdAt'>) => {
   if (shouldReturnMockImmediately()) {
-    return 'mock-family-id';
+    // Return the same ID as the mock family for consistency
+    return mockFamily.id;
   }
   
   try {

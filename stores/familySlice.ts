@@ -109,17 +109,33 @@ export const createFamilySlice: StateCreator<
         if (familyId) {
           // Update user profile with family ID
           console.log('[FamilySlice] Updating user profile with familyId');
-          await createOrUpdateUserProfile(user.uid, {
-            familyId
-          });
+          try {
+            await createOrUpdateUserProfile(user.uid, {
+              familyId
+            });
+            console.log('[FamilySlice] User profile updated successfully');
+          } catch (profileError) {
+            console.error('[FamilySlice] Failed to update user profile:', profileError);
+            // Continue anyway - this isn't critical for family creation
+          }
 
           // Fetch the newly created family to get complete data
+          console.log('[FamilySlice] Fetching created family with ID:', familyId);
           const family = await getFamily(familyId);
           console.log('[FamilySlice] Fetched created family:', family);
           
           if (family) {
-            // Find current member
-            const currentMember = family.members.find(m => m.uid === user.uid) || null;
+            console.log('[FamilySlice] Family object structure:', {
+              id: family.id,
+              name: family.name,
+              adminId: family.adminId,
+              membersCount: family.members?.length || 0,
+              hasId: !!family.id
+            });
+            
+            // Find current member - ensure members array exists
+            const members = Array.isArray(family.members) ? family.members : [];
+            const currentMember = members.find(m => m.uid === user.uid) || null;
             const isAdmin = currentMember?.role === 'admin' || family.adminId === user.uid;
             
             console.log('[FamilySlice] Setting family state - currentMember:', currentMember);
@@ -128,8 +144,8 @@ export const createFamilySlice: StateCreator<
             set((state) => ({
               family: {
                 ...state.family,
-                family: familyData,
-                members: familyData.members,
+                family: family, // Use the fetched family data which includes the id
+                members: Array.isArray(family.members) ? family.members : [],
                 isAdmin,
                 currentMember,
                 isLoading: false,
@@ -142,7 +158,13 @@ export const createFamilySlice: StateCreator<
               }
             }));
             return true;
+          } else {
+            console.error('[FamilySlice] getFamily returned null for ID:', familyId);
+            throw new Error('Failed to fetch created family data');
           }
+        } else {
+          console.error('[FamilySlice] createFamily returned null/undefined familyId');
+          throw new Error('Failed to get family ID from createFamily');
         }
         
         throw new Error('Failed to create family');
@@ -186,8 +208,9 @@ export const createFamilySlice: StateCreator<
         
         console.log('[FamilySlice] Found family:', family.name);
         
-        // Check if user is already a member
-        const existingMember = family.members.find(m => m.uid === user.uid);
+        // Check if user is already a member - ensure members array exists
+        const members = Array.isArray(family.members) ? family.members : [];
+        const existingMember = members.find(m => m.uid === user.uid);
         if (existingMember) {
           throw new Error('You are already a member of this family');
         }
@@ -287,8 +310,9 @@ export const createFamilySlice: StateCreator<
         const familyData = await getFamily(familyId);
         
         if (familyData) {
-          // Find current member (using uid, not userId)
-          const currentMember = familyData.members.find(m => m.uid === user.uid) || null;
+          // Find current member (using uid, not userId) - ensure members array exists
+          const members = Array.isArray(familyData.members) ? familyData.members : [];
+          const currentMember = members.find(m => m.uid === user.uid) || null;
           const isAdmin = currentMember?.role === 'admin' || familyData.adminId === user.uid;
           
           console.log('[FamilySlice] Fetched family data:', familyData.name);
@@ -299,7 +323,7 @@ export const createFamilySlice: StateCreator<
             family: {
               ...state.family,
               family: familyData,
-              members: familyData.members,
+              members: members,
               isAdmin,
               currentMember,
               isLoading: false,
@@ -396,7 +420,7 @@ export const createFamilySlice: StateCreator<
             family: {
               ...state.family,
               members: state.family.members.map(member =>
-                member.userId === userId
+                member.uid === userId
                   ? { ...member, role, familyRole }
                   : member
               ),
@@ -440,22 +464,27 @@ export const createFamilySlice: StateCreator<
       }));
 
       try {
-        const success = await removeFamilyMember(familyId, userId);
-        
-        if (success) {
-          // Update local state optimistically
-          set((state) => ({
-            family: {
-              ...state.family,
-              members: state.family.members.filter(member => member.userId !== userId),
-              isLoading: false,
-              error: null
-            }
-          }));
+        // Remove member by updating the family with filtered members
+        const { family } = get().family;
+        if (family) {
+          const filteredMembers = Array.isArray(family.members) ? family.members.filter(member => member.uid !== userId) : [];
+          const success = await updateFamily(familyId, { members: filteredMembers });
           
-          // Refresh family data
-          await get().family.fetchFamily(familyId);
-          return true;
+          if (success) {
+            // Update local state optimistically
+            set((state) => ({
+              family: {
+                ...state.family,
+                members: state.family.members.filter(member => member.uid !== userId),
+                isLoading: false,
+                error: null
+              }
+            }));
+            
+            // Refresh family data
+            await get().family.fetchFamily(familyId);
+            return true;
+          }
         }
         
         throw new Error('Failed to remove member');
