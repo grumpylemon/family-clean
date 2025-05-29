@@ -4,6 +4,13 @@ const webpack = require('webpack');
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
   
+  // Ensure proper module ordering
+  config.optimization = {
+    ...config.optimization,
+    moduleIds: 'deterministic',
+    chunkIds: 'deterministic',
+  };
+  
   // Add DefinePlugin to replace import.meta
   config.plugins.push(
     new webpack.DefinePlugin({

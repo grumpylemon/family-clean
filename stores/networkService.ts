@@ -2,7 +2,6 @@
 // Integrates with Zustand store for offline-first functionality
 
 import { Platform } from 'react-native';
-import { useFamilyStore } from './familyStore';
 import { OfflineAction, NetworkStatus } from './types';
 
 // Import Firebase services
@@ -23,6 +22,12 @@ class NetworkService {
   private unsubscribe: (() => void) | null = null;
   private syncInterval: NodeJS.Timeout | null = null;
   private isInitialized = false;
+  
+  // Lazily get the store to avoid circular dependencies
+  private getStore() {
+    const { useFamilyStore } = require('./familyStore');
+    return useFamilyStore.getState();
+  }
 
   // Initialize network monitoring
   init() {
@@ -39,7 +44,7 @@ class NetworkService {
           const networkStatus: NetworkStatus = isConnected ? 'online' : 'offline';
           
           console.log('🌐 Network status changed:', networkStatus);
-          const store = useFamilyStore.getState();
+          const store = this.getStore();
           if (store?.offline?.setOnlineStatus) {
             store.offline.setOnlineStatus(networkStatus === 'online');
           } else {
@@ -54,7 +59,7 @@ class NetworkService {
       if (typeof window !== 'undefined') {
         const updateNetworkStatus = () => {
           const networkStatus: NetworkStatus = navigator.onLine ? 'online' : 'offline';
-          const store = useFamilyStore.getState();
+          const store = this.getStore();
           if (store?.offline?.setOnlineStatus) {
             store.offline.setOnlineStatus(networkStatus === 'online');
           } else {
@@ -75,7 +80,7 @@ class NetworkService {
       } else {
         // Server-side rendering fallback
         console.log('🌐 NetworkService: Window not available, assuming online');
-        const store = useFamilyStore.getState();
+        const store = this.getStore();
         if (store?.offline?.setOnlineStatus) {
           store.offline.setOnlineStatus(true);
         }
@@ -109,7 +114,7 @@ class NetworkService {
     
     // Sync every 30 seconds when online
     this.syncInterval = setInterval(() => {
-      const store = useFamilyStore.getState();
+      const store = this.getStore();
       if (store.offline.isOnline && store.offline.pendingActions.length > 0) {
         this.syncPendingActions();
       }
@@ -124,7 +129,7 @@ class NetworkService {
       const result = await enhancedSyncService.performEnhancedSync();
       
       // Update store with enhanced sync results
-      const store = useFamilyStore.getState();
+      const store = this.getStore();
       store.offline.updateSyncStatus({
         isActive: false,
         totalActions: result.syncedActions + result.failedActions,
@@ -151,7 +156,7 @@ class NetworkService {
 
   // Fallback basic sync method
   private async basicSyncPendingActions(): Promise<void> {
-    const store = useFamilyStore.getState();
+    const store = this.getStore();
     
     if (!store.offline.isOnline || store.offline.syncStatus.isActive) {
       console.log('🌐 Sync skipped: offline or already syncing');
@@ -263,7 +268,7 @@ class NetworkService {
     
     if (result.success) {
       // Remove from pending completions
-      useFamilyStore.getState().chores.removePendingCompletion(choreId);
+      this.getStore().chores.removePendingCompletion(choreId);
       
       // Refresh chores data
       // Note: In a full implementation, we'd refresh from server here

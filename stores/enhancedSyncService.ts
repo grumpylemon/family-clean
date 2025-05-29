@@ -2,7 +2,6 @@
 // Provides sophisticated conflict resolution and intelligent sync strategies
 
 import { Platform } from 'react-native';
-import { useFamilyStore } from './familyStore';
 import { OfflineAction, NetworkStatus } from './types';
 import { 
   doc, 
@@ -73,6 +72,12 @@ class EnhancedSyncService {
   private activeListeners: (() => void)[] = [];
   private syncInProgress = false;
   private lastSyncTimestamp: number = 0;
+  
+  // Lazily get the store to avoid circular dependencies
+  private getStore() {
+    const { useFamilyStore } = require('./familyStore');
+    return useFamilyStore.getState();
+  }
 
   // Initialize enhanced sync capabilities
   init() {
@@ -90,7 +95,7 @@ class EnhancedSyncService {
 
   // Set up real-time listeners for conflict detection
   private setupConflictDetection() {
-    const store = useFamilyStore.getState();
+    const store = this.getStore();
     const user = store.auth.user;
     const family = store.family.family;
 
@@ -126,7 +131,7 @@ class EnhancedSyncService {
   private handleServerDataChange(dataType: string, serverData: any, fromCache: boolean) {
     if (fromCache) return; // Ignore cached data
     
-    const store = useFamilyStore.getState();
+    const store = this.getStore();
     const pendingActions = store.pendingActions;
     
     // Check for conflicts with pending actions
@@ -321,7 +326,7 @@ class EnhancedSyncService {
 
   // Resolution strategy: Server wins
   private async resolveServerWins(conflict: DataConflict): Promise<boolean> {
-    const store = useFamilyStore.getState();
+    const store = this.getStore();
     
     // Remove the conflicting action from queue
     store.offline.removePendingAction(conflict.localAction.id);
@@ -467,7 +472,7 @@ class EnhancedSyncService {
 
   // Execute merged update
   private async executeMergedUpdate(originalAction: OfflineAction, mergedData: any): Promise<boolean> {
-    const store = useFamilyStore.getState();
+    const store = this.getStore();
     
     // Remove original action
     store.removePendingAction(originalAction.id);
@@ -537,7 +542,7 @@ class EnhancedSyncService {
     
     console.log('🔄 Starting enhanced sync...');
     
-    const store = useFamilyStore.getState();
+    const store = this.getStore();
     const actionsToSync = store.offline.getActionsForSync();
     
     const result: SyncResult = {
