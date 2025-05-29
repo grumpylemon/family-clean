@@ -397,9 +397,65 @@ service cloud.firestore {
 - [ ] Privacy policy URL added (required for App Store)
 - [ ] App Store Connect app created
 
+## LATEST FIXES APPLIED (Build 11) - TestFlight Demo Mode Issue
+
+### Comprehensive Solution for "Setting up demo mode..." Error
+
+After multiple attempts, we've implemented a comprehensive multi-layered approach:
+
+#### ✅ **Primary Fixes Applied**:
+
+1. **app.json Environment Override**:
+   ```json
+   "extra": {
+     "EXPO_PUBLIC_USE_MOCK": false,
+     "EXPO_PUBLIC_FORCE_PRODUCTION": true
+   }
+   ```
+
+2. **eas.json Production Environment**:
+   ```json
+   "production": {
+     "env": {
+       "EXPO_PUBLIC_FORCE_PRODUCTION": "true",
+       "EXPO_PUBLIC_USE_MOCK": "false",
+       "NODE_ENV": "production"
+     }
+   }
+   ```
+
+3. **Enhanced firebase.ts Detection**:
+   - Multiple production detection methods
+   - Explicit `EXPO_PUBLIC_FORCE_PRODUCTION` override
+   - Comprehensive logging for debugging
+   - Fallback mechanisms for environment detection
+
+#### ✅ **Verification Steps for Build 11**:
+
+1. **Check Console Logs** in TestFlight app for:
+   ```
+   === FIREBASE DEBUG: shouldUseMock() ===
+   EXPO_PUBLIC_FORCE_PRODUCTION: true
+   PRODUCTION MODE FORCED via EXPO_PUBLIC_FORCE_PRODUCTION
+   Using Mock Firebase: false
+   ```
+
+2. **If Still Demo Mode**, look for:
+   - Environment variable values in logs
+   - Constants.appOwnership detection results
+   - Firebase validation errors
+
+3. **Remote Debugging**: Connect device to debug console to see all logs
+
+#### ✅ **Build Command**:
+```bash
+eas build --platform ios --profile production --auto-submit
+```
+
+This build (11) should finally resolve the TestFlight demo mode issue with the multi-layered approach.
+
 ## Next Steps
-1. Run `eas build:configure` to set up your project
-2. Create your first development build
-3. Test with real Firebase
-4. Submit to TestFlight for beta testing
-5. Submit to App Store when ready
+1. Build with `eas build --platform ios --profile production --auto-submit`
+2. Test Build 11 on TestFlight for real Firebase integration
+3. Review console logs if still in demo mode
+4. Submit to App Store when real Firebase is confirmed working
