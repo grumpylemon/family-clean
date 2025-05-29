@@ -9,43 +9,26 @@ This is a React Native/Expo app called "Family Compass" - a family chore managem
 ## Key Commands
 
 ### Development
-- `npm start` - Start the Expo development server
-- `npm run android` - Start on Android emulator
-- `npm run ios` - Start on iOS simulator  
+- `npm start` - Start Expo development server
 - `npm run web` - Start web version
+- `npm run ios` - Start iOS simulator
+- `npm run android` - Start Android emulator
 - `npm run lint` - Run ESLint
-- `npm run clear-cache` - Clear cache and restart Expo
 
-### Building & Testing
-- `npx puppeteer screenshot --url http://localhost:8081 --output screenshots/app.png` - Take screenshots for testing
-- Use Expo EAS Build for production builds
-- No unit test commands currently configured
+### Deployment Commands
+- `npm run export-web` - Build and deploy web (auto-increments version)
+- `npm run build-ios` - Build iOS and submit to App Store (auto-increments build number)
 
-### iOS Build & Deployment
-- You must increment the expo.ios.buildNumber in your app.json before each new build 
-- `eas build --platform ios --auto-submit` - Build iOS app for production and auto Submit to App Store after build completes
-- Apple Developer Account: stoehr@gmail.com
-- Apple Team ID: 87699862N5
-- App Store Connect App ID: 6746467670
-- Bundle Identifier: com.grumpylemon.familyfun
-- Requires interactive authentication during build process
-- Build configuration in `app.json` with iOS-specific settings
-
-### Android Build & Deployment
-- `eas build --platform android --profile production` - Build Android app for production
-- `eas submit --platform android` - Submit to Google Play Store
-
-### Web Deployment
-- `npx expo export --platform web` - Build web version for deployment
-- `firebase deploy --only hosting` - Deploy to Firebase Hosting
-- Live at: https://family-fun-app.web.app
+### Key Configuration
+- Bundle ID: com.grumpylemon.familyfun
 - Firebase Project: family-fun-app
+- Live Web: https://family-fun-app.web.app
 
 ## Architecture & Important Patterns
 
-   - Add helpfull code comments into all the code you generate
-   - before every push to git, update the git version number on the Dashboard page
-   - always refrence the [text](docs/development_task_list.md) to see the full list of task and integration. Make updates as you complete tasks and add new features.
+- Add helpful code comments in all generated code
+- Always reference [development_task_list.md](docs/development_task_list.md) for task tracking
+- Version numbers auto-increment with deployment commands
 
 ### Firebase Integration
 The app uses a hybrid Firebase implementation to support both web and mobile platforms:

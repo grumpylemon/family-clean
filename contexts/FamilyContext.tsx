@@ -287,15 +287,26 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
-      const success = await updateFamilyMember(family.id!, userId, {
-        role,
-        familyRole
-      });
       
-      if (success) {
+      // Update both family member AND user profile for consistency
+      const [familySuccess, profileSuccess] = await Promise.all([
+        updateFamilyMember(family.id!, userId, {
+          role,
+          familyRole
+        }),
+        createOrUpdateUserProfile(userId, {
+          role,
+          familyRole
+        })
+      ]);
+      
+      if (familySuccess && profileSuccess) {
         await refreshFamily();
+        return true;
+      } else {
+        setError('Failed to update member role - partial update');
+        return false;
       }
-      return success;
     } catch (err) {
       console.error('Error updating member role:', err);
       setError(err instanceof Error ? err.message : 'Failed to update member');

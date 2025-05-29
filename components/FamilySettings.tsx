@@ -17,6 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFamily } from '@/contexts/FamilyContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Toast } from '@/components/ui/Toast';
+import { DEFAULT_COLLABORATION_SETTINGS, updateCollaborationSettings } from '@/services/collaborationService';
+import { CollaborationSettings } from '@/types';
 
 interface FamilySettingsProps {
   visible: boolean;
@@ -41,6 +43,13 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
   const [transferFrom, setTransferFrom] = useState('');
   const [transferTo, setTransferTo] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
+  
+  // Collaboration Settings state
+  const [collaborationSettings, setCollaborationSettings] = useState<CollaborationSettings>({
+    ...DEFAULT_COLLABORATION_SETTINGS,
+    familyId: family?.id || ''
+  });
+  const [showCollaborationSettings, setShowCollaborationSettings] = useState(false);
 
   useEffect(() => {
     if (visible && family) {
@@ -50,6 +59,19 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
       setDefaultChoreCooldownHours(family.settings.defaultChoreCooldownHours.toString());
       setAllowPointTransfers(family.settings.allowPointTransfers);
       setWeekStartDay(family.settings.weekStartDay.toString());
+      
+      // Initialize collaboration settings
+      if (family.collaborationSettings) {
+        setCollaborationSettings({
+          ...family.collaborationSettings,
+          familyId: family.id || ''
+        });
+      } else {
+        setCollaborationSettings({
+          ...DEFAULT_COLLABORATION_SETTINGS,
+          familyId: family.id || ''
+        });
+      }
     }
   }, [visible, family]);
 
@@ -79,6 +101,11 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
       const success = await updateFamilySettings(updates.settings, updates.name);
       
       if (success) {
+        // Also update collaboration settings
+        if (family.id) {
+          await updateCollaborationSettings(family.id, collaborationSettings);
+        }
+        
         Alert.alert('Success', 'Family settings updated successfully');
         onClose();
       } else {
@@ -350,6 +377,185 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                 ))}
               </View>
             </View>
+          </View>
+
+          {/* Collaboration Settings Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Collaboration Features</Text>
+            
+            <TouchableOpacity
+              style={styles.collaborationToggle}
+              onPress={() => setShowCollaborationSettings(!showCollaborationSettings)}
+            >
+              <Text style={styles.collaborationToggleText}>
+                {showCollaborationSettings ? 'Hide' : 'Show'} Collaboration Settings
+              </Text>
+            </TouchableOpacity>
+            
+            {showCollaborationSettings && (
+              <View style={styles.collaborationContent}>
+                <View style={styles.inputGroup}>
+                  <View style={styles.switchRow}>
+                    <Text style={styles.label}>Enable Help Requests</Text>
+                    <Switch
+                      value={collaborationSettings.helpRequestsEnabled}
+                      onValueChange={(value) => setCollaborationSettings({
+                        ...collaborationSettings,
+                        helpRequestsEnabled: value
+                      })}
+                      trackColor={{ false: '#f1f5f9', true: '#f9a8d4' }}
+                      thumbColor={collaborationSettings.helpRequestsEnabled ? '#be185d' : '#9ca3af'}
+                    />
+                  </View>
+                  <Text style={styles.helperText}>
+                    Allow members to request help with their chores
+                  </Text>
+                </View>
+                
+                <View style={styles.inputGroup}>
+                  <View style={styles.switchRow}>
+                    <Text style={styles.label}>Enable Trade Proposals</Text>
+                    <Switch
+                      value={collaborationSettings.tradeProposalsEnabled}
+                      onValueChange={(value) => setCollaborationSettings({
+                        ...collaborationSettings,
+                        tradeProposalsEnabled: value
+                      })}
+                      trackColor={{ false: '#f1f5f9', true: '#f9a8d4' }}
+                      thumbColor={collaborationSettings.tradeProposalsEnabled ? '#be185d' : '#9ca3af'}
+                    />
+                  </View>
+                  <Text style={styles.helperText}>
+                    Allow members to propose chore trades with each other
+                  </Text>
+                </View>
+                
+                <View style={styles.inputGroup}>
+                  <View style={styles.switchRow}>
+                    <Text style={styles.label}>Enable Urgency System</Text>
+                    <Switch
+                      value={collaborationSettings.urgencySystemEnabled}
+                      onValueChange={(value) => setCollaborationSettings({
+                        ...collaborationSettings,
+                        urgencySystemEnabled: value
+                      })}
+                      trackColor={{ false: '#f1f5f9', true: '#f9a8d4' }}
+                      thumbColor={collaborationSettings.urgencySystemEnabled ? '#be185d' : '#9ca3af'}
+                    />
+                  </View>
+                  <Text style={styles.helperText}>
+                    Chores become urgent as due dates approach with bonus points
+                  </Text>
+                </View>
+                
+                <View style={styles.inputGroup}>
+                  <View style={styles.switchRow}>
+                    <Text style={styles.label}>Enable Chore Stealing</Text>
+                    <Switch
+                      value={collaborationSettings.choreStealingEnabled}
+                      onValueChange={(value) => setCollaborationSettings({
+                        ...collaborationSettings,
+                        choreStealingEnabled: value
+                      })}
+                      trackColor={{ false: '#f1f5f9', true: '#f9a8d4' }}
+                      thumbColor={collaborationSettings.choreStealingEnabled ? '#be185d' : '#9ca3af'}
+                    />
+                  </View>
+                  <Text style={styles.helperText}>
+                    Allow members to "steal" urgent chores for bonus points
+                  </Text>
+                </View>
+                
+                {/* Help Request Settings */}
+                {collaborationSettings.helpRequestsEnabled && (
+                  <View style={styles.subsection}>
+                    <Text style={styles.subsectionTitle}>Help Request Settings</Text>
+                    
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Default Expiration (hours)</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={collaborationSettings.helpRequestDefaults.expirationHours.toString()}
+                        onChangeText={(value) => setCollaborationSettings({
+                          ...collaborationSettings,
+                          helpRequestDefaults: {
+                            ...collaborationSettings.helpRequestDefaults,
+                            expirationHours: parseInt(value) || 24
+                          }
+                        })}
+                        keyboardType="numeric"
+                        placeholder="24"
+                        placeholderTextColor="#9ca3af"
+                      />
+                    </View>
+                    
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Min Helper Points Share (%)</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={collaborationSettings.helpRequestDefaults.minPointsSplit.toString()}
+                        onChangeText={(value) => setCollaborationSettings({
+                          ...collaborationSettings,
+                          helpRequestDefaults: {
+                            ...collaborationSettings.helpRequestDefaults,
+                            minPointsSplit: parseInt(value) || 20
+                          }
+                        })}
+                        keyboardType="numeric"
+                        placeholder="20"
+                        placeholderTextColor="#9ca3af"
+                      />
+                    </View>
+                  </View>
+                )}
+                
+                {/* Trade Settings */}
+                {collaborationSettings.tradeProposalsEnabled && (
+                  <View style={styles.subsection}>
+                    <Text style={styles.subsectionTitle}>Trade Settings</Text>
+                    
+                    <View style={styles.inputGroup}>
+                      <View style={styles.switchRow}>
+                        <Text style={styles.label}>Require Admin Approval</Text>
+                        <Switch
+                          value={collaborationSettings.tradeDefaults.requireAdminApproval}
+                          onValueChange={(value) => setCollaborationSettings({
+                            ...collaborationSettings,
+                            tradeDefaults: {
+                              ...collaborationSettings.tradeDefaults,
+                              requireAdminApproval: value
+                            }
+                          })}
+                          trackColor={{ false: '#f1f5f9', true: '#f9a8d4' }}
+                          thumbColor={collaborationSettings.tradeDefaults.requireAdminApproval ? '#be185d' : '#9ca3af'}
+                        />
+                      </View>
+                    </View>
+                    
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Fairness Threshold (%)</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={collaborationSettings.tradeDefaults.fairnessThreshold.toString()}
+                        onChangeText={(value) => setCollaborationSettings({
+                          ...collaborationSettings,
+                          tradeDefaults: {
+                            ...collaborationSettings.tradeDefaults,
+                            fairnessThreshold: parseInt(value) || 70
+                          }
+                        })}
+                        keyboardType="numeric"
+                        placeholder="70"
+                        placeholderTextColor="#9ca3af"
+                      />
+                      <Text style={styles.helperText}>
+                        Trades below this fairness score require admin approval
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
           </View>
 
           {/* Transfer Points Section */}
@@ -739,6 +945,30 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(253, 242, 248, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  collaborationToggle: {
+    padding: 8,
+    alignItems: 'center',
+  },
+  collaborationToggleText: {
+    color: '#be185d',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  collaborationContent: {
+    marginTop: 16,
+  },
+  subsection: {
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#f9a8d4',
+  },
+  subsectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+    color: '#831843',
   },
 });
 

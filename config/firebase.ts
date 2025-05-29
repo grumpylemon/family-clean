@@ -245,20 +245,35 @@ export const shouldUseMock = (): boolean => {
   console.log('=== FIREBASE DEBUG: shouldUseMock() ===');
   console.log('Platform.OS:', Platform.OS);
   console.log('__DEV__:', __DEV__);
+  console.log('typeof __DEV__:', typeof __DEV__);
   console.log('NODE_ENV:', process.env.NODE_ENV);
   console.log('EXPO_PUBLIC_USE_MOCK:', process.env.EXPO_PUBLIC_USE_MOCK);
+  console.log('EXPO_PUBLIC_FORCE_PRODUCTION:', process.env.EXPO_PUBLIC_FORCE_PRODUCTION);
   
-  // Check environment variable first - explicit override
-  if (process.env.EXPO_PUBLIC_USE_MOCK === 'true') {
+  // CRITICAL: Check for explicit production override first
+  if (process.env.EXPO_PUBLIC_FORCE_PRODUCTION === 'true') {
+    console.log('PRODUCTION MODE FORCED via EXPO_PUBLIC_FORCE_PRODUCTION');
+    return false;
+  }
+  
+  // Check environment variable first - explicit override to use mock
+  if (process.env.EXPO_PUBLIC_USE_MOCK === 'true' || process.env.EXPO_PUBLIC_USE_MOCK === true) {
     console.log('Mock mode enabled via environment variable');
     return true;
   }
   
   // CRITICAL FIX: For production builds, ALWAYS use real Firebase
-  // This includes EAS builds and App Store builds
-  if (!__DEV__) {
-    console.log('PRODUCTION BUILD DETECTED (__DEV__ = false), FORCING REAL FIREBASE');
-    console.log('This is a production/EAS build - real Firebase WILL be used');
+  // Multiple checks to ensure we catch production builds
+  const isProductionBuild = !__DEV__ || 
+                           process.env.NODE_ENV === 'production' || 
+                           process.env.EXPO_PUBLIC_FORCE_PRODUCTION === 'true';
+  
+  if (isProductionBuild) {
+    console.log('PRODUCTION BUILD DETECTED - FORCING REAL FIREBASE');
+    console.log('Production indicators:');
+    console.log('  __DEV__:', __DEV__);
+    console.log('  NODE_ENV:', process.env.NODE_ENV);
+    console.log('  FORCE_PRODUCTION:', process.env.EXPO_PUBLIC_FORCE_PRODUCTION);
     return false;
   }
   
@@ -281,9 +296,14 @@ export const shouldUseMock = (): boolean => {
     const Constants = require('expo-constants').default;
     const isExpoGo = Constants.appOwnership === 'expo';
     
+    console.log('=== DETAILED CONSTANTS DEBUG ===');
     console.log('Constants.appOwnership:', Constants.appOwnership);
+    console.log('Constants.expoVersion:', Constants.expoVersion);
+    console.log('Constants.isDevice:', Constants.isDevice);
+    console.log('Constants.platform:', Constants.platform);
     console.log('isExpoGo (development only):', isExpoGo);
     console.log('hasCompleteConfig:', hasCompleteConfig);
+    console.log('================================');
     
     // Only use mock if we're truly in Expo Go on iOS
     if (Platform.OS === 'ios' && isExpoGo) {

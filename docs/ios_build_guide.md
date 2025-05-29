@@ -244,12 +244,120 @@ This error occurs when EAS Build cannot find the GoogleService-Info.plist file. 
 - Verify the `googleServicesFile` property is in app.json iOS config
 - Rebuild the app after adding the file
 
-### App Stuck in Demo/Mock Mode
-1. Check the console logs for Firebase initialization decision
-2. Verify `__DEV__` is `false` in production builds
-3. Ensure `EXPO_PUBLIC_USE_MOCK` is not set to `true` in .env
-4. Confirm GoogleService-Info.plist is properly referenced in app.json
-5. For EAS builds, ensure you're using production profile: `eas build --platform ios --profile production`
+### App Stuck in Demo/Mock Mode (TestFlight Issue)
+**CRITICAL ISSUE**: iOS TestFlight app showing "Setting up demo mode..." instead of using real Firebase.
+
+This issue persists despite previous fixes. Here's the comprehensive troubleshooting approach:
+
+#### 1. **Environment Variable Issues (Most Likely Cause)**
+Check if environment variables are being incorrectly processed:
+
+```bash
+# Check your .env file
+cat .env | grep EXPO_PUBLIC_USE_MOCK
+
+# The value should be exactly: false (not "false" or undefined)
+# If it's anything else, update it:
+echo "EXPO_PUBLIC_USE_MOCK=false" >> .env
+```
+
+**Critical Fix**: Add explicit environment variable override in app.json:
+```json
+{
+  "expo": {
+    "extra": {
+      "EXPO_PUBLIC_USE_MOCK": false
+    }
+  }
+}
+```
+
+#### 2. **__DEV__ Flag Not Working in Production**
+The `__DEV__` flag might not be false in EAS builds. Add this override to firebase.ts:
+
+```javascript
+// Force production detection for EAS builds
+const isProductionBuild = !__DEV__ || process.env.NODE_ENV === 'production' || process.env.EXPO_PUBLIC_FORCE_PRODUCTION === 'true';
+
+if (isProductionBuild) {
+  console.log('FORCING PRODUCTION MODE - REAL FIREBASE');
+  return false;
+}
+```
+
+#### 3. **Firebase Config Validation Failing**
+If Firebase config validation fails, it falls back to mock. Check environment variables:
+
+```bash
+# Verify all Firebase env vars are set
+echo "API_KEY: $EXPO_PUBLIC_FIREBASE_API_KEY"
+echo "PROJECT_ID: $EXPO_PUBLIC_FIREBASE_PROJECT_ID" 
+echo "APP_ID: $EXPO_PUBLIC_FIREBASE_APP_ID"
+```
+
+#### 4. **EAS Environment Variable Override**
+Set explicit environment variables in EAS:
+
+```bash
+# Force production mode via EAS secret
+eas secret:create --name EXPO_PUBLIC_FORCE_PRODUCTION --value "true"
+eas secret:create --name EXPO_PUBLIC_USE_MOCK --value "false"
+```
+
+Then update eas.json:
+```json
+{
+  "build": {
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_FORCE_PRODUCTION": "true",
+        "EXPO_PUBLIC_USE_MOCK": "false"
+      }
+    }
+  }
+}
+```
+
+#### 5. **Constants.appOwnership Detection Issue** 
+The expo-constants detection might be failing. Add this debug logging:
+
+```javascript
+// In shouldUseMock function, add more logging:
+console.log('=== DETAILED ENVIRONMENT DEBUG ===');
+console.log('process.env.NODE_ENV:', process.env.NODE_ENV);
+console.log('typeof __DEV__:', typeof __DEV__);
+console.log('__DEV__ value:', __DEV__);
+console.log('Platform.OS:', Platform.OS);
+try {
+  const Constants = require('expo-constants').default;
+  console.log('Constants.appOwnership:', Constants.appOwnership);
+  console.log('Constants.expoVersion:', Constants.expoVersion);
+  console.log('Constants.isDevice:', Constants.isDevice);
+} catch (e) {
+  console.log('Constants error:', e);
+}
+console.log('================================');
+```
+
+#### 6. **Quick Debug Steps**
+1. Check console logs in TestFlight app (use remote debugging)
+2. Look for the "=== FIREBASE INITIALIZATION DECISION ===" log
+3. Verify `Using Mock Firebase: false` appears
+4. If `Using Mock Firebase: true`, check which condition is triggering it
+
+#### 7. **Nuclear Option - Hardcode Production Mode**
+As a last resort, temporarily hardcode production mode:
+
+```javascript
+export const shouldUseMock = (): boolean => {
+  // TEMPORARY OVERRIDE FOR TESTFLIGHT DEBUG
+  if (Platform.OS === 'ios') {
+    console.log('HARDCODED: iOS production build - forcing real Firebase');
+    return false;
+  }
+  // ... rest of logic
+};
+```
 
 ### Authentication Not Working
 - Check Firebase Console > Authentication > Sign-in methods

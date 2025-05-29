@@ -47,7 +47,7 @@ interface EditMemberModalProps {
 
 export function ManageMembers({ visible, onClose }: ManageMembersProps) {
   const { user } = useAuth();
-  const { family } = useFamily();
+  const { family, refreshFamily } = useFamily();
   const { canManageMembers, canPromoteDemoteMembers, getPermissionErrorMessage } = useAccessControl();
   const [loading, setLoading] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
@@ -107,6 +107,14 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
   const handleCloseEditModal = () => {
     setShowEditModal(false);
     setEditingMember(null);
+  };
+
+  const handleMemberUpdate = async () => {
+    // Refresh both family data and room data after member updates
+    await Promise.all([
+      refreshFamily(),
+      loadRoomData()
+    ]);
   };
 
 
@@ -473,7 +481,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
           member={editingMember}
           visible={showEditModal}
           onClose={handleCloseEditModal}
-          onUpdate={loadRoomData}
+          onUpdate={handleMemberUpdate}
           canManageMembers={canManageMembers}
           canPromoteDemoteMembers={canPromoteDemoteMembers}
           isOriginalAdmin={editingMember.uid === family.adminId}

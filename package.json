@@ -9,7 +9,10 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "clear-cache": "rm -rf node_modules/.cache && npx expo start --clear"
+    "clear-cache": "rm -rf node_modules/.cache && npx expo start --clear",
+    "export-web": "node ./scripts/increment-version.js",
+    "build-ios": "node ./scripts/increment-ios-build.js 'eas build --platform ios --auto-submit'",
+    "increment-ios-build": "node ./scripts/increment-ios-build.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

@@ -1,9 +1,10 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
-import { completeChore, getChores } from '@/services/firestore';
+import { completeChore, getChores, claimChore, takeoverChore } from '@/services/firestore';
 import { Chore, ChoreStatus, CompletionReward } from '@/types';
 import { CompletionRewardModal } from '@/components/CompletionRewardModal';
 import { UniversalIcon } from '@/components/ui/UniversalIcon';
+import { createHelpRequest, createTradeProposal } from '@/services/collaborationService';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -107,8 +108,182 @@ export default function ChoresScreen() {
   };
 
   const handleClaimChore = async (choreId: string) => {
-    // TODO: Implement claim chore functionality
-    console.log('Claiming chore:', choreId);
+    if (!user || !currentFamily) return;
+
+    try {
+      const displayName = user.displayName || user.email || 'User';
+      await claimChore(choreId, user.uid, displayName);
+      
+      // Refresh chores list
+      await loadChores();
+      
+      const successMessage = 'Chore claimed successfully!';
+      if (Platform.OS === 'android') {
+        ToastAndroid.show(successMessage, ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Success', successMessage);
+      }
+    } catch (error) {
+      console.error('Error claiming chore:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to claim chore. Please try again.';
+      if (Platform.OS === 'android') {
+        ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Error', errorMessage);
+      }
+    }
+  };
+
+  const handleTakeoverChore = async (choreId: string) => {
+    if (!user || !currentFamily) return;
+
+    // Find the chore to get assignee info
+    const chore = chores.find(c => c.id === choreId);
+    if (!chore || !chore.assignedTo) return;
+
+    const assignedMember = currentFamily.members.find(m => m.uid === chore.assignedTo);
+    const assignedName = assignedMember?.name || 'someone';
+
+    // Show confirmation dialog
+    Alert.alert(
+      'Take Over Chore?',
+      `This chore is assigned to ${assignedName}. Do you want to take it over and help them out?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Take Over',
+          style: 'default',
+          onPress: async () => {
+            try {
+              const displayName = user.displayName || user.email || 'User';
+              await takeoverChore(choreId, user.uid, displayName, 'helping');
+              
+              // Refresh chores list
+              await loadChores();
+              
+              const successMessage = `You've taken over the chore from ${assignedName}!`;
+              if (Platform.OS === 'android') {
+                ToastAndroid.show(successMessage, ToastAndroid.SHORT);
+              } else {
+                Alert.alert('Success', successMessage);
+              }
+            } catch (error) {
+              console.error('Error taking over chore:', error);
+              const errorMessage = error instanceof Error ? error.message : 'Failed to take over chore. Please try again.';
+              if (Platform.OS === 'android') {
+                ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+              } else {
+                Alert.alert('Error', errorMessage);
+              }
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleRequestHelp = (chore: Chore) => {
+    if (!user || !family) return;
+    
+    Alert.prompt(
+      'Request Help',
+      `What kind of help do you need with "${chore.title}"?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Send Request',
+          onPress: async (description) => {
+            try {
+              if (!description || description.trim() === '') {
+                Alert.alert('Error', 'Please describe what help you need');
+                return;
+              }
+              
+              await createHelpRequest(chore.id!, chore.title, {
+                familyId: family.id!,
+                type: 'assistance',
+                urgency: 'medium',
+                description: description.trim(),
+                pointsSplit: 30, // Default 30% to helper
+                xpSplit: 30,
+              });
+              
+              const successMessage = 'Help request sent to family members!';
+              if (Platform.OS === 'android') {
+                ToastAndroid.show(successMessage, ToastAndroid.SHORT);
+              } else {
+                Alert.alert('Success', successMessage);
+              }
+            } catch (error) {
+              console.error('Error creating help request:', error);
+              const errorMessage = error instanceof Error ? error.message : 'Failed to send help request';
+              Alert.alert('Error', errorMessage);
+            }
+          },
+        },
+      ],
+      'plain-text',
+      '',
+      'default'
+    );
+  };
+
+  const handleProposeTradeFor = (targetChore: Chore) => {
+    if (!user || !family) return;
+    
+    // Find chores that the current user has assigned to them that they could offer
+    const myChores = chores.filter(c => c.assignedTo === user.uid && c.status === 'open');
+    
+    if (myChores.length === 0) {
+      Alert.alert('No Chores to Trade', 'You need to have assigned chores to propose a trade');
+      return;
+    }
+    
+    // For now, just show the first chore as a simple trade proposal
+    const myChore = myChores[0];
+    
+    Alert.alert(
+      'Propose Trade',
+      `Do you want to offer "${myChore.title}" (${myChore.points} pts) in exchange for "${targetChore.title}" (${targetChore.points} pts)?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Propose Trade',
+          onPress: async () => {
+            try {
+              const targetMember = family.members.find(m => m.uid === targetChore.assignedTo);
+              
+              await createTradeProposal(
+                {
+                  receiverId: targetChore.assignedTo!,
+                  receiverName: targetMember?.name || 'Unknown',
+                  familyId: family.id!,
+                },
+                [myChore], // offered chores
+                [targetChore] // requested chores
+              );
+              
+              const successMessage = `Trade proposal sent to ${targetMember?.name}!`;
+              if (Platform.OS === 'android') {
+                ToastAndroid.show(successMessage, ToastAndroid.SHORT);
+              } else {
+                Alert.alert('Success', successMessage);
+              }
+            } catch (error) {
+              console.error('Error creating trade proposal:', error);
+              const errorMessage = error instanceof Error ? error.message : 'Failed to send trade proposal';
+              Alert.alert('Error', errorMessage);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const getFilteredChores = () => {
@@ -284,6 +459,18 @@ export default function ChoresScreen() {
                           <UniversalIcon name="person-outline" size={16} color="#9f1239" />
                           <Text style={styles.choreDetailText}>
                             {family?.members.find(m => m.uid === chore.assignedTo)?.name || 'Unknown'}
+                            {chore.takenOverBy && (
+                              <Text style={{ color: '#f59e0b' }}> (taken over)</Text>
+                            )}
+                          </Text>
+                        </View>
+                      )}
+
+                      {chore.originalAssignee && chore.originalAssignee !== chore.assignedTo && (
+                        <View style={styles.choreDetailRow}>
+                          <UniversalIcon name="time-outline" size={16} color="#f59e0b" />
+                          <Text style={[styles.choreDetailText, { color: '#f59e0b' }]}>
+                            Originally: {family?.members.find(m => m.uid === chore.originalAssignee)?.name || 'Unknown'}
                           </Text>
                         </View>
                       )}
@@ -323,13 +510,24 @@ export default function ChoresScreen() {
                     {chore.status === 'open' && !locked && (
                       <View style={styles.choreActions}>
                         {chore.assignedTo === user?.uid ? (
-                          <TouchableOpacity
-                            style={[styles.choreActionButton, styles.completeButton]}
-                            onPress={() => handleCompleteChore(chore.id!)}
-                          >
-                            <UniversalIcon name="checkmark-circle" size={20} color="#fff" />
-                            <Text style={styles.completeButtonText}>Complete</Text>
-                          </TouchableOpacity>
+                          <>
+                            <TouchableOpacity
+                              style={[styles.choreActionButton, styles.completeButton]}
+                              onPress={() => handleCompleteChore(chore.id!)}
+                            >
+                              <UniversalIcon name="checkmark-circle" size={20} color="#fff" />
+                              <Text style={styles.completeButtonText}>Complete</Text>
+                            </TouchableOpacity>
+                            {family?.collaborationSettings?.helpRequestsEnabled && (
+                              <TouchableOpacity
+                                style={[styles.choreActionButton, styles.helpButton]}
+                                onPress={() => handleRequestHelp(chore)}
+                              >
+                                <UniversalIcon name="help-circle" size={20} color="#8b5cf6" />
+                                <Text style={styles.helpButtonText}>Need Help</Text>
+                              </TouchableOpacity>
+                            )}
+                          </>
                         ) : !chore.assignedTo ? (
                           <TouchableOpacity
                             style={[styles.choreActionButton, styles.claimButton]}
@@ -338,6 +536,25 @@ export default function ChoresScreen() {
                             <UniversalIcon name="hand-right" size={20} color="#be185d" />
                             <Text style={styles.claimButtonText}>Claim</Text>
                           </TouchableOpacity>
+                        ) : chore.assignedTo !== user?.uid ? (
+                          <>
+                            <TouchableOpacity
+                              style={[styles.choreActionButton, styles.takeoverButton]}
+                              onPress={() => handleTakeoverChore(chore.id!)}
+                            >
+                              <UniversalIcon name="swap-horizontal" size={20} color="#f59e0b" />
+                              <Text style={styles.takeoverButtonText}>Take Over</Text>
+                            </TouchableOpacity>
+                            {family?.collaborationSettings?.tradeProposalsEnabled && (
+                              <TouchableOpacity
+                                style={[styles.choreActionButton, styles.tradeButton]}
+                                onPress={() => handleProposeTradeFor(chore)}
+                              >
+                                <UniversalIcon name="git-compare" size={20} color="#06b6d4" />
+                                <Text style={styles.tradeButtonText}>Trade</Text>
+                              </TouchableOpacity>
+                            )}
+                          </>
                         ) : null}
                       </View>
                     )}
@@ -558,8 +775,9 @@ const styles = StyleSheet.create({
   },
   choreActions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
     marginTop: 8,
+    flexWrap: 'wrap',
   },
   choreActionButton: {
     flex: 1,
@@ -585,6 +803,36 @@ const styles = StyleSheet.create({
   },
   claimButtonText: {
     color: '#be185d',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  takeoverButton: {
+    backgroundColor: '#fff7ed',
+    borderWidth: 2,
+    borderColor: '#fed7aa',
+  },
+  takeoverButtonText: {
+    color: '#f59e0b',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  helpButton: {
+    backgroundColor: '#f3f4f6',
+    borderWidth: 2,
+    borderColor: '#d1d5db',
+  },
+  helpButtonText: {
+    color: '#8b5cf6',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  tradeButton: {
+    backgroundColor: '#f0f9ff',
+    borderWidth: 2,
+    borderColor: '#bae6fd',
+  },
+  tradeButtonText: {
+    color: '#06b6d4',
     fontWeight: '600',
     fontSize: 16,
   },

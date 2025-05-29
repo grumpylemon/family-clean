@@ -41,6 +41,7 @@ import {
   getFirestore,
   query,
   setDoc,
+  updateDoc,
   where
 } from 'firebase/firestore';
 import { Platform } from 'react-native';
@@ -759,6 +760,28 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
 // Helper function to handle chore rotation logic
 const handleChoreRotation = async (chore: Chore, family: Family, lockedUntil: Date) => {
   try {
+    // Check if this chore was taken over - if so, return it to the original assignee
+    if (chore.originalAssignee && chore.originalAssignee !== chore.assignedTo) {
+      // Ensure the original assignee is still active
+      const originalMember = family.members.find(m => m.uid === chore.originalAssignee);
+      if (originalMember && originalMember.isActive) {
+        await updateChore(chore.id!, {
+          assignedTo: chore.originalAssignee,
+          assignedToName: chore.originalAssigneeName || originalMember.name,
+          status: 'open',
+          lockedUntil: lockedUntil.toISOString(),
+          // Clear takeover fields since we're returning to original
+          takenOverBy: null,
+          takenOverByName: null,
+          takenOverAt: null,
+          takeoverReason: null,
+        });
+        console.log(`Chore ${chore.id} returned to original assignee ${originalMember.name}`);
+        return;
+      }
+    }
+
+    // Regular rotation logic
     // Find eligible members (active, not excluded)
     const rotationOrder = family.memberRotationOrder || family.members.filter(m => m.isActive).map(m => m.uid);
     let nextIndex = typeof family.nextFamilyChoreAssigneeIndex === 'number' ? family.nextFamilyChoreAssigneeIndex : 0;
@@ -800,6 +823,14 @@ const handleChoreRotation = async (chore: Chore, family: Family, lockedUntil: Da
           assignedToName: member?.name || '',
           status: 'open',
           lockedUntil: lockedUntil.toISOString(),
+          // Clear any takeover fields since this is a new rotation assignment
+          originalAssignee: null,
+          originalAssigneeName: null,
+          takenOverBy: null,
+          takenOverByName: null,
+          takenOverAt: null,
+          takeoverReason: null,
+          missedBy: null,
         });
         
         // Update family rotation index
@@ -829,6 +860,125 @@ const handleChoreRotation = async (chore: Chore, family: Family, lockedUntil: Da
       status: 'open',
       lockedUntil: lockedUntil.toISOString(),
     });
+  }
+};
+
+// Takeover and collaboration functions
+export const canTakeoverChore = (chore: Chore, currentUser: User, family: Family) => {
+  // Check if user can take over this chore
+  // Business rules:
+  // 1. User must be part of the family
+  // 2. Chore must be assigned to someone else (not the current user)
+  // 3. Chore must not be completed
+  // 4. User must be active in the family
+  
+  const isFamilyMember = family.members.some(m => m.uid === currentUser.uid && m.isActive);
+  const isAssignedToOther = chore.assignedTo && chore.assignedTo !== currentUser.uid;
+  const isNotCompleted = chore.status === 'open';
+  
+  return isFamilyMember && isAssignedToOther && isNotCompleted;
+};
+
+export const takeoverChore = async (choreId: string, takingOverUserId: string, takingOverUserName: string, reason?: string) => {
+  try {
+    const choresCollection = getChoresCollection();
+    if (!choresCollection) return null;
+
+    // Get the current chore data
+    const choreDoc = await getDoc(doc(choresCollection, choreId));
+    if (!choreDoc.exists()) {
+      throw new Error('Chore not found');
+    }
+
+    const chore = { id: choreDoc.id, ...choreDoc.data() } as Chore;
+
+    // Validate takeover is allowed
+    if (chore.status !== 'open') {
+      throw new Error('Chore is already completed or not available');
+    }
+
+    if (!chore.assignedTo) {
+      throw new Error('Chore is not assigned to anyone. Use claim instead.');
+    }
+
+    if (chore.assignedTo === takingOverUserId) {
+      throw new Error('Chore is already assigned to you');
+    }
+
+    // Update the chore with takeover information
+    const updateData: Partial<Chore> = {
+      // Store original assignee info if this is the first takeover
+      originalAssignee: chore.originalAssignee || chore.assignedTo,
+      originalAssigneeName: chore.originalAssigneeName || chore.assignedToName,
+      
+      // Update current assignment
+      assignedTo: takingOverUserId,
+      assignedToName: takingOverUserName,
+      
+      // Track takeover details
+      takenOverBy: takingOverUserId,
+      takenOverByName: takingOverUserName,
+      takenOverAt: new Date().toISOString(),
+      takeoverReason: reason || 'helping',
+      
+      // Add to missed list if not already there
+      missedBy: chore.missedBy 
+        ? (chore.missedBy.includes(chore.assignedTo) ? chore.missedBy : [...chore.missedBy, chore.assignedTo])
+        : [chore.assignedTo],
+        
+      updatedAt: new Date().toISOString()
+    };
+
+    await updateDoc(doc(choresCollection, choreId), updateData);
+
+    // Log the takeover for analytics
+    console.log(`Chore ${choreId} taken over by ${takingOverUserName} from ${chore.assignedToName}`);
+
+    return { ...chore, ...updateData };
+  } catch (error) {
+    console.error('Error taking over chore:', error);
+    throw error;
+  }
+};
+
+// Claim function for unassigned chores
+export const claimChore = async (choreId: string, claimingUserId: string, claimingUserName: string) => {
+  try {
+    const choresCollection = getChoresCollection();
+    if (!choresCollection) return null;
+
+    // Get the current chore data
+    const choreDoc = await getDoc(doc(choresCollection, choreId));
+    if (!choreDoc.exists()) {
+      throw new Error('Chore not found');
+    }
+
+    const chore = { id: choreDoc.id, ...choreDoc.data() } as Chore;
+
+    // Validate claim is allowed
+    if (chore.status !== 'open') {
+      throw new Error('Chore is already completed or not available');
+    }
+
+    if (chore.assignedTo) {
+      throw new Error('Chore is already assigned to someone. Use takeover instead.');
+    }
+
+    // Update the chore with claim information
+    const updateData: Partial<Chore> = {
+      assignedTo: claimingUserId,
+      assignedToName: claimingUserName,
+      updatedAt: new Date().toISOString()
+    };
+
+    await updateDoc(doc(choresCollection, choreId), updateData);
+
+    console.log(`Chore ${choreId} claimed by ${claimingUserName}`);
+
+    return { ...chore, ...updateData };
+  } catch (error) {
+    console.error('Error claiming chore:', error);
+    throw error;
   }
 };
 
