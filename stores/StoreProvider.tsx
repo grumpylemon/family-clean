@@ -35,13 +35,18 @@ export function StoreProvider({ children }: StoreProviderProps) {
 
 // Hook to integrate with existing AuthContext
 export function useAuthContextIntegration() {
-  const { setUser, setLoading, setError } = useFamilyStore();
-  
   // This will be called by the existing AuthContext to sync user state
   const syncUserWithStore = (user: any, loading: boolean, error: string | null) => {
-    setUser(user);
-    setLoading(loading);
-    setError(error);
+    // Update auth slice state directly
+    useFamilyStore.setState((state) => ({
+      auth: {
+        ...state.auth,
+        user,
+        isAuthenticated: !!user,
+        isLoading: loading,
+        error
+      }
+    }));
   };
   
   return { syncUserWithStore };
@@ -49,14 +54,6 @@ export function useAuthContextIntegration() {
 
 // Hook to integrate with existing FamilyContext  
 export function useFamilyContextIntegration() {
-  const { 
-    setFamily, 
-    setUserProfile, 
-    setLoading, 
-    setError,
-    updateMemberOptimistically 
-  } = useFamilyStore();
-  
   // This will be called by the existing FamilyContext to sync family state
   const syncFamilyWithStore = (
     family: any, 
@@ -64,14 +61,20 @@ export function useFamilyContextIntegration() {
     loading: boolean, 
     error: string | null
   ) => {
-    setFamily(family);
-    setUserProfile(userProfile);
-    setLoading(loading);
-    setError(error);
+    // Update family slice state directly
+    useFamilyStore.setState((state) => ({
+      family: {
+        ...state.family,
+        family,
+        currentMember: userProfile,
+        isLoading: loading,
+        error
+      }
+    }));
   };
   
   return { 
     syncFamilyWithStore,
-    updateMemberOptimistically 
+    updateMemberOptimistically: () => {} // Placeholder for now
   };
 }
