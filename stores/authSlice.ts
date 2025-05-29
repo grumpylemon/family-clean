@@ -26,7 +26,7 @@ export interface AuthSlice {
     signInWithGoogle: () => Promise<void>;
     signInAsGuest: () => Promise<void>;
     logout: () => Promise<void>;
-    checkAuthState: () => void;
+    checkAuthState: () => Promise<void>;
     clearError: () => void;
   };
 }
@@ -60,35 +60,56 @@ export const createAuthSlice: StateCreator<
         const result = await authService.signInWithGoogle(auth);
         
         const firebaseUser = result.user;
+        console.log('[AuthSlice] SignInWithGoogle - Firebase user:', firebaseUser.uid, firebaseUser.email);
         
-        // Create User object from Firebase user
-        const user: User = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email || null,
-          displayName: firebaseUser.displayName || null,
-          photoURL: firebaseUser.photoURL || null,
-          familyId: null,
-          points: {
-            current: 0,
-            weekly: 0,
-            lifetime: 0,
-            lastReset: new Date().toISOString()
-          },
-          level: 1,
-          xp: 0,
-          achievements: [],
-          streakDays: 0,
-          lastActiveDate: new Date().toISOString(),
-          preferences: {
-            notifications: true,
-            theme: 'light',
-            defaultChoreDifficulty: 'medium'
-          },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
+        // First try to get existing user profile
+        console.log('[AuthSlice] SignInWithGoogle - Attempting to get user profile for:', firebaseUser.uid);
+        let user: User | null = await getUserProfile(firebaseUser.uid);
+        console.log('[AuthSlice] SignInWithGoogle - Retrieved user profile:', user ? `Found user with familyId: ${user.familyId}` : 'No user profile found');
+        
+        if (!user) {
+          // Create new user object only if profile doesn't exist
+          user = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || null,
+            displayName: firebaseUser.displayName || null,
+            photoURL: firebaseUser.photoURL || null,
+            familyId: null,
+            points: {
+              current: 0,
+              weekly: 0,
+              lifetime: 0,
+              lastReset: new Date().toISOString()
+            },
+            level: 1,
+            xp: 0,
+            achievements: [],
+            streakDays: 0,
+            lastActiveDate: new Date().toISOString(),
+            preferences: {
+              notifications: true,
+              theme: 'light',
+              defaultChoreDifficulty: 'medium'
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          
+          // Create new user profile
+          console.log('[AuthSlice] SignInWithGoogle - Creating new user profile:', user);
+          await createOrUpdateUserProfile(user.uid, user);
+          console.log('[AuthSlice] SignInWithGoogle - New user profile created');
+        } else {
+          // Update existing user's last active date
+          console.log('[AuthSlice] SignInWithGoogle - Updating existing user profile');
+          user.lastActiveDate = new Date().toISOString();
+          user.displayName = firebaseUser.displayName || user.displayName;
+          user.photoURL = firebaseUser.photoURL || user.photoURL;
+          await createOrUpdateUserProfile(user.uid, user);
+          console.log('[AuthSlice] SignInWithGoogle - User profile updated, familyId:', user.familyId);
+        }
 
-        // Update auth state
+        // Update auth state with the complete user profile
         set((state) => ({
           auth: {
             ...state.auth,
@@ -99,8 +120,24 @@ export const createAuthSlice: StateCreator<
           }
         }));
 
-        // Create/update user profile
-        await createOrUpdateUserProfile(user.uid, user);
+        // If user has a familyId, load family data
+        if (user.familyId) {
+          console.log('[AuthSlice] User has familyId, loading family data:', user.familyId);
+          const familySlice = get().family;
+          if (familySlice.fetchFamily) {
+            try {
+              await familySlice.fetchFamily(user.familyId);
+              console.log('[AuthSlice] Family data loaded successfully');
+            } catch (familyError) {
+              console.error('[AuthSlice] Error loading family data:', familyError);
+              // Don't fail the whole auth process if family loading fails
+            }
+          } else {
+            console.error('[AuthSlice] fetchFamily function not available');
+          }
+        } else {
+          console.log('[AuthSlice] User has no familyId, will show family setup');
+        }
       } catch (error) {
         console.error('Error signing in with Google:', error);
         set((state) => ({
@@ -219,7 +256,7 @@ export const createAuthSlice: StateCreator<
       }
     },
 
-    checkAuthState: () => {
+    checkAuthState: async () => {
       const isMock = isMockImplementation();
       
       set((state) => ({
@@ -230,41 +267,85 @@ export const createAuthSlice: StateCreator<
         // For mock auth, check current user
         const currentUser = auth.currentUser;
         if (currentUser) {
-          // Create User object from mock
-          const user: User = {
-            uid: currentUser.uid,
-            email: currentUser.email || null,
-            displayName: currentUser.displayName || 'Guest',
-            photoURL: currentUser.photoURL || null,
-            familyId: null,
-            points: {
-              current: 0,
-              weekly: 0,
-              lifetime: 0,
-              lastReset: new Date().toISOString()
-            },
-            level: 1,
-            xp: 0,
-            achievements: [],
-            streakDays: 0,
-            lastActiveDate: new Date().toISOString(),
-            preferences: {
-              notifications: true,
-              theme: 'light',
-              defaultChoreDifficulty: 'medium'
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
+          try {
+            // Try to get existing user profile first
+            const profile = await getUserProfile(currentUser.uid);
+            
+            if (profile) {
+              set((state) => ({
+                auth: {
+                  ...state.auth,
+                  user: profile,
+                  isAuthenticated: true,
+                  isLoading: false
+                }
+              }));
 
-          set((state) => ({
-            auth: {
-              ...state.auth,
-              user,
-              isAuthenticated: true,
-              isLoading: false
+              // If user has a familyId, load family data
+              if (profile.familyId) {
+                console.log('[AuthSlice] Mock auth - User has familyId, loading family data:', profile.familyId);
+                const familySlice = get().family;
+                if (familySlice.fetchFamily) {
+                  try {
+                    await familySlice.fetchFamily(profile.familyId);
+                    console.log('[AuthSlice] Mock auth - Family data loaded successfully');
+                  } catch (familyError) {
+                    console.error('[AuthSlice] Error loading family data in mock mode:', familyError);
+                  }
+                } else {
+                  console.error('[AuthSlice] Mock auth - fetchFamily function not available');
+                }
+              } else {
+                console.log('[AuthSlice] Mock auth - User has no familyId, will show family setup');
+              }
+            } else {
+              // Create User object from mock
+              const user: User = {
+                uid: currentUser.uid,
+                email: currentUser.email || null,
+                displayName: currentUser.displayName || 'Guest',
+                photoURL: currentUser.photoURL || null,
+                familyId: null,
+                points: {
+                  current: 0,
+                  weekly: 0,
+                  lifetime: 0,
+                  lastReset: new Date().toISOString()
+                },
+                level: 1,
+                xp: 0,
+                achievements: [],
+                streakDays: 0,
+                lastActiveDate: new Date().toISOString(),
+                preferences: {
+                  notifications: true,
+                  theme: 'light',
+                  defaultChoreDifficulty: 'medium'
+                },
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+
+              set((state) => ({
+                auth: {
+                  ...state.auth,
+                  user,
+                  isAuthenticated: true,
+                  isLoading: false
+                }
+              }));
             }
-          }));
+          } catch (error) {
+            console.error('Error loading user profile in mock mode:', error);
+            set((state) => ({
+              auth: {
+                ...state.auth,
+                user: null,
+                isAuthenticated: false,
+                isLoading: false
+              }
+            }));
+          }
         } else {
           set((state) => ({
             auth: {
@@ -292,6 +373,24 @@ export const createAuthSlice: StateCreator<
                     isLoading: false
                   }
                 }));
+
+                // If user has a familyId, load family data
+                if (profile.familyId) {
+                  console.log('[AuthSlice] Auth state change - User has familyId, loading family data:', profile.familyId);
+                  const familySlice = get().family;
+                  if (familySlice.fetchFamily) {
+                    try {
+                      await familySlice.fetchFamily(profile.familyId);
+                      console.log('[AuthSlice] Auth state change - Family data loaded successfully');
+                    } catch (familyError) {
+                      console.error('[AuthSlice] Error loading family data:', familyError);
+                    }
+                  } else {
+                    console.error('[AuthSlice] Auth state change - fetchFamily function not available');
+                  }
+                } else {
+                  console.log('[AuthSlice] Auth state change - User has no familyId, will show family setup');
+                }
               } else {
                 // Create new user profile
                 const user: User = {

@@ -1349,10 +1349,17 @@ export const createOrUpdateUserProfile = async (userId: string, userData: Partia
   
   try {
     if (isMockImplementation()) {
-      console.log(`Mock create/update user profile: ${userId}`, userData);
-      // Update the user in mock database
-      await getUsersCollection().doc(userId).set(userData, { merge: true });
-      return true;
+      console.log(`[Firestore] Mock create/update user profile: ${userId}`, userData);
+      console.log(`[Firestore] User familyId being saved:`, userData.familyId);
+      try {
+        // Update the user in mock database
+        await getUsersCollection().doc(userId).set(userData, { merge: true });
+        console.log(`[Firestore] Mock user profile saved successfully`);
+        return true;
+      } catch (mockSaveError) {
+        console.error(`[Firestore] Error saving mock user profile:`, mockSaveError);
+        return false;
+      }
     }
     
     const formattedData = formatForFirestore({
@@ -1402,25 +1409,42 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
   
   try {
     if (isMockImplementation()) {
-      console.log(`Mock getUserProfile for: ${userId}`);
-      // Try to get from mock database first
-      const userDoc = await getUsersCollection().doc(userId).get();
-      if (userDoc.exists) {
-        const userData = userDoc.data();
-        console.log(`Found mock user profile:`, userData);
-        return userData;
+      console.log(`[Firestore] Mock getUserProfile for: ${userId}`);
+      try {
+        // Try to get from mock database first
+        const userDoc = await getUsersCollection().doc(userId).get();
+        console.log(`[Firestore] Mock database query result - exists: ${userDoc.exists}`);
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          console.log(`[Firestore] Found mock user profile:`, userData);
+          console.log(`[Firestore] Mock user familyId:`, userData?.familyId);
+          return userData;
+        }
+        
+        // Fallback for mock user
+        console.log(`[Firestore] No mock user profile found, returning basic mock data`);
+        return {
+          uid: userId,
+          email: 'mock@example.com',
+          displayName: 'Mock User',
+          photoURL: null,
+          familyId: null, // Explicitly showing this is null
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+      } catch (mockError) {
+        console.error(`[Firestore] Error accessing mock database:`, mockError);
+        // Return basic mock data on error
+        return {
+          uid: userId,
+          email: 'mock@example.com',
+          displayName: 'Mock User',
+          photoURL: null,
+          familyId: null, // Explicitly showing this is null
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
       }
-      
-      // Fallback for mock user
-      console.log(`No mock user profile found, returning basic mock data`);
-      return {
-        uid: userId,
-        email: 'mock@example.com',
-        displayName: 'Mock User',
-        photoURL: null,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
     }
     
     const userDoc = await getDoc(doc(getUsersCollection(), userId));
