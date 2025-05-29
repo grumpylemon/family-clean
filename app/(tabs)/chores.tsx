@@ -16,6 +16,7 @@ import {
   ToastAndroid,
   TouchableOpacity,
   View,
+  SafeAreaView,
 } from 'react-native';
 
 type FilterType = 'all' | 'mine' | 'available' | 'completed';
@@ -162,7 +163,7 @@ export default function ChoresScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Main Tab Bar */}
       <View style={styles.mainTabBar}>
         <TouchableOpacity
@@ -233,7 +234,7 @@ export default function ChoresScreen() {
           >
             {filteredChores.length === 0 ? (
               <View style={styles.emptyState}>
-                <Ionicons name="checkbox-outline" size={48} color="#9ca3af" />
+                <Ionicons name="checkbox-outline" size={48} color="#f9a8d4" />
                 <Text style={styles.emptyText}>No chores found</Text>
               </View>
             ) : (
@@ -246,7 +247,7 @@ export default function ChoresScreen() {
                         <Ionicons 
                           name={getChoreTypeIcon(chore.type) as any} 
                           size={20} 
-                          color="#64748b" 
+                          color="#be185d" 
                         />
                       </View>
                       <View style={styles.choreHeaderInfo}>
@@ -263,7 +264,7 @@ export default function ChoresScreen() {
 
                     <View style={styles.choreDetails}>
                       <View style={styles.choreDetailRow}>
-                        <Ionicons name="calendar-outline" size={16} color="#6b7280" />
+                        <Ionicons name="calendar-outline" size={16} color="#9f1239" />
                         <Text style={styles.choreDetailText}>
                           Due: {new Date(chore.dueDate).toLocaleDateString()}
                         </Text>
@@ -280,7 +281,7 @@ export default function ChoresScreen() {
 
                       {chore.assignedTo && (
                         <View style={styles.choreDetailRow}>
-                          <Ionicons name="person-outline" size={16} color="#6b7280" />
+                          <Ionicons name="person-outline" size={16} color="#9f1239" />
                           <Text style={styles.choreDetailText}>
                             {family?.members.find(m => m.uid === chore.assignedTo)?.name || 'Unknown'}
                           </Text>
@@ -350,7 +351,7 @@ export default function ChoresScreen() {
         <ScrollView style={styles.choresList}>
           {getUserCompletedChores().length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="checkmark-done-outline" size={48} color="#9ca3af" />
+              <Ionicons name="checkmark-done-outline" size={48} color="#f9a8d4" />
               <Text style={styles.emptyText}>No completed chores yet</Text>
             </View>
           ) : (
@@ -359,7 +360,7 @@ export default function ChoresScreen() {
               .map((chore) => (
                 <View key={chore.id} style={styles.choreCard}>
                   <View style={styles.choreHeader}>
-                    <Ionicons name={getChoreTypeIcon(chore.type) as any} size={20} color="#64748b" style={{ marginRight: 8 }} />
+                    <Ionicons name={getChoreTypeIcon(chore.type) as any} size={20} color="#be185d" style={{ marginRight: 8 }} />
                     <View style={styles.choreHeaderInfo}>
                       <Text style={styles.choreTitle}>{chore.title}</Text>
                       <Text style={styles.choreDescription}>{chore.description}</Text>
@@ -371,7 +372,7 @@ export default function ChoresScreen() {
                   </View>
                   <View style={styles.choreDetails}>
                     <View style={styles.choreDetailRow}>
-                      <Ionicons name="calendar-outline" size={16} color="#6b7280" />
+                      <Ionicons name="calendar-outline" size={16} color="#9f1239" />
                       <Text style={styles.choreDetailText}>
                         Completed: {chore.completedAt ? new Date(chore.completedAt).toLocaleString() : '—'}
                       </Text>
@@ -394,36 +395,29 @@ export default function ChoresScreen() {
           setCompletedChoreTitle('');
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fdf2f8',
   },
   header: {
-    backgroundColor: '#ffffff',
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    backgroundColor: '#fdf2f8',
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: 20,
     paddingHorizontal: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
-    color: '#1f2937',
+    color: '#831843',
   },
   filterContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fdf2f8',
     maxHeight: 60,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
   },
   filterContent: {
     paddingHorizontal: 20,
@@ -436,10 +430,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffff',
     gap: 6,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
   },
   filterTabActive: {
     backgroundColor: '#be185d',
@@ -448,13 +442,13 @@ const styles = StyleSheet.create({
   filterTabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6b7280',
+    color: '#831843',
   },
   filterTabTextActive: {
     color: '#ffffff',
   },
   filterBadge: {
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#fbcfe8',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 10,
@@ -467,7 +461,7 @@ const styles = StyleSheet.create({
   filterBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6b7280',
+    color: '#831843',
   },
   filterBadgeTextActive: {
     color: '#ffffff',
@@ -482,22 +476,20 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#9ca3af',
+    color: '#9f1239',
     marginTop: 16,
     fontWeight: '500',
   },
   choreCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 16,
+    borderRadius: 24,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 2,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
   },
   choreHeader: {
     flexDirection: 'row',
@@ -508,42 +500,40 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fdf2f8',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
   },
   choreHeaderInfo: {
     flex: 1,
   },
   choreTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     marginBottom: 4,
-    color: '#1f2937',
+    color: '#831843',
   },
   choreDescription: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#9f1239',
     lineHeight: 20,
   },
   chorePointsBadge: {
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#be185d',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
   },
   chorePoints: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#d97706',
+    color: '#ffffff',
   },
   chorePointsLabel: {
     fontSize: 10,
-    color: '#d97706',
+    color: '#ffffff',
     fontWeight: '600',
   },
   choreDetails: {
@@ -557,7 +547,7 @@ const styles = StyleSheet.create({
   },
   choreDetailText: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#831843',
     fontWeight: '500',
   },
   difficultyDot: {
@@ -581,7 +571,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   completeButton: {
-    backgroundColor: '#10b981',
+    backgroundColor: '#be185d',
   },
   completeButtonText: {
     color: '#ffffff',
@@ -589,9 +579,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   claimButton: {
-    backgroundColor: '#f0f9ff',
-    borderWidth: 1,
-    borderColor: '#bae6fd',
+    backgroundColor: '#fdf2f8',
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
   },
   claimButtonText: {
     color: '#be185d',
@@ -600,25 +590,25 @@ const styles = StyleSheet.create({
   },
   mainTabBar: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#f9a8d4',
   },
   mainTab: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: 14,
-    borderBottomWidth: 2,
+    borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },
   mainTabActive: {
     borderBottomColor: '#be185d',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fdf2f8',
   },
   mainTabText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6b7280',
+    color: '#9f1239',
   },
   mainTabTextActive: {
     color: '#be185d',

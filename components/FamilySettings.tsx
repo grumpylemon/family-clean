@@ -8,10 +8,15 @@ import {
   Alert,
   ActivityIndicator,
   Switch,
-  View
+  View,
+  Text,
+  SafeAreaView,
+  Platform
 } from 'react-native';
-import { ThemedText } from './ThemedText';
+import { Ionicons } from '@expo/vector-icons';
 import { useFamily } from '@/contexts/FamilyContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { Toast } from '@/components/ui/Toast';
 
 interface FamilySettingsProps {
   visible: boolean;
@@ -20,15 +25,22 @@ interface FamilySettingsProps {
 
 export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
   const { family, isAdmin, updateFamilySettings } = useFamily();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   
   // Form state
   const [familyName, setFamilyName] = useState('');
   const [defaultChorePoints, setDefaultChorePoints] = useState('10');
   const [defaultChoreCooldownHours, setDefaultChoreCooldownHours] = useState('24');
+  const [defaultUrgencyMinutes, setDefaultUrgencyMinutes] = useState('30');
   const [allowPointTransfers, setAllowPointTransfers] = useState(false);
+  const [enableMonetarySystem, setEnableMonetarySystem] = useState(false);
   const [weekStartDay, setWeekStartDay] = useState('0');
   const [showDangerZone, setShowDangerZone] = useState(false);
+  const [showTransferPoints, setShowTransferPoints] = useState(false);
+  const [transferFrom, setTransferFrom] = useState('');
+  const [transferTo, setTransferTo] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
 
   useEffect(() => {
     if (visible && family) {
@@ -57,7 +69,9 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
         settings: {
           defaultChorePoints: parseInt(defaultChorePoints) || 10,
           defaultChoreCooldownHours: parseInt(defaultChoreCooldownHours) || 24,
+          defaultUrgencyMinutes: parseInt(defaultUrgencyMinutes) || 30,
           allowPointTransfers,
+          enableMonetarySystem,
           weekStartDay: parseInt(weekStartDay) || 0,
         },
       };
@@ -147,32 +161,34 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
         presentationStyle="pageSheet"
         onRequestClose={onClose}
       >
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
           <View style={styles.header}>
-            <ThemedText style={styles.title}>Family Settings</ThemedText>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <ThemedText style={styles.closeButtonText}>Close</ThemedText>
+            <TouchableOpacity onPress={onClose} style={styles.backButton}>
+              <Ionicons name="chevron-back" size={24} color="#be185d" />
+              <Text style={styles.backText}>Admin</Text>
             </TouchableOpacity>
+            <Text style={styles.title}>Family Settings</Text>
+            <View style={styles.headerSpacer} />
           </View>
           
           <View style={styles.content}>
-            <ThemedText style={styles.errorText}>
+            <Text style={styles.errorText}>
               Only family admins can modify settings
-            </ThemedText>
+            </Text>
             
             <View style={styles.infoSection}>
-              <ThemedText style={styles.infoTitle}>Family Information</ThemedText>
+              <Text style={styles.infoTitle}>Family Information</Text>
               <View style={styles.infoRow}>
-                <ThemedText style={styles.infoLabel}>Family Name:</ThemedText>
-                <ThemedText style={styles.infoValue}>{family?.name}</ThemedText>
+                <Text style={styles.infoLabel}>Family Name:</Text>
+                <Text style={styles.infoValue}>{family?.name}</Text>
               </View>
               <View style={styles.infoRow}>
-                <ThemedText style={styles.infoLabel}>Join Code:</ThemedText>
-                <ThemedText style={[styles.infoValue, styles.joinCode]}>{family?.joinCode}</ThemedText>
+                <Text style={styles.infoLabel}>Join Code:</Text>
+                <Text style={[styles.infoValue, styles.joinCode]}>{family?.joinCode}</Text>
               </View>
               <View style={styles.infoRow}>
-                <ThemedText style={styles.infoLabel}>Members:</ThemedText>
-                <ThemedText style={styles.infoValue}>{family?.members.length || 0}</ThemedText>
+                <Text style={styles.infoLabel}>Members:</Text>
+                <Text style={styles.infoValue}>{family?.members.length || 0}</Text>
               </View>
             </View>
             
@@ -180,10 +196,10 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
               style={[styles.actionButton, styles.leaveButton]}
               onPress={handleLeaveFamily}
             >
-              <ThemedText style={styles.leaveButtonText}>Leave Family</ThemedText>
+              <Text style={styles.leaveButtonText}>Leave Family</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SafeAreaView>
       </Modal>
     );
   }
@@ -195,91 +211,123 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <ThemedText style={styles.title}>Family Settings</ThemedText>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <ThemedText style={styles.closeButtonText}>Done</ThemedText>
+          <TouchableOpacity onPress={onClose} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color="#be185d" />
+            <Text style={styles.backText}>Admin</Text>
           </TouchableOpacity>
+          <Text style={styles.title}>Family Settings</Text>
+          <View style={styles.headerSpacer} />
         </View>
 
         <ScrollView style={styles.scrollView}>
           <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Basic Information</ThemedText>
+            <Text style={styles.sectionTitle}>Basic Information</Text>
             
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Family Name</ThemedText>
+              <Text style={styles.label}>Family Name</Text>
               <TextInput
                 style={styles.input}
                 value={familyName}
                 onChangeText={setFamilyName}
                 placeholder="Enter family name"
+                placeholderTextColor="#9ca3af"
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Join Code</ThemedText>
+              <Text style={styles.label}>Join Code</Text>
               <View style={styles.joinCodeContainer}>
-                <ThemedText style={styles.joinCodeText}>{family?.joinCode}</ThemedText>
+                <Text style={styles.joinCodeText}>{family?.joinCode}</Text>
                 <TouchableOpacity
                   style={styles.copyButton}
                   onPress={() => {
                     // TODO: Implement copy to clipboard
-                    Alert.alert('Info', 'Join code copied to clipboard');
+                    Toast.show('Join code copied to clipboard', 'success');
                   }}
                 >
-                  <ThemedText style={styles.copyButtonText}>Copy</ThemedText>
+                  <Text style={styles.copyButtonText}>Copy</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
 
           <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Chore Settings</ThemedText>
+            <Text style={styles.sectionTitle}>Chore Settings</Text>
             
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Default Chore Points</ThemedText>
+              <Text style={styles.label}>Default Chore Points</Text>
               <TextInput
                 style={styles.input}
                 value={defaultChorePoints}
                 onChangeText={setDefaultChorePoints}
                 placeholder="10"
                 keyboardType="numeric"
+                placeholderTextColor="#9ca3af"
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Default Cooldown Hours</ThemedText>
+              <Text style={styles.label}>Default Cooldown Hours</Text>
               <TextInput
                 style={styles.input}
                 value={defaultChoreCooldownHours}
                 onChangeText={setDefaultChoreCooldownHours}
                 placeholder="24"
                 keyboardType="numeric"
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Default Urgency Duration (Minutes)</Text>
+              <TextInput
+                style={styles.input}
+                value={defaultUrgencyMinutes}
+                onChangeText={setDefaultUrgencyMinutes}
+                placeholder="30"
+                keyboardType="numeric"
+                placeholderTextColor="#9ca3af"
               />
             </View>
 
             <View style={styles.inputGroup}>
               <View style={styles.switchRow}>
-                <ThemedText style={styles.label}>Allow Point Transfers</ThemedText>
+                <Text style={styles.label}>Allow Point Transfers</Text>
                 <Switch
                   value={allowPointTransfers}
                   onValueChange={setAllowPointTransfers}
-                  trackColor={{ false: '#767577', true: '#4285F4' }}
-                  thumbColor={allowPointTransfers ? '#fff' : '#f4f3f4'}
+                  trackColor={{ false: '#f1f5f9', true: '#f9a8d4' }}
+                  thumbColor={allowPointTransfers ? '#be185d' : '#9ca3af'}
                 />
               </View>
-              <ThemedText style={styles.helperText}>
-                Allow family members to transfer points between each other
-              </ThemedText>
+              <Text style={styles.helperText}>
+                Allow admins to transfer points between family members
+              </Text>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <View style={styles.switchRow}>
+                <Text style={styles.label}>Enable Monetary System</Text>
+                <Switch
+                  value={enableMonetarySystem}
+                  onValueChange={setEnableMonetarySystem}
+                  trackColor={{ false: '#f1f5f9', true: '#f9a8d4' }}
+                  thumbColor={enableMonetarySystem ? '#be185d' : '#9ca3af'}
+                />
+              </View>
+              <Text style={styles.helperText}>
+                Chores can have real money value
+              </Text>
             </View>
           </View>
 
           <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Schedule Settings</ThemedText>
+            <Text style={styles.sectionTitle}>Schedule Settings</Text>
             
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Week Start Day</ThemedText>
+              <Text style={styles.label}>Week Start Day</Text>
               <View style={styles.weekDaySelector}>
                 {weekDays.map((day) => (
                   <TouchableOpacity
@@ -290,30 +338,84 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                     ]}
                     onPress={() => setWeekStartDay(day.value)}
                   >
-                    <ThemedText
+                    <Text
                       style={[
                         styles.weekDayButtonText,
                         weekStartDay === day.value && styles.weekDayButtonTextSelected,
                       ]}
                     >
                       {day.label.substring(0, 3)}
-                    </ThemedText>
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
           </View>
 
+          {/* Transfer Points Section */}
+          {allowPointTransfers && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Transfer Points</Text>
+              <TouchableOpacity
+                style={styles.transferToggle}
+                onPress={() => setShowTransferPoints(!showTransferPoints)}
+              >
+                <Text style={styles.transferToggleText}>
+                  {showTransferPoints ? 'Hide' : 'Show'} Transfer Options
+                </Text>
+              </TouchableOpacity>
+              
+              {showTransferPoints && (
+                <View style={styles.transferContent}>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Transfer From</Text>
+                    <TouchableOpacity style={styles.pickerContainer}>
+                      <Text style={styles.pickerText}>{user?.displayName || 'Select member'}</Text>
+                      <Ionicons name="chevron-down" size={20} color="#9ca3af" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Transfer To</Text>
+                    <TouchableOpacity style={styles.pickerContainer}>
+                      <Text style={styles.pickerText}>Select recipient</Text>
+                      <Ionicons name="chevron-down" size={20} color="#9ca3af" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Amount to Transfer</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={transferAmount}
+                      onChangeText={setTransferAmount}
+                      placeholder="0"
+                      keyboardType="numeric"
+                      placeholderTextColor="#9ca3af"
+                    />
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.transferButton]}
+                    onPress={() => Toast.show('Point transfer coming soon!', 'info')}
+                  >
+                    <Text style={styles.transferButtonText}>Transfer Points</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+
           <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Danger Zone</ThemedText>
+            <Text style={styles.sectionTitle}>Danger Zone</Text>
             
             <TouchableOpacity
               style={styles.dangerToggle}
               onPress={() => setShowDangerZone(!showDangerZone)}
             >
-              <ThemedText style={styles.dangerToggleText}>
+              <Text style={styles.dangerToggleText}>
                 {showDangerZone ? 'Hide' : 'Show'} Danger Zone
-              </ThemedText>
+              </Text>
             </TouchableOpacity>
 
             {showDangerZone && (
@@ -322,11 +424,11 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                   style={[styles.actionButton, styles.deleteButton]}
                   onPress={handleDeleteFamily}
                 >
-                  <ThemedText style={styles.deleteButtonText}>Delete Family</ThemedText>
+                  <Text style={styles.deleteButtonText}>Delete Family</Text>
                 </TouchableOpacity>
-                <ThemedText style={styles.dangerWarning}>
+                <Text style={styles.dangerWarning}>
                   This will permanently delete all family data
-                </ThemedText>
+                </Text>
               </View>
             )}
           </View>
@@ -337,19 +439,19 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
               onPress={handleSaveSettings}
               disabled={loading}
             >
-              <ThemedText style={styles.saveButtonText}>
+              <Text style={styles.saveButtonText}>
                 {loading ? 'Saving...' : 'Save Changes'}
-              </ThemedText>
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
 
         {loading && (
           <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#4285F4" />
+            <ActivityIndicator size="large" color="#be185d" />
           </View>
         )}
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -357,38 +459,41 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fdf2f8',
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#fdf2f8',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#f9a8d4',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  backText: {
+    fontSize: 16,
+    color: '#be185d',
+    marginLeft: 4,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  closeButton: {
-    padding: 8,
-  },
-  closeButtonText: {
-    color: '#4285F4',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
+    color: '#831843',
+    textAlign: 'center',
+    flex: 1,
+  },
+  headerSpacer: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fdf2f8',
   },
   content: {
     flex: 1,
@@ -397,29 +502,27 @@ const styles = StyleSheet.create({
   errorText: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#EA4335',
+    color: '#ef4444',
     marginTop: 20,
     marginBottom: 30,
   },
   section: {
-    padding: 16,
+    padding: 20,
     backgroundColor: '#ffffff',
-    marginBottom: 12,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    marginBottom: 16,
+    marginHorizontal: 20,
+    borderRadius: 24,
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     marginBottom: 16,
-    color: '#1f2937',
+    color: '#831843',
   },
   inputGroup: {
     marginBottom: 16,
@@ -428,37 +531,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#374151',
+    color: '#831843',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
+    borderRadius: 12,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#f9fafb',
-    color: '#1f2937',
+    backgroundColor: '#fdf2f8',
+    color: '#831843',
   },
   joinCodeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
+    borderRadius: 12,
     padding: 12,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#fdf2f8',
   },
   joinCodeText: {
     fontSize: 18,
     fontWeight: 'bold',
     flex: 1,
-    color: '#4285F4',
+    color: '#be185d',
   },
   copyButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: '#4285F4',
-    borderRadius: 4,
+    backgroundColor: '#be185d',
+    borderRadius: 8,
   },
   copyButtonText: {
     color: 'white',
@@ -472,8 +575,9 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 12,
-    color: '#6b7280',
+    color: '#9f1239',
     marginTop: 4,
+    fontStyle: 'italic',
   },
   weekDaySelector: {
     flexDirection: 'row',
@@ -483,17 +587,18 @@ const styles = StyleSheet.create({
   weekDayButton: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
+    backgroundColor: '#ffffff',
   },
   weekDayButtonSelected: {
-    backgroundColor: '#4285F4',
-    borderColor: '#4285F4',
+    backgroundColor: '#be185d',
+    borderColor: '#be185d',
   },
   weekDayButtonText: {
     fontSize: 14,
+    color: '#831843',
   },
   weekDayButtonTextSelected: {
     color: 'white',
@@ -504,7 +609,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dangerToggleText: {
-    color: '#EA4335',
+    color: '#ef4444',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -514,19 +619,47 @@ const styles = StyleSheet.create({
   },
   dangerWarning: {
     fontSize: 12,
-    color: '#EA4335',
+    color: '#ef4444',
     opacity: 0.7,
     marginTop: 8,
     textAlign: 'center',
   },
+  transferToggle: {
+    padding: 8,
+    alignItems: 'center',
+  },
+  transferToggleText: {
+    color: '#be185d',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  transferContent: {
+    marginTop: 16,
+  },
+  pickerContainer: {
+    backgroundColor: '#fdf2f8',
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  pickerText: {
+    fontSize: 16,
+    color: '#831843',
+    flex: 1,
+  },
   actionButton: {
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 4,
+    borderRadius: 12,
     alignItems: 'center',
   },
   saveButton: {
-    backgroundColor: '#4285F4',
+    backgroundColor: '#be185d',
   },
   saveButtonText: {
     color: 'white',
@@ -534,11 +667,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   saveButtonContainer: {
-    padding: 16,
+    padding: 20,
     paddingTop: 8,
   },
   leaveButton: {
-    backgroundColor: '#EA4335',
+    backgroundColor: '#ef4444',
     marginTop: 20,
   },
   leaveButtonText: {
@@ -547,25 +680,37 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   deleteButton: {
-    backgroundColor: '#EA4335',
+    backgroundColor: '#ef4444',
   },
   deleteButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
+  transferButton: {
+    backgroundColor: '#10b981',
+  },
+  transferButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   infoSection: {
     backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 24,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   infoTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
     marginBottom: 12,
+    color: '#831843',
   },
   infoRow: {
     flexDirection: 'row',
@@ -574,15 +719,15 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#9f1239',
   },
   infoValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#1f2937',
+    color: '#831843',
   },
   joinCode: {
-    color: '#4285F4',
+    color: '#be185d',
     fontWeight: 'bold',
   },
   loadingOverlay: {
@@ -591,7 +736,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(248, 250, 252, 0.95)',
+    backgroundColor: 'rgba(253, 242, 248, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
   },

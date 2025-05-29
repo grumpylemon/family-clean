@@ -13,7 +13,9 @@ import {
     StyleSheet,
     TextInput,
     TouchableOpacity,
-    View
+    View,
+    Text,
+    SafeAreaView
 } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { TestDataGenerator } from './TestDataGenerator';
@@ -270,14 +272,22 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
         presentationStyle="pageSheet"
         onRequestClose={onClose}
       >
-        <View style={styles.container}>
-          <ThemedText style={styles.errorText}>
-            {getPermissionErrorMessage('admin')}
-          </ThemedText>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <ThemedText style={styles.closeButtonText}>Close</ThemedText>
-          </TouchableOpacity>
-        </View>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onClose} style={styles.backButton}>
+              <Ionicons name="chevron-back" size={24} color="#be185d" />
+              <Text style={styles.backText}>Admin</Text>
+            </TouchableOpacity>
+            <Text style={styles.title}>Manage Chores</Text>
+            <View style={styles.headerSpacer} />
+          </View>
+          <View style={styles.errorContainer}>
+            <Ionicons name="lock-closed-outline" size={64} color="#f9a8d4" />
+            <Text style={styles.errorText}>
+              {getPermissionErrorMessage('admin')}
+            </Text>
+          </View>
+        </SafeAreaView>
       </Modal>
     );
   }
@@ -289,20 +299,22 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <ThemedText style={styles.title}>Manage Chores</ThemedText>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <ThemedText style={styles.closeButtonText}>Done</ThemedText>
+          <TouchableOpacity onPress={onClose} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color="#be185d" />
+            <Text style={styles.backText}>Admin</Text>
           </TouchableOpacity>
+          <Text style={styles.title}>Manage Chores</Text>
+          <View style={styles.headerSpacer} />
         </View>
 
         {showForm ? (
           <ScrollView style={styles.scrollView}>
             <View style={styles.form}>
-              <ThemedText style={styles.formTitle}>
+              <Text style={styles.formTitle}>
                 {editingChore ? 'Edit Chore' : 'Create New Chore'}
-              </ThemedText>
+              </Text>
 
               <ValidatedInput
                 label="Title *"
@@ -334,7 +346,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
               />
 
               <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Type</ThemedText>
+                <Text style={styles.label}>Type</Text>
                 <View style={styles.buttonGroup}>
                   {(['individual', 'family', 'pet', 'shared'] as ChoreType[]).map((type) => (
                     <TouchableOpacity
@@ -346,21 +358,21 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                       ]}
                       onPress={() => setChoreType(type)}
                     >
-                      <ThemedText
+                      <Text
                         style={[
                           styles.typeButtonText,
                           choreType === type && { color: getTypeColor(type) }
                         ]}
                       >
                         {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </ThemedText>
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
 
               <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Difficulty</ThemedText>
+                <Text style={styles.label}>Difficulty</Text>
                 <View style={styles.buttonGroup}>
                   {(['easy', 'medium', 'hard'] as ChoreDifficulty[]).map((diff) => (
                     <TouchableOpacity
@@ -372,14 +384,14 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                       ]}
                       onPress={() => setDifficulty(diff)}
                     >
-                      <ThemedText
+                      <Text
                         style={[
                           styles.diffButtonText,
                           difficulty === diff && { color: getDifficultyColor(diff) }
                         ]}
                       >
                         {diff.charAt(0).toUpperCase() + diff.slice(1)}
-                      </ThemedText>
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -388,14 +400,14 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
               {/* Room Selection - only show for room chores */}
               {choreType === 'room' && (
                 <View style={styles.inputGroup}>
-                  <ThemedText style={styles.label}>Select Room</ThemedText>
+                  <Text style={styles.label}>Select Room</Text>
                   {rooms.length > 0 ? (
                     <View style={styles.roomSelect}>
                       <TouchableOpacity
                         style={[styles.roomOption, !selectedRoomId && styles.roomOptionSelected]}
                         onPress={() => setSelectedRoomId('')}
                       >
-                        <ThemedText style={styles.roomOptionText}>No Room</ThemedText>
+                        <Text style={styles.roomOptionText}>No Room</Text>
                       </TouchableOpacity>
                       {rooms.map((room) => (
                         <TouchableOpacity
@@ -406,23 +418,23 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                           ]}
                           onPress={() => setSelectedRoomId(room.id!)}
                         >
-                          <ThemedText style={styles.roomEmoji}>
+                          <Text style={styles.roomEmoji}>
                             {getRoomTypeEmoji(room.type)}
-                          </ThemedText>
+                          </Text>
                           <View style={styles.roomOptionContent}>
-                            <ThemedText style={styles.roomOptionText}>{room.name}</ThemedText>
-                            <ThemedText style={styles.roomOptionSubtext}>
+                            <Text style={styles.roomOptionText}>{room.name}</Text>
+                            <Text style={styles.roomOptionSubtext}>
                               {getRoomTypeDisplayName(room.type)}
-                            </ThemedText>
+                            </Text>
                           </View>
                         </TouchableOpacity>
                       ))}
                     </View>
                   ) : (
                     <View style={styles.noRoomsMessage}>
-                      <ThemedText style={styles.noRoomsText}>
+                      <Text style={styles.noRoomsText}>
                         No rooms available. Create rooms first to assign room-based chores.
-                      </ThemedText>
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -443,13 +455,13 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
               />
 
               <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Assign To</ThemedText>
+                <Text style={styles.label}>Assign To</Text>
                 <View style={styles.memberSelect}>
                   <TouchableOpacity
                     style={[styles.memberOption, !assignedTo && styles.memberOptionSelected]}
                     onPress={() => setAssignedTo('')}
                   >
-                    <ThemedText style={styles.memberOptionText}>Unassigned</ThemedText>
+                    <Text style={styles.memberOptionText}>Unassigned</Text>
                   </TouchableOpacity>
                   {family?.members.map((member) => (
                     <TouchableOpacity
@@ -460,19 +472,19 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                       ]}
                       onPress={() => setAssignedTo(member.uid)}
                     >
-                      <ThemedText style={styles.memberOptionText}>{member.name}</ThemedText>
+                      <Text style={styles.memberOptionText}>{member.name}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
 
               <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Due Date</ThemedText>
+                <Text style={styles.label}>Due Date</Text>
                 <TouchableOpacity
                   style={styles.dateButton}
                   onPress={() => setShowDatePicker(true)}
                 >
-                  <ThemedText>{dueDate.toLocaleDateString()}</ThemedText>
+                  <Text style={styles.dateButtonText}>{dueDate.toLocaleDateString()}</Text>
                 </TouchableOpacity>
                 {showDatePicker && (
                   <DateTimePicker
@@ -494,7 +506,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                   style={styles.recurringToggle}
                   onPress={() => setIsRecurring(!isRecurring)}
                 >
-                  <ThemedText style={styles.label}>Recurring Chore</ThemedText>
+                  <Text style={styles.label}>Recurring Chore</Text>
                   <View style={[styles.checkbox, isRecurring && styles.checkboxChecked]} />
                 </TouchableOpacity>
                 {isRecurring && (
@@ -527,7 +539,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                   style={[styles.actionButton, styles.cancelButton]}
                   onPress={resetForm}
                 >
-                  <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.actionButton, styles.saveButton]}
@@ -537,9 +549,9 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                   {savingChore ? (
                     <LoadingSpinner size="small" />
                   ) : (
-                    <ThemedText style={styles.saveButtonText}>
+                    <Text style={styles.saveButtonText}>
                       {editingChore ? 'Update' : 'Create'}
-                    </ThemedText>
+                    </Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -551,7 +563,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
               style={styles.createButton}
               onPress={() => setShowForm(true)}
             >
-              <ThemedText style={styles.createButtonText}>+ Create New Chore</ThemedText>
+              <Text style={styles.createButtonText}>+ Create New Chore</Text>
             </TouchableOpacity>
 
             {/* Test Data Generator */}
@@ -565,10 +577,10 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
               ) : chores.length === 0 ? (
                 <View style={styles.emptyStateContainer}>
                   <Ionicons name="list-outline" size={64} color="#f9a8d4" />
-                  <ThemedText style={styles.emptyStateTitle}>No chores yet</ThemedText>
-                  <ThemedText style={styles.emptyStateMessage}>
+                  <Text style={styles.emptyStateTitle}>No chores yet</Text>
+                  <Text style={styles.emptyStateMessage}>
                     Create your first chore to get started!
-                  </ThemedText>
+                  </Text>
                 </View>
               ) : (
                 chores.map((chore) => {
@@ -576,13 +588,13 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                   return (
                     <View key={chore.id} style={styles.choreCard}>
                       <View style={styles.choreHeader}>
-                        <ThemedText style={styles.choreTitle}>{chore.title}</ThemedText>
+                        <Text style={styles.choreTitle}>{chore.title}</Text>
                         <View style={styles.choreActions}>
                           <TouchableOpacity
                             style={styles.choreActionButton}
                             onPress={() => handleEditChore(chore)}
                           >
-                            <ThemedText style={styles.editText}>Edit</ThemedText>
+                            <Text style={styles.editText}>Edit</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
                             style={styles.choreActionButton}
@@ -595,52 +607,52 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                             {deletingChoreId === chore.id ? (
                               <LoadingSpinner size="small" />
                             ) : (
-                              <ThemedText style={styles.deleteText}>Delete</ThemedText>
+                              <Text style={styles.deleteText}>Delete</Text>
                             )}
                           </TouchableOpacity>
                         </View>
                       </View>
 
                       {chore.description && (
-                        <ThemedText style={styles.choreDescription}>{chore.description}</ThemedText>
+                        <Text style={styles.choreDescription}>{chore.description}</Text>
                       )}
 
                       <View style={styles.choreDetails}>
                         <View style={styles.choreTag}>
-                          <ThemedText style={[styles.choreTagText, { color: getTypeColor(chore.type) }]}>
+                          <Text style={[styles.choreTagText, { color: getTypeColor(chore.type) }]}>
                             {chore.type}
-                          </ThemedText>
+                          </Text>
                         </View>
                         <View style={styles.choreTag}>
-                          <ThemedText style={[styles.choreTagText, { color: getDifficultyColor(chore.difficulty) }]}>
+                          <Text style={[styles.choreTagText, { color: getDifficultyColor(chore.difficulty) }]}>
                             {chore.difficulty}
-                          </ThemedText>
+                          </Text>
                         </View>
-                        <ThemedText style={styles.chorePoints}>{chore.points} pts</ThemedText>
+                        <Text style={styles.chorePoints}>{chore.points} pts</Text>
                       </View>
 
                       <View style={styles.choreFooter}>
-                        <ThemedText style={styles.choreFooterText}>
+                        <Text style={styles.choreFooterText}>
                           Due: {new Date(chore.dueDate).toLocaleDateString()}
-                        </ThemedText>
+                        </Text>
                         {chore.assignedTo && (
-                          <ThemedText style={styles.choreFooterText}>
+                          <Text style={styles.choreFooterText}>
                             Assigned: {family?.members.find(m => m.uid === chore.assignedTo)?.name || 'Unknown'}
-                          </ThemedText>
+                          </Text>
                         )}
                         {chore.recurring?.enabled && (
-                          <ThemedText style={styles.choreFooterText}>
+                          <Text style={styles.choreFooterText}>
                             Repeats every {chore.recurring.frequencyDays} days
-                          </ThemedText>
+                          </Text>
                         )}
                       </View>
 
                       {locked && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
                           <Ionicons name="lock-closed" size={16} color="#ef4444" />
-                          <ThemedText style={{ color: '#ef4444', marginLeft: 4 }}>
+                          <Text style={styles.lockedText}>
                             Locked until {new Date(chore.lockedUntil!).toLocaleString()}
-                          </ThemedText>
+                          </Text>
                         </View>
                       )}
                     </View>
@@ -662,7 +674,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
           icon="trash-outline"
         />
 
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -670,26 +682,37 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fdf2f8',
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#fdf2f8',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#f9a8d4',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  backText: {
+    fontSize: 16,
+    color: '#be185d',
+    marginLeft: 4,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1f2937',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#831843',
+    textAlign: 'center',
+    flex: 1,
+  },
+  headerSpacer: {
+    flex: 1,
   },
   closeButton: {
     padding: 8,
@@ -698,6 +721,12 @@ const styles = StyleSheet.create({
     color: '#be185d',
     fontSize: 16,
     fontWeight: '600',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
   },
   scrollView: {
     flex: 1,
@@ -740,22 +769,21 @@ const styles = StyleSheet.create({
   },
   errorText: {
     textAlign: 'center',
-    fontSize: 16,
-    color: '#ef4444',
-    marginTop: 50,
+    fontSize: 18,
+    color: '#831843',
+    marginTop: 20,
+    fontWeight: '600',
   },
   choreCard: {
-    padding: 16,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 24,
     backgroundColor: '#ffffff',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    marginBottom: 16,
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   choreHeader: {
     flexDirection: 'row',
@@ -765,9 +793,9 @@ const styles = StyleSheet.create({
   },
   choreTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     flex: 1,
-    color: '#1f2937',
+    color: '#831843',
   },
   choreActions: {
     flexDirection: 'row',
@@ -790,7 +818,7 @@ const styles = StyleSheet.create({
   },
   choreDescription: {
     fontSize: 14,
-    opacity: 0.7,
+    color: '#9f1239',
     marginBottom: 12,
   },
   choreDetails: {
@@ -819,15 +847,21 @@ const styles = StyleSheet.create({
   },
   choreFooterText: {
     fontSize: 12,
-    opacity: 0.7,
+    color: '#9f1239',
+  },
+  lockedText: {
+    color: '#ef4444',
+    marginLeft: 4,
+    fontSize: 12,
   },
   form: {
     padding: 16,
   },
   formTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 20,
+    color: '#831843',
   },
   inputGroup: {
     marginBottom: 16,
@@ -836,15 +870,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
+    color: '#831843',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
+    borderRadius: 12,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#ffffff',
-    color: '#1f2937',
+    backgroundColor: '#fdf2f8',
+    color: '#831843',
   },
   textArea: {
     height: 80,
@@ -858,26 +893,36 @@ const styles = StyleSheet.create({
   typeButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 4,
-    borderWidth: 1,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
+    backgroundColor: '#ffffff',
   },
   typeButtonSelected: {
-    backgroundColor: 'rgba(190, 24, 93, 0.1)',
+    backgroundColor: '#f9a8d4',
+    borderColor: '#be185d',
   },
   typeButtonText: {
     fontSize: 14,
+    color: '#831843',
+    fontWeight: '500',
   },
   diffButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 4,
-    borderWidth: 1,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
+    backgroundColor: '#ffffff',
   },
   diffButtonSelected: {
-    backgroundColor: 'rgba(190, 24, 93, 0.1)',
+    backgroundColor: '#f9a8d4',
+    borderColor: '#be185d',
   },
   diffButtonText: {
     fontSize: 14,
+    color: '#831843',
+    fontWeight: '500',
   },
   memberSelect: {
     flexDirection: 'row',
@@ -886,22 +931,31 @@ const styles = StyleSheet.create({
   },
   memberOption: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: '#fdf2f8',
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
   },
   memberOptionSelected: {
     backgroundColor: '#be185d',
+    borderColor: '#831843',
   },
   memberOptionText: {
     fontSize: 14,
+    color: '#831843',
+    fontWeight: '500',
   },
   dateButton: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
+    borderRadius: 12,
     padding: 12,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fdf2f8',
+  },
+  dateButtonText: {
+    color: '#831843',
+    fontSize: 16,
   },
   recurringToggle: {
     flexDirection: 'row',
@@ -927,14 +981,14 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 4,
+    paddingVertical: 12,
+    borderRadius: 12,
   },
   cancelButton: {
-    backgroundColor: '#ccc',
+    backgroundColor: '#f9a8d4',
   },
   cancelButtonText: {
-    color: '#333',
+    color: '#831843',
     fontWeight: '600',
   },
   saveButton: {

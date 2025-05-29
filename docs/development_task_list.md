@@ -87,6 +87,30 @@ This document contains a comprehensive task list for continued development of th
   - Updated guest user to have admin privileges in family QJ7FEP
   - Allows bypassing Google login for quick access to app features
   - Facilitates easy testing of admin functionality and UI updates
+- [x] Update Settings page organization and dark mode toggle (Completed: 2025-05-28)
+  - Removed family settings section from main Settings page
+  - Moved all family management settings to Admin Panel → Family Settings
+  - Added dark/light mode toggle with pink theme integration
+  - Created "Coming Soon" section for future user preferences
+  - Enhanced FamilySettings component with comprehensive options and pink styling
+- [x] Update Rewards page with improved navigation and layout (Completed: 2025-05-28)
+  - Removed modal wrapper and fixed navigation issues
+  - Integrated rewards directly into tab screen for better UX
+  - Improved card layout from vertical stacking to responsive 2-column grid
+  - Enhanced reward cards with consistent pink theme and proper spacing
+  - Updated category filters and point display to match app design
+- [x] Update Chores page with pink theme and safe area fixes (Completed: 2025-05-28)
+  - Fixed header text positioning with proper SafeAreaView implementation
+  - Updated all colors to match pink theme palette
+  - Enhanced card design with 24px border radius and pink shadows
+  - Improved typography hierarchy with larger, more readable fonts
+  - Updated filter tabs, buttons, and interactive elements to pink theme
+- [x] Update Admin Panel components with pink theme (Completed: 2025-05-28)
+  - Enhanced ChoreManagement component with pink theme styling
+  - Updated Create/Edit Chore forms with consistent pink design
+  - Improved header navigation with proper back buttons
+  - Enhanced form elements, buttons, and validation with pink styling
+  - Fixed SafeAreaView implementation and updated all text components
 
 #### Comprehensive Gamification System Implementation (May 28, 2025)
 - [x] Enhanced chore completion flow with full gamification (Completed: 2025-05-28)

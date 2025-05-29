@@ -4,7 +4,6 @@ import { ManageMembers } from '@/components/ManageMembers';
 import { ChoreManagement } from '@/components/ChoreManagement';
 import { FamilySettings } from '@/components/FamilySettings';
 import RewardManagement from '@/components/RewardManagement';
-import RewardStore from '@/components/RewardStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
@@ -24,7 +23,6 @@ export default function HomeScreen() {
   const [showChoreManagement, setShowChoreManagement] = useState(false);
   const [showFamilySettings, setShowFamilySettings] = useState(false);
   const [showRewardManagement, setShowRewardManagement] = useState(false);
-  const [showRewardStore, setShowRewardStore] = useState(false);
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -285,18 +283,6 @@ export default function HomeScreen() {
         <RewardManagement
           familyId={family.id!}
           onClose={() => setShowRewardManagement(false)}
-        />
-      )}
-      
-      {showRewardStore && family && currentMember && (
-        <RewardStore
-          familyId={family.id!}
-          userPoints={currentMember.points.current}
-          onClose={() => setShowRewardStore(false)}
-          onRedemption={() => {
-            // Refresh family data after redemption to update points
-            refreshFamily();
-          }}
         />
       )}
     </View>

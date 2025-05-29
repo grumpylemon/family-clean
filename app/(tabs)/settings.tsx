@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { Toast } from '@/components/ui/Toast';
 import AdminSettings from '@/components/AdminSettings';
 
@@ -21,26 +22,20 @@ export default function SettingsScreen() {
   const { user } = useAuth();
   const { family } = useFamily();
   const { canManageFamily } = useAccessControl();
+  const colorScheme = useColorScheme();
   
   const [name, setName] = useState(user?.displayName || '');
-  const [defaultPoints, setDefaultPoints] = useState(family?.settings.defaultChorePoints?.toString() || '5');
-  const [defaultCooldown, setDefaultCooldown] = useState(family?.settings.defaultChoreCooldownHours?.toString() || '24');
-  const [defaultUrgency, setDefaultUrgency] = useState('30');
-  const [allowTransfers, setAllowTransfers] = useState(family?.settings.allowPointTransfers || false);
-  const [monetaryEnabled, setMonetaryEnabled] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState('Default');
   const [showAdminSettings, setShowAdminSettings] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
 
   const handleUpdateProfile = () => {
     Toast.show('Profile update coming soon!', 'info');
   };
 
-  const handleSaveSettings = () => {
-    Toast.show('Settings save coming soon!', 'info');
-  };
-
-  const handleTransferPoints = () => {
-    Toast.show('Point transfers coming soon!', 'info');
+  const handleToggleDarkMode = (value: boolean) => {
+    setIsDarkMode(value);
+    // TODO: Implement dark mode toggle functionality
+    Toast.show(`${value ? 'Dark' : 'Light'} mode coming soon!`, 'info');
   };
 
   const getInitials = (name: string): string => {
@@ -154,120 +149,61 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          {/* Family Settings Section */}
-          {canManageFamily && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Family Settings</Text>
-              <View style={styles.settingsCard}>
-                <View style={styles.settingItem}>
-                  <Text style={styles.settingLabel}>Default Chore Points</Text>
-                  <TextInput
-                    style={styles.settingInput}
-                    value={defaultPoints}
-                    onChangeText={setDefaultPoints}
-                    keyboardType="numeric"
-                    placeholder="5"
-                    placeholderTextColor="#9ca3af"
-                  />
+          {/* App Preferences Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>App Preferences</Text>
+            <View style={styles.settingsCard}>
+              <View style={styles.settingItem}>
+                <View style={styles.settingLeft}>
+                  <View style={styles.settingIconContainer}>
+                    <Ionicons 
+                      name={isDarkMode ? "moon" : "sunny"} 
+                      size={20} 
+                      color="#be185d" 
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.settingLabel}>Dark Mode</Text>
+                    <Text style={styles.settingDescription}>Switch between light and dark themes</Text>
+                  </View>
                 </View>
-
-                <View style={styles.settingItem}>
-                  <Text style={styles.settingLabel}>Default Chore Cooldown (Hours)</Text>
-                  <TextInput
-                    style={styles.settingInput}
-                    value={defaultCooldown}
-                    onChangeText={setDefaultCooldown}
-                    keyboardType="numeric"
-                    placeholder="24"
-                    placeholderTextColor="#9ca3af"
-                  />
-                </View>
-
-                <View style={styles.settingItem}>
-                  <Text style={styles.settingLabel}>Default Urgency Duration (Minutes)</Text>
-                  <TextInput
-                    style={styles.settingInput}
-                    value={defaultUrgency}
-                    onChangeText={setDefaultUrgency}
-                    keyboardType="numeric"
-                    placeholder="30"
-                    placeholderTextColor="#9ca3af"
-                  />
-                </View>
-
-                <View style={styles.settingItem}>
-                  <Text style={styles.settingLabel}>Allow Admins to Transfer Points</Text>
-                  <Switch
-                    value={allowTransfers}
-                    onValueChange={setAllowTransfers}
-                    trackColor={{ false: '#f1f5f9', true: '#f9a8d4' }}
-                    thumbColor={allowTransfers ? '#be185d' : '#9ca3af'}
-                  />
-                </View>
-
-                <View style={styles.settingItem}>
-                  <Text style={styles.settingLabel}>Enable Monetary System</Text>
-                  <Text style={styles.settingSubtext}>(Chores can have real money value)</Text>
-                  <Switch
-                    value={monetaryEnabled}
-                    onValueChange={setMonetaryEnabled}
-                    trackColor={{ false: '#f1f5f9', true: '#f9a8d4' }}
-                    thumbColor={monetaryEnabled ? '#be185d' : '#9ca3af'}
-                  />
-                </View>
-
-                <View style={styles.settingItem}>
-                  <Text style={styles.settingLabel}>App Theme Preset</Text>
-                  <TouchableOpacity style={styles.pickerContainer}>
-                    <Text style={styles.pickerText}>{selectedTheme}</Text>
-                    <Ionicons name="chevron-down" size={20} color="#9ca3af" />
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity style={styles.saveButton} onPress={handleSaveSettings}>
-                  <Text style={styles.saveButtonText}>Save Settings</Text>
-                </TouchableOpacity>
+                <Switch
+                  value={isDarkMode}
+                  onValueChange={handleToggleDarkMode}
+                  trackColor={{ false: '#f1f5f9', true: '#f9a8d4' }}
+                  thumbColor={isDarkMode ? '#be185d' : '#9ca3af'}
+                />
               </View>
             </View>
-          )}
+          </View>
 
-          {/* Transfer Points Section */}
-          {canManageFamily && allowTransfers && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Transfer Points</Text>
-              <View style={styles.transferCard}>
-                <View style={styles.transferRow}>
-                  <Text style={styles.transferLabel}>Transfer From</Text>
-                  <TouchableOpacity style={styles.pickerContainer}>
-                    <Text style={styles.pickerText}>{user?.displayName || 'John'}</Text>
-                    <Ionicons name="chevron-down" size={20} color="#9ca3af" />
-                  </TouchableOpacity>
+          {/* More Settings Coming Soon */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Coming Soon</Text>
+            <View style={styles.settingsCard}>
+              <View style={styles.comingSoonItem}>
+                <Ionicons name="notifications-outline" size={24} color="#9f1239" />
+                <View style={styles.comingSoonText}>
+                  <Text style={styles.comingSoonTitle}>Notifications</Text>
+                  <Text style={styles.comingSoonDescription}>Customize notification preferences</Text>
                 </View>
-
-                <View style={styles.transferRow}>
-                  <Text style={styles.transferLabel}>Transfer To</Text>
-                  <TouchableOpacity style={styles.pickerContainer}>
-                    <Text style={styles.pickerText}>Select recipient</Text>
-                    <Ionicons name="chevron-down" size={20} color="#9ca3af" />
-                  </TouchableOpacity>
+              </View>
+              <View style={styles.comingSoonItem}>
+                <Ionicons name="language-outline" size={24} color="#9f1239" />
+                <View style={styles.comingSoonText}>
+                  <Text style={styles.comingSoonTitle}>Language</Text>
+                  <Text style={styles.comingSoonDescription}>Choose your preferred language</Text>
                 </View>
-
-                <View style={styles.transferRow}>
-                  <Text style={styles.transferLabel}>Amount to Transfer</Text>
-                  <TextInput
-                    style={styles.transferInput}
-                    placeholder="0"
-                    keyboardType="numeric"
-                    placeholderTextColor="#9ca3af"
-                  />
+              </View>
+              <View style={styles.comingSoonItem}>
+                <Ionicons name="lock-closed-outline" size={24} color="#9f1239" />
+                <View style={styles.comingSoonText}>
+                  <Text style={styles.comingSoonTitle}>Privacy</Text>
+                  <Text style={styles.comingSoonDescription}>Manage privacy settings</Text>
                 </View>
-
-                <TouchableOpacity style={styles.transferButton} onPress={handleTransferPoints}>
-                  <Text style={styles.transferButtonText}>Transfer Points</Text>
-                </TouchableOpacity>
               </View>
             </View>
-          )}
+          </View>
         </View>
       </ScrollView>
 
@@ -523,5 +459,44 @@ const styles = StyleSheet.create({
   },
   adminDescriptionDisabled: {
     color: '#d1d5db',
+  },
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 12,
+  },
+  settingIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fdf2f8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingDescription: {
+    fontSize: 12,
+    color: '#9f1239',
+    marginTop: 2,
+  },
+  comingSoonItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    paddingVertical: 12,
+    opacity: 0.6,
+  },
+  comingSoonText: {
+    flex: 1,
+  },
+  comingSoonTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#831843',
+    marginBottom: 2,
+  },
+  comingSoonDescription: {
+    fontSize: 14,
+    color: '#9f1239',
   },
 });
