@@ -255,6 +255,20 @@ This document contains a comprehensive task list for continued development of th
   - Assign to specific members or leave unassigned
   - Visual member selection in creation form
 - [x] Implement rotation system for family chores (Completed by Agent on 2024-06-08)
+  - [x] Comprehensive rotation logic with `handleChoreRotation()` function
+  - [x] Active member filtering and eligibility checking
+  - [x] Smart next assignment (skips current assignee)
+  - [x] Rotation index persistence with `nextFamilyChoreAssigneeIndex`
+  - [x] Cooldown integration during rotation
+  - [x] Edge case handling (all members excluded)
+  - [ ] **MISSING: Chore Takeover/Reassignment System** (PRIORITY FOR NEXT SPRINT)
+    - [ ] Allow family members to take over assigned chores
+    - [ ] Implement `takeoverChore()` service function
+    - [ ] Handle rotation fairness when takeovers occur (route back to original assignee)
+    - [ ] Track `originalAssignee` vs `completedBy` distinction
+    - [ ] Add takeover permissions and business rules
+    - [ ] Update chore data model for takeover tracking
+    - [ ] Create "Take Over" UI button for assigned chores
 - [x] Build chore completion flow (Completed: 2025-05-28)
   - [x] Update backend logic to handle:
     - [x] Points/XP/money gain on completion
@@ -485,27 +499,157 @@ After analyzing 11 screenshots from the MVP app, the following critical features
   - [ ] "Pet's Best Friend" achievement categories
   - [ ] Monthly pet care reports and insights
 
-#### 3. 🤝 Chore Collaboration Features (HIGH PRIORITY) 
+#### 3. 📅 **Smart Google Calendar Integration System** (HIGH PRIORITY - NEXT SPRINT)
+
+**Strategic Value**: Transform basic chore management into intelligent family coordination by leveraging existing Google sign-in
+
+- [ ] **Phase 1: Calendar Access & Conflict Detection** (IMMEDIATE PRIORITY)
+  - [ ] **Google Calendar API Integration**
+    - [ ] Add calendar scopes to existing Google OAuth (calendar.readonly, calendar.events)
+    - [ ] Implement calendar event fetching for all family members
+    - [ ] Create calendar permission management UI
+    - [ ] Build calendar data caching and sync system
+  - [ ] **Real-Time Availability Checking**
+    - [ ] Check for calendar conflicts before chore assignment
+    - [ ] Implement "busy time" detection algorithm
+    - [ ] Create availability scoring system (0-100% available)
+    - [ ] Build conflict detection for existing assigned chores
+  - [ ] **Smart Conflict Alerts**
+    - [ ] "Emma has soccer practice 4-6pm, but chore due at 5pm - reassign?"
+    - [ ] Proactive notification system for upcoming conflicts
+    - [ ] Buffer time warnings (meeting ends 5pm, chore needs 45min)
+    - [ ] Auto-suggest alternative time slots
+
+- [ ] **Phase 2: Intelligent Auto-Rotation Enhancement** (Builds on existing rotation system)
+  - [ ] **Calendar-Aware Rotation Logic**
+    - [ ] Enhance existing `handleChoreRotation()` with calendar checking
+    - [ ] Skip busy family members automatically in rotation
+    - [ ] Find next available family member based on calendar
+    - [ ] Implement "emergency reassignment" for sudden conflicts
+  - [ ] **Smart Assignment Algorithm**
+    - [ ] Score family members by availability (calendar + preferences)
+    - [ ] Consider travel time between calendar events and home
+    - [ ] Account for energy levels (morning person vs night owl)
+    - [ ] Balance workload across actual available time slots
+
+- [ ] **Phase 3: Family Calendar Coordination**
+  - [ ] **Shared Family Calendar View**
+    - [ ] Display all family chores alongside personal events  
+    - [ ] Beautiful calendar UI showing everyone's schedule
+    - [ ] Color-coded family member events and chores
+    - [ ] Weekly/monthly family planning view
+  - [ ] **Event-Triggered Chore Creation**
+    - [ ] "Dinner party tomorrow → auto-create 'deep clean living room'"
+    - [ ] Detect recurring family events and suggest prep chores
+    - [ ] Holiday/special event chore templates
+    - [ ] Guest visit preparation automation
+
+- [ ] **Phase 4: Advanced Scheduling Intelligence**
+  - [ ] **Optimal Time Suggestions**
+    - [ ] "Best time for John to do dishes: 7:30pm (30min free slot)"
+    - [ ] Machine learning from completion patterns
+    - [ ] Weather-aware outdoor chore scheduling
+    - [ ] Energy level optimization (harder chores when fresh)
+  - [ ] **Travel & Vacation Management**
+    - [ ] Auto-detect out-of-town trips from calendar
+    - [ ] Redistribute chores during absences
+    - [ ] Create vacation coverage assignments
+    - [ ] Return-from-travel catch-up planning
+  - [ ] **Context-Aware Notifications**
+    - [ ] "30 minutes free before next meeting - perfect for kitchen cleanup!"
+    - [ ] Location-aware reminders (arrived home, calendar shows free time)
+    - [ ] Weekend bulk planning suggestions
+    - [ ] School/work schedule integration
+
+### 🛠 **Technical Implementation Strategy for Calendar Integration**
+
+**Leverages Existing Architecture**:
+- ✅ Google OAuth already implemented - just need to add calendar scopes
+- ✅ Robust rotation system in `handleChoreRotation()` - enhance with calendar logic
+- ✅ Firebase real-time sync - perfect for calendar change notifications
+- ✅ Pink theme and UI patterns - extend to calendar views
+
+**Key Integration Points**:
+```typescript
+// Enhance existing firestore.ts functions
+export const getAvailableMembers = async (timeSlot: Date, duration: number) => {
+  // Check calendar availability for each family member
+  // Return scored list of available members
+}
+
+export const enhancedChoreRotation = async (chore: Chore, family: Family, lockedUntil: Date) => {
+  // Current rotation logic + calendar checking
+  // Skip busy members, find optimal assignment
+}
+
+// New calendar service functions
+export const checkCalendarConflicts = async (userId: string, choreTime: Date) => {}
+export const suggestOptimalTimes = async (chore: Chore, family: Family) => {}
+export const createSharedFamilyCalendar = async (familyId: string) => {}
+```
+
+**Data Model Extensions**:
+```typescript
+interface User {
+  calendarId?: string;           // Google Calendar ID
+  calendarPermissions?: string[]; // Granted scopes
+  availabilityPreferences?: {     // Personal scheduling preferences
+    morningPerson: boolean;
+    preferredChoreHours: string[];
+    blockedTimes: string[];
+  };
+}
+
+interface Chore {
+  estimatedDuration?: number;     // Minutes needed
+  flexibleTiming?: boolean;       // Can be rescheduled
+  calendarEventId?: string;       // If blocked in calendar
+  suggestedTimeSlots?: Date[];    // AI-suggested optimal times
+}
+```
+
+**Implementation Priority**: This builds perfectly on your existing foundation and would create immediate value for testing families.
+
+#### 4. 🤝 Chore Collaboration Features (HIGH PRIORITY - AFTER CALENDAR)
+
+**Current Status**: Basic rotation system exists but lacks takeover/collaboration features
+
+- [ ] **Chore Takeover System** (BUILDS ON CALENDAR INTEGRATION)
+  - [x] **Current Foundation**: Solid rotation logic with `handleChoreRotation()` in firestore.ts
+    - Active member filtering, smart assignment, rotation index persistence
+    - Distinguishes `assignedTo` vs `completedBy` in data model
+  - [ ] **Missing Implementation**:
+    - [ ] `takeoverChore(choreId, newAssigneeId)` service function
+    - [ ] "Take Over" button for assigned chores in UI
+    - [ ] Permission system (who can take over chores)
+    - [ ] Enhanced data model fields: `originalAssignee`, `takeoverBy`, `takeoverReason`
+    - [ ] Smart rotation logic: route back to original assignee after takeover
+    - [ ] Takeover notifications and approval workflow
+- [ ] **Chore Claiming System** 
+  - [x] "Claim" button exists in UI but `handleClaimChore()` not implemented
+  - [ ] Implement claiming logic for unassigned chores
+  - [ ] Claiming permissions and cooldown rules
+  - [ ] Fair distribution algorithms for popular chores
 - [ ] **Help Request System**
   - [ ] "Need Help" button on chore cards
   - [ ] Help request notifications and matching
   - [ ] Helper selection and communication
   - [ ] Reward sharing for collaborative completion
+  - [ ] Helper rating and feedback system
 - [ ] **Chore Trading System**
   - [ ] "Offer Trade" functionality on chore cards
   - [ ] Trade proposal and negotiation interface
-  - [ ] Trade approval workflow
+  - [ ] Trade approval workflow with admin oversight
   - [ ] Trade history and analytics
-- [ ] **Chore Claiming/Stealing System**
-  - [ ] "Claim" button for available chores
-  - [ ] Urgency-based chore claiming rules
-  - [ ] Stealing prevention and cooldown mechanisms
-  - [ ] Fair distribution algorithms
+  - [ ] Point-balanced trade suggestions
+  - [ ] Trade fairness scoring algorithm
 - [ ] **Urgency & Time-Based Features**
   - [ ] Urgency escalation system with countdown timers
   - [ ] Bonus points for urgent chore completion
   - [ ] Visual urgency indicators and animations
   - [ ] Urgency achievements and tracking
+  - [ ] Time-based point multipliers
+  - [ ] Emergency chore prioritization
 
 #### 4. ⚙️ Enhanced Settings & Configuration System
 - [ ] **Comprehensive Family Settings**
@@ -987,27 +1131,10 @@ After analyzing 11 screenshots from the MVP app, the following critical features
       - [ ] Temperature adjustment for comfort during chores
       - [ ] Music playlists for different chore types
       - [ ] Automated tool/supply reminders
-- [ ] Google Calendar Integration
-  - [ ] Two-way calendar synchronization
-    - [ ] Auto-import busy times from Google Calendar
-    - [ ] Export chores as calendar events
-    - [ ] Conflict detection and resolution
-    - [ ] Shared family calendar creation
-  - [ ] Smart scheduling features
-    - [ ] Automatic chore scheduling around appointments
-    - [ ] Buffer time before/after calendar events
-    - [ ] Travel time consideration for location-based chores
-    - [ ] Recurring event pattern recognition
-  - [ ] Calendar-based notifications
-    - [ ] Pre-event chore reminders
-    - [ ] "Complete before you leave" alerts
-    - [ ] Weekend planning summaries
-    - [ ] Monthly chore/calendar overview
-  - [ ] Advanced calendar features
-    - [ ] Chore time estimation learning
-    - [ ] Optimal chore batching suggestions
-    - [ ] Energy level scheduling (morning person vs night owl)
-    - [ ] School/work schedule integration
+- [x] **Google Calendar Integration** → **MOVED TO HIGH PRIORITY** (See Section 3: Smart Google Calendar Integration System)
+  - Complete smart scheduling system designed for immediate implementation
+  - Leverages existing rotation logic with calendar intelligence
+  - Transforms app from chore manager to family coordination system
 
 ### Apple Watch App (NEW)
 - [ ] Design watchOS companion app
@@ -1255,6 +1382,66 @@ After analyzing 11 screenshots from the MVP app, the following critical features
 - [ ] Public leaderboards (opt-in)
 - [ ] Achievement sharing
 - [ ] Community chore templates
+
+---
+
+## 🔍 **Chore Rotation & Takeover System Analysis** (December 2025)
+
+### ✅ **Current Implementation Strengths**
+The rotation system has a solid foundation:
+
+- **Comprehensive Rotation Logic**: `handleChoreRotation()` function in firestore.ts:761-834
+- **Smart Member Filtering**: Active member eligibility checking with exclusion support
+- **Fair Assignment**: Ensures next assignee isn't the current one
+- **State Persistence**: `nextFamilyChoreAssigneeIndex` tracks rotation position
+- **Cooldown Integration**: Sets `lockedUntil` during rotation
+- **Edge Case Handling**: Handles all members excluded scenario
+- **Data Distinction**: Clear separation of `assignedTo` vs `completedBy`
+
+### ❌ **Missing for Collaboration Testing**
+Critical gaps preventing takeover functionality:
+
+- **No Takeover Implementation**: `handleClaimChore()` exists but empty (chores.tsx:109-112)
+- **No Reassignment Logic**: No way to change `assignedTo` without completion
+- **Missing Business Rules**: No permissions for who can take over chores
+- **Incomplete Data Model**: Missing `originalAssignee`, `takeoverBy`, `takeoverReason` fields
+- **No Fair Rotation**: Takeovers would break rotation fairness without routing back to original assignee
+- **No UI Elements**: Need "Take Over" button and assignment history display
+
+### 🎯 **Implementation Requirements for Functional Testing**
+
+**Phase 1: Core Takeover Logic**
+```typescript
+// New service functions needed in firestore.ts
+export const takeoverChore = async (choreId: string, originalAssignee: string) => {
+  // 1. Reassign chore to takeover person
+  // 2. Mark original assignee as "missed" 
+  // 3. When completed, rotate back to original assignee (not next in rotation)
+}
+
+export const canTakeoverChore = (chore: Chore, currentUser: User) => {
+  // Business rules: family members can take over assigned chores
+  // Optional: time constraints, approval requirements
+}
+```
+
+**Phase 2: Enhanced Data Model**
+```typescript
+interface Chore {
+  originalAssignee?: string;      // Who was originally assigned
+  takeoverBy?: string;            // Who took over (if any)
+  missedBy?: string[];            // Track who missed assignments  
+  takeoverReason?: string;        // Optional: "not_home", "unable", etc.
+}
+```
+
+**Phase 3: UI Components**
+- **"Take Over" button** - For assigned chores (family members only)
+- **Proper "Claim" implementation** - For unassigned chores
+- **Assignment history** - Show who was originally assigned vs who completed
+
+### 🚀 **Next Implementation Priority**
+The existing foundation is excellent - we just need to add the takeover layer on top of the robust rotation system. This would transform the app from individual task management to true family collaboration, making it ready for realistic family testing scenarios.
 
 ---
 

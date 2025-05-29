@@ -254,9 +254,11 @@ export const shouldUseMock = (): boolean => {
     return true;
   }
   
-  // For production builds, NEVER use mock implementation
+  // CRITICAL FIX: For production builds, ALWAYS use real Firebase
+  // This includes EAS builds and App Store builds
   if (!__DEV__) {
-    console.log('Production build detected (__DEV__ = false), forcing real Firebase implementation');
+    console.log('PRODUCTION BUILD DETECTED (__DEV__ = false), FORCING REAL FIREBASE');
+    console.log('This is a production/EAS build - real Firebase WILL be used');
     return false;
   }
   
@@ -274,22 +276,24 @@ export const shouldUseMock = (): boolean => {
   // Only in development, check if running in Expo Go
   try {
     // Check if we're in Expo Go vs a standalone build
-    // In standalone builds, isEmbeddedLaunch should be true
-    // In Expo Go, isEmbeddedLaunch is false or undefined
-    const isEmbeddedLaunch = (global as any).expo?.modules?.ExpoUpdates?.isEmbeddedLaunch;
-    const isExpoGo = isEmbeddedLaunch === false;
+    // In standalone builds (EAS), Constants.appOwnership will be 'standalone' or undefined
+    // In Expo Go, Constants.appOwnership will be 'expo'
+    const Constants = require('expo-constants').default;
+    const isExpoGo = Constants.appOwnership === 'expo';
     
-    console.log('isEmbeddedLaunch:', isEmbeddedLaunch);
+    console.log('Constants.appOwnership:', Constants.appOwnership);
     console.log('isExpoGo (development only):', isExpoGo);
     console.log('hasCompleteConfig:', hasCompleteConfig);
     
-    // Only use mock if we're truly in Expo Go AND we don't have config
-    if (Platform.OS === 'ios' && isExpoGo && !hasCompleteConfig) {
-      console.log('iOS Expo Go detected in development WITHOUT complete config, using mock implementation');
+    // Only use mock if we're truly in Expo Go on iOS
+    if (Platform.OS === 'ios' && isExpoGo) {
+      console.log('iOS Expo Go detected in development, using mock implementation');
       return true;
     }
   } catch (error) {
     console.log('Error checking Expo Go status:', error);
+    // If we can't determine, assume we're NOT in Expo Go
+    console.log('Could not determine Expo Go status, assuming standalone build');
   }
   
   console.log('Using real Firebase implementation');
@@ -306,6 +310,13 @@ export const initializeFirebase = async () => {
   
   // Determine if we should use mock
   _isUsingMock = shouldUseMock();
+  
+  // CRITICAL: Log the decision clearly
+  console.log('=== FIREBASE INITIALIZATION DECISION ===');
+  console.log('Using Mock Firebase:', _isUsingMock);
+  console.log('Build Type:', __DEV__ ? 'Development' : 'Production');
+  console.log('Platform:', Platform.OS);
+  console.log('=======================================');
   
   if (_isUsingMock) {
     console.log("Initializing mock Firebase implementation");

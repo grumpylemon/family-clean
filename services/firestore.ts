@@ -618,10 +618,10 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
     );
     
     // Award milestone bonus points
-    let milestoneBonus = 0;
+    let pointMilestoneBonus = 0;
     for (const milestone of newMilestones) {
       if (milestone.unlockRewards?.bonusPoints) {
-        milestoneBonus += milestone.unlockRewards.bonusPoints;
+        pointMilestoneBonus += milestone.unlockRewards.bonusPoints;
         await logPointTransaction({
           userId: currentUser.uid,
           familyId: chore.familyId,
@@ -638,12 +638,11 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
     }
     
     // 8. Update user profile with all rewards and enhanced streaks
-    const streakMilestoneBonusAdjustment = achievedMilestones.reduce((total, milestone) => total + milestone.bonusPoints, 0);
-    const totalPointsEarned = totalFinalPoints + milestoneBonus;
+    const totalPointsEarned = totalFinalPoints + pointMilestoneBonus;
     const updatedUserProfile = {
       points: {
         current: (userProfile.points?.current || 0) + totalPointsEarned,
-        lifetime: newLifetimePoints + milestoneBonus,
+        lifetime: newLifetimePoints + pointMilestoneBonus,
         weekly: (userProfile.points?.weekly || 0) + totalPointsEarned,
       },
       streak, // Keep legacy streak for backward compatibility

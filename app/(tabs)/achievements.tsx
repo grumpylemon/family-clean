@@ -12,6 +12,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamily } from '@/contexts/FamilyContext';
 import { XPProgressBar } from '@/components/ui/XPProgressBar';
+import { CircularProgress } from '@/components/ui/CircularProgress';
 import { 
   calculateLevel, 
   getAllAchievements, 
@@ -30,11 +31,28 @@ interface AchievementCardProps {
 const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, isEarned, progress }) => {
   return (
     <View style={[styles.achievementCard, isEarned && styles.achievementCardEarned]}>
-      <View style={styles.achievementIcon}>
-        <Text style={styles.achievementEmoji}>{achievement.icon}</Text>
-        {isEarned && (
-          <View style={styles.earnedBadge}>
-            <Text style={styles.earnedCheck}>✓</Text>
+      <View style={styles.achievementHeader}>
+        <View style={styles.achievementIcon}>
+          <Text style={styles.achievementEmoji}>{achievement.icon}</Text>
+          {isEarned && (
+            <View style={styles.earnedBadge}>
+              <Text style={styles.earnedCheck}>✓</Text>
+            </View>
+          )}
+        </View>
+        
+        {!isEarned && (
+          <View style={styles.progressMeter}>
+            <CircularProgress
+              size={50}
+              strokeWidth={4}
+              progress={progress}
+              showPercentage={true}
+              colors={{
+                background: '#f9a8d4',
+                progress: ['#ef4444', '#f59e0b', '#10b981']
+              }}
+            />
           </View>
         )}
       </View>
@@ -46,15 +64,6 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, isEarned
         <Text style={[styles.achievementDescription, isEarned && styles.achievementDescriptionEarned]}>
           {achievement.description}
         </Text>
-        
-        {!isEarned && (
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-            </View>
-            <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>
-          </View>
-        )}
         
         <View style={styles.xpReward}>
           <Text style={styles.xpText}>+{achievement.xpReward} XP</Text>
@@ -270,6 +279,7 @@ export default function AchievementsScreen() {
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2; // 2 columns with 20px margin + 20px gap
+const cardHeight = cardWidth * 1.2; // Make cards more square with slight height
 
 const styles = StyleSheet.create({
   container: {
@@ -407,6 +417,7 @@ const styles = StyleSheet.create({
   },
   achievementCard: {
     width: cardWidth,
+    height: cardHeight,
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 16,
@@ -425,18 +436,28 @@ const styles = StyleSheet.create({
     shadowColor: '#10b981',
     shadowOpacity: 0.3,
   },
+  achievementHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
   achievementIcon: {
     alignItems: 'center',
-    marginBottom: 12,
     position: 'relative',
+    flex: 1,
+  },
+  progressMeter: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   achievementEmoji: {
-    fontSize: 32,
+    fontSize: 28,
   },
   earnedBadge: {
     position: 'absolute',
     top: -4,
-    right: 12,
+    right: -8,
     backgroundColor: '#10b981',
     borderRadius: 10,
     width: 20,
@@ -453,56 +474,38 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   achievementName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     color: '#831843',
     marginBottom: 4,
     textAlign: 'center',
+    lineHeight: 18,
   },
   achievementNameEarned: {
     color: '#10b981',
   },
   achievementDescription: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#9f1239',
     textAlign: 'center',
-    marginBottom: 12,
-    lineHeight: 16,
+    marginBottom: 8,
+    lineHeight: 14,
+    flex: 1,
   },
   achievementDescriptionEarned: {
     color: '#059669',
-  },
-  progressContainer: {
-    marginBottom: 8,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: '#f9a8d4',
-    borderRadius: 3,
-    marginBottom: 4,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#be185d',
-    borderRadius: 3,
-  },
-  progressText: {
-    fontSize: 10,
-    color: '#9f1239',
-    textAlign: 'center',
-    fontWeight: '600',
   },
   xpReward: {
     alignItems: 'center',
   },
   xpText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '600',
     color: '#be185d',
     backgroundColor: '#fbcfe8',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   emptyState: {
     alignItems: 'center',

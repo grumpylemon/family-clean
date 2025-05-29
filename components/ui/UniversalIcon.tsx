@@ -146,7 +146,6 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
   'lock-closed': '🔒',
   'information-circle-outline': 'ℹ️',
   'person-outline': '👤',
-  'calendar-outline': '📅',
   
   // Transportation & Location
   'location': '📍',

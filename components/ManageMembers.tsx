@@ -637,8 +637,21 @@ function EditMemberModal({
       ? `Are you sure you want to remove admin rights from ${member.name}?`
       : `Grant admin rights to ${member.name}? They will be able to manage family settings and members.`;
 
+    // Enhanced console logging for debugging
+    console.log('=== Admin Toggle Debug Info ===');
+    console.log('Member:', {
+      uid: member.uid,
+      name: member.name,
+      currentRole: member.role,
+      familyRole: member.familyRole
+    });
+    console.log('Current admin count:', familyMembers.filter(m => m.role === 'admin').length);
+    console.log('Action:', action);
+    console.log('Is currently admin:', isCurrentlyAdmin);
+
     // Don't allow demotion if there's only one admin
     if (isCurrentlyAdmin && familyMembers.filter(m => m.role === 'admin').length <= 1) {
+      console.log('❌ Cannot remove the last admin');
       showErrorMessage('Cannot remove the last admin');
       return;
     }
@@ -652,19 +665,30 @@ function EditMemberModal({
           text: action,
           style: isCurrentlyAdmin ? 'destructive' : 'default',
           onPress: async () => {
+            console.log('✅ User confirmed admin toggle');
             setLoading(true);
             try {
               const newRole = isCurrentlyAdmin ? 'member' : 'admin';
+              console.log('Calling updateMemberRole with:', {
+                userId: member.uid,
+                newRole,
+                familyRole: member.familyRole
+              });
+              
               const success = await updateMemberRole(member.uid, newRole, member.familyRole);
+              console.log('updateMemberRole result:', success);
+              
               if (success) {
+                console.log('✅ Admin role updated successfully');
                 showSuccessMessage(isCurrentlyAdmin ? 'Admin rights removed' : `${member.name} is now an admin`);
                 onUpdate();
               } else {
+                console.log('❌ updateMemberRole returned false');
                 showErrorMessage(`Failed to ${action.toLowerCase()} admin`);
               }
             } catch (error) {
+              console.error(`❌ Error ${action}ing admin:`, error);
               showErrorMessage('An error occurred');
-              console.error(`Error ${action}ing admin:`, error);
             } finally {
               setLoading(false);
             }
@@ -765,48 +789,47 @@ function EditMemberModal({
             <View style={styles.editSection}>
               <Text style={styles.editSectionTitle}>Member Actions</Text>
               <View style={styles.actionButtons}>
+                {/* Admin Role Toggle - More compact design */}
+                {canPromoteDemoteMembers && member.uid !== currentUserId && (
+                  <View style={styles.toggleSection}>
+                    <Text style={styles.toggleLabel}>Admin Access</Text>
+                    <TouchableOpacity
+                      style={[styles.toggleButton, member.role === 'admin' ? styles.toggleButtonActive : styles.toggleButtonInactive]}
+                      onPress={handleToggleAdmin}
+                      disabled={loading}
+                    >
+                      <View style={[styles.toggleSlider, member.role === 'admin' && styles.toggleSliderActive]} />
+                    </TouchableOpacity>
+                    <Text style={[styles.toggleStatus, member.role === 'admin' && styles.toggleStatusActive]}>
+                      {member.role === 'admin' ? 'Admin' : 'User'}
+                    </Text>
+                  </View>
+                )}
+
                 {/* Exclude/Include Toggle */}
                 <TouchableOpacity
-                  style={[styles.actionButton, member.isActive ? styles.excludeButton : styles.includeButton]}
+                  style={[styles.compactActionButton, member.isActive ? styles.excludeButton : styles.includeButton]}
                   onPress={handleToggleExclude}
                   disabled={loading}
                 >
                   <Ionicons 
                     name={member.isActive ? "person-remove" : "person-add"} 
-                    size={20} 
+                    size={16} 
                     color="#ffffff" 
                   />
-                  <Text style={styles.actionButtonText}>
+                  <Text style={styles.compactActionButtonText}>
                     {member.isActive ? 'Exclude from Rotation' : 'Re-include in Rotation'}
                   </Text>
                 </TouchableOpacity>
 
-                {/* Admin Toggle - Only show if current user can promote/demote */}
-                {canPromoteDemoteMembers && member.uid !== currentUserId && (
-                  <TouchableOpacity
-                    style={[styles.actionButton, member.role === 'admin' ? styles.demoteButton : styles.promoteButton]}
-                    onPress={handleToggleAdmin}
-                    disabled={loading}
-                  >
-                    <Ionicons 
-                      name={member.role === 'admin' ? "shield-outline" : "shield"} 
-                      size={20} 
-                      color="#ffffff" 
-                    />
-                    <Text style={styles.actionButtonText}>
-                      {member.role === 'admin' ? 'Remove Admin Rights' : 'Make Admin'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-
                 {/* Remove Member */}
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.removeButton]}
+                  style={[styles.compactActionButton, styles.removeButton]}
                   onPress={handleRemoveMember}
                   disabled={loading}
                 >
-                  <Ionicons name="trash-outline" size={20} color="#ffffff" />
-                  <Text style={styles.actionButtonText}>Remove from Family</Text>
+                  <Ionicons name="trash-outline" size={16} color="#ffffff" />
+                  <Text style={styles.compactActionButtonText}>Remove from Family</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1371,6 +1394,67 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  compactActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 8,
+  },
+  compactActionButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  toggleSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    gap: 12,
+  },
+  toggleLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#831843',
+    minWidth: 80,
+  },
+  toggleButton: {
+    width: 50,
+    height: 28,
+    borderRadius: 14,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  toggleButtonInactive: {
+    backgroundColor: '#e5e7eb',
+  },
+  toggleButtonActive: {
+    backgroundColor: '#be185d',
+  },
+  toggleSlider: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  toggleSliderActive: {
+    transform: [{ translateX: 22 }],
+  },
+  toggleStatus: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+    minWidth: 40,
+  },
+  toggleStatusActive: {
+    color: '#be185d',
   },
   excludeButton: {
     backgroundColor: '#f59e0b',
