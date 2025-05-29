@@ -86,6 +86,9 @@ export interface OfflineSlice {
     clearFailedActions: () => void;
     updateSyncStatus: (status: Partial<SyncStatus>) => void;
     setCacheSize: (size: number) => void;
+    getActionsForSync: () => OfflineAction[];
+    removePendingAction: (actionId: string) => void;
+    movePendingToFailed: (actionId: string, error: string) => void;
   };
 }
 

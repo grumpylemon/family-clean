@@ -9,7 +9,7 @@ export const createOfflineSlice: StateCreator<
   [],
   [],
   OfflineSlice
-> = (set) => ({
+> = (set, get) => ({
   offline: {
     isOnline: true,
     networkStatus: 'online',
@@ -88,6 +88,37 @@ export const createOfflineSlice: StateCreator<
     
     setCacheSize: (size) => set((state) => ({
       offline: { ...state.offline, cacheSize: size }
-    }))
+    })),
+    
+    getActionsForSync: () => {
+      const state = get();
+      return state.offline.pendingActions.filter(action => 
+        !action.synced && action.retryCount < 3
+      );
+    },
+    
+    removePendingAction: (actionId) => set((state) => ({
+      offline: {
+        ...state.offline,
+        pendingActions: state.offline.pendingActions.filter(a => a.id !== actionId)
+      }
+    })),
+    
+    movePendingToFailed: (actionId, error) => set((state) => {
+      const action = state.offline.pendingActions.find(a => a.id === actionId);
+      if (!action) return state;
+      
+      return {
+        offline: {
+          ...state.offline,
+          pendingActions: state.offline.pendingActions.filter(a => a.id !== actionId),
+          failedActions: [...state.offline.failedActions, { 
+            ...action, 
+            lastError: error,
+            retryCount: action.retryCount + 1
+          }]
+        }
+      };
+    })
   }
 });
