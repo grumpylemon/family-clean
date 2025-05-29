@@ -4,9 +4,9 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Import Zustand using CommonJS to avoid import.meta issues on web
-const { create } = require('zustand');
-const { persist, createJSONStorage } = require('zustand/middleware');
+// Import Zustand v4 which doesn't use import.meta
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 import { FamilyStore } from './types';
 import { createAuthSlice } from './authSlice';

@@ -1,9 +1,9 @@
 // App Version Configuration
 // Update this before each build to increment the version number
-export const APP_VERSION = 'v2.34';
+export const APP_VERSION = 'v2.35';
 
 // Build hash will be auto-updated by build scripts
-export const BUILD_HASH = '741e636';
+export const BUILD_HASH = 'ef591f2';
 
 // Combined version string for display
 export const VERSION_STRING = `${APP_VERSION}-${BUILD_HASH}`;
