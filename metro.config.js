@@ -1,4 +1,5 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
 
 const config = getDefaultConfig(__dirname);
 
@@ -10,9 +11,10 @@ config.resolver.blockList = [
   /.*\/@react-native\/debugger-frontend\/.*/,
 ];
 
-// Also configure resolver to handle potential import.meta issues
+// Use custom transformer to replace import.meta at build time
 config.transformer = {
   ...config.transformer,
+  babelTransformerPath: require.resolve('./metro.transformer.js'),
   minifierConfig: {
     keep_fnames: true,
     mangle: {
