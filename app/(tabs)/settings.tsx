@@ -11,8 +11,7 @@ import {
   Switch
 } from 'react-native';
 import { WebIcon } from '@/components/ui/WebIcon';
-import { useAuth } from '@/contexts/AuthContext';
-import { useFamily } from '@/contexts/FamilyContext';
+import { useAuth, useFamily } from '@/hooks/useZustandHooks';
 import { useAccessControl } from '@/hooks/useAccessControl';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Toast } from '@/components/ui/Toast';

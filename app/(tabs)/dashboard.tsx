@@ -7,8 +7,8 @@ import { TestDataGenerator } from '@/components/TestDataGenerator';
 import WeeklyProgress from '@/components/WeeklyProgress';
 import WeeklyComparison from '@/components/WeeklyComparison';
 import { XPProgressBar } from '@/components/ui/XPProgressBar';
-import { useAuth } from '@/contexts/AuthContext';
-import { useFamily } from '@/contexts/FamilyContext';
+import { OfflineStatusIndicator } from '@/components/OfflineStatusIndicator';
+import { useAuth, useFamily } from '@/hooks/useZustandHooks';
 import { VERSION_STRING, VERSION_DISPLAY } from '@/constants/Version';
 import { getChores, shouldResetWeeklyPoints, resetWeeklyPoints, completeChore } from '@/services/firestore';
 import { Chore, CompletionReward } from '@/types';
@@ -219,6 +219,9 @@ export default function DashboardScreen() {
             <Text style={styles.statLabel}>Members</Text>
           </View>
         </View>
+
+        {/* Offline Status - Zustand Demo */}
+        <OfflineStatusIndicator />
 
         {/* Level Progress */}
         <View style={styles.section}>

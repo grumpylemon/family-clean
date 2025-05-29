@@ -12,10 +12,14 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ToastProvider } from '@/components/ui/Toast';
+import { StoreProvider } from '@/stores/StoreProvider';
 // We've moved the Firebase import into the explicit initialization
 
 // Version tracking for updates
-console.log("App Layout version: v5");
+console.log("App Layout version: v6 - Zustand Integration");
+
+// Feature flag to test Zustand migration
+const USE_ZUSTAND_ONLY = false; // Set to true to use Zustand exclusively
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -54,18 +58,32 @@ export default function RootLayout() {
     return null;
   }
 
+  // Create the app content
+  const appContent = (
+    <ToastProvider>
+      <RootLayoutNav firebaseStatus={firebaseInitialized} />
+      <StatusBar style="auto" />
+    </ToastProvider>
+  );
+
+  // Conditionally wrap with context providers based on feature flag
+  const wrappedContent = USE_ZUSTAND_ONLY ? (
+    appContent
+  ) : (
+    <AuthProvider>
+      <FamilyProvider>
+        {appContent}
+      </FamilyProvider>
+    </AuthProvider>
+  );
+
   return (
     <ErrorBoundary>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <ToastProvider>
-          <AuthProvider>
-            <FamilyProvider>
-              <RootLayoutNav firebaseStatus={firebaseInitialized} />
-            </FamilyProvider>
-          </AuthProvider>
-          <StatusBar style="auto" />
-        </ToastProvider>
-      </ThemeProvider>
+      <StoreProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          {wrappedContent}
+        </ThemeProvider>
+      </StoreProvider>
     </ErrorBoundary>
   );
 }

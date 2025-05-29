@@ -1,5 +1,4 @@
-import { useAuth } from '@/contexts/AuthContext';
-import { useFamily } from '@/contexts/FamilyContext';
+import { useAuth, useFamily } from '@/hooks/useZustandHooks';
 import { useAccessControl } from '@/hooks/useAccessControl';
 import { FamilyMember, FamilyRole, Room, RoomAssignment } from '@/types';
 import React, { useState, useEffect } from 'react';

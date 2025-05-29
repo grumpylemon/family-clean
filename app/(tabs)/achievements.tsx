@@ -9,8 +9,7 @@ import {
   TouchableOpacity,
   Dimensions
 } from 'react-native';
-import { useAuth } from '@/contexts/AuthContext';
-import { useFamily } from '@/contexts/FamilyContext';
+import { useAuth, useFamily } from '@/hooks/useZustandHooks';
 import { XPProgressBar } from '@/components/ui/XPProgressBar';
 import { CircularProgress } from '@/components/ui/CircularProgress';
 import { 

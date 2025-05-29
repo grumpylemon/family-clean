@@ -18,6 +18,7 @@ import {
 } from '@/types';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
+import { useFamilyContextIntegration } from '@/stores/StoreProvider';
 
 interface FamilyContextType {
   family: Family | null;
@@ -57,10 +58,14 @@ export const useFamily = () => useContext(FamilyContext);
 
 export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const { syncFamilyWithStore } = useFamilyContextIntegration();
+  
   const [family, setFamily] = useState<Family | null>(null);
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  console.log('🏪 FamilyContext: Zustand integration active');
 
   // Computed values
   const currentMember = family?.members.find(m => m.uid === user?.uid) || null;
@@ -76,6 +81,11 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   }, [user]);
+
+  // Sync with Zustand store whenever state changes
+  useEffect(() => {
+    syncFamilyWithStore(family, userProfile, loading, error);
+  }, [family, userProfile, loading, error, syncFamilyWithStore]);
 
   const loadUserAndFamily = async () => {
     if (!user) return;

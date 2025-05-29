@@ -1,5 +1,5 @@
 import { isMockImplementation } from '@/config/firebase';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useZustandHooks';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { 

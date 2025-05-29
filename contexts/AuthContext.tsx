@@ -2,6 +2,7 @@ import { auth, googleProvider, isMockImplementation } from '@/config/firebase';
 import { GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup, signOut, User } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
+import { useAuthContextIntegration } from '@/stores/StoreProvider';
 
 // Version to confirm updates (v6)
 console.log("AuthContext version: v6");
@@ -34,8 +35,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Get mock status immediately and synchronously
   const isMockMode = isMockImplementation();
   
+  // Integration with Zustand store
+  const { syncUserWithStore } = useAuthContextIntegration();
+  
   console.log('🔍 AuthContext: isMockMode =', isMockMode);
   console.log('🔍 AuthContext: Platform =', Platform.OS);
+  console.log('🏪 AuthContext: Zustand integration active');
   
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,6 +88,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Clean up subscription
     return unsubscribe;
   }, [isMockMode]);
+
+  // Sync with Zustand store whenever state changes
+  useEffect(() => {
+    syncUserWithStore(user, loading, error);
+  }, [user, loading, error, syncUserWithStore]);
 
   // Sign in with Google
   const signInWithGoogle = async () => {

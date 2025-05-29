@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAccessControl } from '@/hooks/useAccessControl';
-import { useFamily } from '@/contexts/FamilyContext';
+import { useFamily } from '@/hooks/useZustandHooks';
 import RoomManagement from '@/components/RoomManagement';
 import ChoreManagement from '@/components/ChoreManagement';
 import ManageMembers from '@/components/ManageMembers';
 import RewardManagement from '@/components/RewardManagement';
 import FamilySettings from '@/components/FamilySettings';
+import { ZustandAdminPanel } from '@/components/ZustandAdminPanel';
 
 export default function AdminScreen() {
   const { canManageFamily, canManageChores, canManageRewards } = useAccessControl();
@@ -19,6 +20,7 @@ export default function AdminScreen() {
   const [showMemberManagement, setShowMemberManagement] = useState(false);
   const [showRewardManagement, setShowRewardManagement] = useState(false);
   const [showFamilySettings, setShowFamilySettings] = useState(false);
+  const [showZustandAdmin, setShowZustandAdmin] = useState(false);
 
   if (!canManageFamily) {
     return (
@@ -78,6 +80,15 @@ export default function AdminScreen() {
       icon: 'settings' as const,
       color: '#64748b',
       onPress: () => setShowFamilySettings(true),
+      enabled: canManageFamily,
+    },
+    {
+      id: 'zustand-admin',
+      title: 'Zustand Remote Admin',
+      description: 'Advanced store management and offline controls',
+      icon: 'server' as const,
+      color: '#7c3aed',
+      onPress: () => setShowZustandAdmin(true),
       enabled: canManageFamily,
     },
   ];
@@ -213,6 +224,11 @@ export default function AdminScreen() {
       <FamilySettings 
         visible={showFamilySettings}
         onClose={() => setShowFamilySettings(false)}
+      />
+      
+      <ZustandAdminPanel 
+        visible={showZustandAdmin}
+        onClose={() => setShowZustandAdmin(false)}
       />
     </SafeAreaView>
   );

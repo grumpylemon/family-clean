@@ -1,5 +1,4 @@
-import { useAuth } from '@/contexts/AuthContext';
-import { useFamily } from '@/contexts/FamilyContext';
+import { useAuth, useFamily } from '@/hooks/useZustandHooks';
 
 /**
  * Comprehensive access control hook for admin/user permissions

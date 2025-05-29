@@ -1,5 +1,4 @@
-import { useAuth } from '@/contexts/AuthContext';
-import { useFamily } from '@/contexts/FamilyContext';
+import { useAuth, useFamily } from '@/hooks/useZustandHooks';
 import { completeChore, getChores, claimChore, takeoverChore } from '@/services/firestore';
 import { Chore, ChoreStatus, CompletionReward } from '@/types';
 import { CompletionRewardModal } from '@/components/CompletionRewardModal';

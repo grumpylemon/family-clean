@@ -13,8 +13,7 @@ import {
   Modal,
   ActivityIndicator
 } from 'react-native';
-import { useAuth } from '@/contexts/AuthContext';
-import { useFamily } from '@/contexts/FamilyContext';
+import { useAuth, useFamily } from '@/hooks/useZustandHooks';
 import { Ionicons } from '@expo/vector-icons';
 import { Reward, RewardCategory, RewardRedemption } from '@/types';
 import { 

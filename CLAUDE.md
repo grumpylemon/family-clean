@@ -40,10 +40,14 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
    - Exports `auth`, `safeCollection`, and helper functions
    - Uses dynamic collection references to handle initialization timing
 
-2. **Authentication** (`contexts/AuthContext.tsx`):
-   - Provides auth state management via React Context
-   - Supports Google sign-in and anonymous authentication
-   - Handles both mock and real Firebase auth seamlessly
+2. **State Management** (Zustand-based Architecture - Updated: 2025-05-29):
+   - **Primary Store** (`stores/familyStore.ts`): Centralized Zustand store for all state
+   - **Auth Slice** (`stores/authSlice.ts`): Authentication with Firebase integration
+   - **Family Slice** (`stores/familySlice.ts`): Family management and member operations
+   - **Offline-First Architecture**: Complete offline support with action queuing
+   - **Migration Hooks** (`hooks/useZustandHooks.ts`): Drop-in replacements for React Context
+   - **Feature Flag**: `USE_ZUSTAND_ONLY` in `app/_layout.tsx` for gradual migration
+   - Legacy contexts (`contexts/AuthContext.tsx`, `contexts/FamilyContext.tsx`) maintained for backward compatibility
 
 3. **Firestore Database** (`services/firestore.ts`):
    - Uses Firebase v9 modular API syntax exclusively
@@ -52,10 +56,12 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
    - Comprehensive family management system with join codes
    - Dates are converted to ISO strings for Firestore compatibility
 
-4. **Family Management** (`contexts/FamilyContext.tsx`):
-   - Global state management for family data
-   - Handles family creation, joining, and member management
-   - Integrates with user profiles and authentication
+4. **Offline Capabilities** (Enhanced: 2025-05-29):
+   - **Network Detection**: Cross-platform network status monitoring
+   - **Action Queue**: Offline operations queued and synced when online
+   - **Optimistic Updates**: Instant UI feedback with background sync
+   - **Advanced Caching**: Multi-tier cache with LZ compression and priority eviction
+   - **Conflict Resolution**: 5 strategies for handling simultaneous edits
 
 ### Key Implementation Details
 
@@ -78,12 +84,14 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
 
 3. **Navigation Structure**:
    - Uses Expo Router file-based routing
-   - Main layout in `app/_layout.tsx` with AuthProvider and FamilyProvider
+   - Main layout in `app/_layout.tsx` with StoreProvider wrapping the app
+   - Conditional context providers based on `USE_ZUSTAND_ONLY` flag
    - Tab navigation in `app/(tabs)/` with pink-themed styling
-   - Login screen at `app/login.tsx` with pink gradient design and guest access
+   - Login screen at `app/login.tsx` - uses Zustand hooks for authentication
    - Dashboard at `app/(tabs)/dashboard.tsx` - main hub with card-based stats and quick actions
    - Chores screen at `app/(tabs)/chores.tsx` - comprehensive chore management with completion flow
    - Family screen at `app/(tabs)/index.tsx` - family info, member avatars, and management
+   - All screens migrated to use `useAuth` and `useFamily` from Zustand hooks
 
 4. **Error Handling**:
    - Comprehensive error handling in all Firebase operations

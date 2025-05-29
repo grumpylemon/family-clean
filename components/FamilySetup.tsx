@@ -10,8 +10,8 @@ import {
 } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
-import { useFamily } from '@/contexts/FamilyContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useFamily } from '@/hooks/useZustandHooks';
+import { useAuth } from '@/hooks/useZustandHooks';
 
 interface FamilySetupProps {
   onComplete?: () => void;

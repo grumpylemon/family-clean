@@ -1,4 +1,4 @@
-import { useFamily } from '@/contexts/FamilyContext';
+import { useFamily } from '@/hooks/useZustandHooks';
 import { useAccessControl } from '@/hooks/useAccessControl';
 import { createChore, deleteChore, getChores, updateChore, createRoomChore } from '@/services/firestore';
 import { getFamilyRooms, getRoomTypeDisplayName, getRoomTypeEmoji } from '@/services/roomService';
