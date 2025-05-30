@@ -1,15 +1,15 @@
-import { FirestoreTest } from '@/components/FirestoreTest';
-import { FamilySetup } from '@/components/FamilySetup';
-import { ManageMembers } from '@/components/ManageMembers';
-import { ChoreManagement } from '@/components/ChoreManagement';
-import { FamilySettings } from '@/components/FamilySettings';
-import RewardManagement from '@/components/RewardManagement';
-import { useAuth, useFamily } from '@/hooks/useZustandHooks';
-import { useAccessControl } from '@/hooks/useAccessControl';
+import { FirestoreTest } from '../../components/FirestoreTest';
+import { FamilySetup } from '../../components/FamilySetup';
+import { ManageMembers } from '../../components/ManageMembers';
+import { ChoreManagement } from '../../components/ChoreManagement';
+import { FamilySettings } from '../../components/FamilySettings';
+import RewardManagement from '../../components/RewardManagement';
+import { useAuth, useFamily } from '../../hooks/useZustandHooks';
+import { useAccessControl } from '../../hooks/useAccessControl';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, TouchableOpacity, View, ActivityIndicator, Text, Image } from 'react-native';
-import { WebIcon } from '@/components/ui/WebIcon';
+import { WebIcon } from '../../components/ui/WebIcon';
 
 // Version tracking for updates
 console.log("Home Screen version: v5");

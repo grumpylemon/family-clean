@@ -9,15 +9,15 @@ import {
   TouchableOpacity,
   Dimensions
 } from 'react-native';
-import { useAuth, useFamily } from '@/hooks/useZustandHooks';
-import { XPProgressBar } from '@/components/ui/XPProgressBar';
-import { CircularProgress } from '@/components/ui/CircularProgress';
+import { useAuth, useFamily } from '../../hooks/useZustandHooks';
+import { XPProgressBar } from '../../components/ui/XPProgressBar';
+import { CircularProgress } from '../../components/ui/CircularProgress';
 import { 
   calculateLevel, 
   getAllAchievements, 
   getAchievementProgress 
-} from '@/services/gamification';
-import { Achievement } from '@/types';
+} from '../../services/gamification';
+import { Achievement } from '../../types';
 
 type AchievementCategory = 'all' | 'chores' | 'levels' | 'points' | 'streaks' | 'special' | 'teamwork';
 

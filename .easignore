@@ -1,6 +1,53 @@
-# EAS Build ignore file
-node_modules/
-dist/
+# EAS Build ignores
+# Ignore iOS and Android folders for managed workflow
+ios/
+android/
+
+# Ignore test files
+__tests__/
+*.test.js
+*.test.ts
+
+# Ignore documentation
+docs/
+*.md
+
+# Ignore scripts that aren't needed for build
+scripts/test-*.js
+scripts/clear-*.js
+scripts/populate-*.js
+
+# Ignore web-specific files
 web/
-.expo/
-.expo-shared/
+webpack.config.js
+
+# Ignore local environment files
+.env.local
+.env.*.local
+
+# Ignore git files
+.git/
+.gitignore
+
+# Ignore editor files
+.vscode/
+.idea/
+
+# Ignore temporary files
+tmp/
+temp/
+*.tmp
+
+# Ignore build artifacts
+dist/
+build/
+
+# Ignore logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore puppeteer
+tests/
+puppeteer/

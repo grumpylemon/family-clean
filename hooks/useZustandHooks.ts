@@ -16,7 +16,7 @@ export type { UseAuthReturn } from './useAuthZustand';
 export type { UseFamilyReturn } from './useFamilyZustand';
 
 // Additional Zustand hooks from the store
-export { useFamilyStore } from '@/stores/familyStore';
+export { useFamilyStore } from '../stores/familyStore';
 
 // Utility hook for checking migration status
 export function useMigrationStatus() {

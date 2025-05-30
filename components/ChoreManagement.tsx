@@ -1,8 +1,8 @@
-import { useFamily } from '@/hooks/useZustandHooks';
-import { useAccessControl } from '@/hooks/useAccessControl';
-import { createChore, deleteChore, getChores, updateChore, createRoomChore } from '@/services/firestore';
-import { getFamilyRooms, getRoomTypeDisplayName, getRoomTypeEmoji } from '@/services/roomService';
-import { Chore, ChoreDifficulty, ChoreType, Room, RoomType } from '@/types';
+import { useFamily } from '../hooks/useZustandHooks';
+import { useAccessControl } from '../hooks/useAccessControl';
+import { createChore, deleteChore, getChores, updateChore, createRoomChore } from '../services/firestore';
+import { getFamilyRooms, getRoomTypeDisplayName, getRoomTypeEmoji } from '../services/roomService';
+import { Chore, ChoreDifficulty, ChoreType, Room, RoomType } from '../types';
 import { WebIcon } from './ui/WebIcon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
@@ -23,7 +23,7 @@ import { LoadingSpinner } from './ui/LoadingSpinner';
 import { Toast } from './ui/Toast';
 import { ConfirmDialog } from './ui/ConfirmDialog';
 import { ValidatedInput } from './ui/ValidatedInput';
-import { useFormValidation, validationRules } from '@/hooks/useFormValidation';
+import { useFormValidation, validationRules } from '../hooks/useFormValidation';
 
 interface ChoreManagementProps {
   visible: boolean;

@@ -14,13 +14,13 @@ import {
   ActivityIndicator
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { WebIcon } from '@/components/ui/WebIcon';
-import { useAuth, useFamily } from '@/hooks/useZustandHooks';
-import { useAccessControl } from '@/hooks/useAccessControl';
-import { useTheme } from '@/contexts/ThemeContext';
-import { Toast } from '@/components/ui/Toast';
-import AdminSettings from '@/components/AdminSettings';
-import NotificationSettings from '@/components/NotificationSettings';
+import { WebIcon } from '../../components/ui/WebIcon';
+import { useAuth, useFamily } from '../../hooks/useZustandHooks';
+import { useAccessControl } from '../../hooks/useAccessControl';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Toast } from '../../components/ui/Toast';
+import AdminSettings from '../../components/AdminSettings';
+import NotificationSettings from '../../components/NotificationSettings';
 
 export default function SettingsScreen() {
   const { user } = useAuth();

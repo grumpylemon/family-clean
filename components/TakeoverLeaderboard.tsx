@@ -9,8 +9,8 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { TakeoverLeaderboardEntry, AnalyticsPeriod } from '@/types';
-import { useFamilyStore } from '@/stores/hooks';
+import { TakeoverLeaderboardEntry, AnalyticsPeriod } from '../types';
+import { useFamilyStore } from '../stores/hooks';
 
 interface TakeoverLeaderboardProps {
   onPeriodChange?: (period: AnalyticsPeriod) => void;

@@ -1,9 +1,9 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
-import { useAuth } from '@/contexts/AuthContext';
-import { WebIcon } from '@/components/ui/WebIcon';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { WebIcon } from '../../components/ui/WebIcon';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // Version tracking for updates
 console.log("Tabs Layout version: v3.1 - Dark Mode Support");

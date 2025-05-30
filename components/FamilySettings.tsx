@@ -14,10 +14,10 @@ import {
   Platform
 } from 'react-native';
 import { WebIcon } from './ui/WebIcon';
-import { useFamily , useAuth } from '@/hooks/useZustandHooks';
-import { Toast } from '@/components/ui/Toast';
-import { DEFAULT_COLLABORATION_SETTINGS, updateCollaborationSettings } from '@/services/collaborationService';
-import { CollaborationSettings } from '@/types';
+import { useFamily , useAuth } from '../hooks/useZustandHooks';
+import { Toast } from './ui/Toast';
+import { DEFAULT_COLLABORATION_SETTINGS, updateCollaborationSettings } from '../services/collaborationService';
+import { CollaborationSettings } from '../types';
 
 interface FamilySettingsProps {
   visible: boolean;

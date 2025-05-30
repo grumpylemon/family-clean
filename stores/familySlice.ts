@@ -3,7 +3,7 @@
 
 import { StateCreator } from 'zustand';
 import { FamilyStore } from './types';
-import { Family, FamilyMember } from '@/types';
+import { Family, FamilyMember } from '../types';
 import {
   createFamily,
   findFamilyByJoinCode,
@@ -14,7 +14,7 @@ import {
   getUserProfile,
   createOrUpdateUserProfile,
   generateJoinCode
-} from '@/services/firestore';
+} from '../services/firestore';
 
 export interface FamilySlice {
   // State

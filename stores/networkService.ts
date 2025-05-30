@@ -13,7 +13,7 @@ import {
   redeemReward,
   updateFamilyMember,
   updateFamily
-} from '@/services/firestore';
+} from '../services/firestore';
 
 // Import enhanced sync service
 import { enhancedSyncService } from './enhancedSyncService';

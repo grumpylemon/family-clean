@@ -1,6 +1,6 @@
-import { isMockImplementation } from '@/config/firebase';
-import { useAuth } from '@/contexts/AuthContext';
-import { addChore, Chore, getChores, getDefaultFamilyId } from '@/services/firestore';
+import { isMockImplementation } from '../config/firebase';
+import { useAuth } from '../contexts/AuthContext';
+import { addChore, Chore, getChores, getDefaultFamilyId } from '../services/firestore';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { ThemedText } from './ThemedText';

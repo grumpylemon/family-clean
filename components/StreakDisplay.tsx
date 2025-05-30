@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { EnhancedStreak, StreakCategory, StreakMilestone } from '@/types';
-import { getStreakMilestones, calculateCompoundStreakMultiplier, countActiveStreaks } from '@/services/gamification';
+import { EnhancedStreak, StreakCategory, StreakMilestone } from '../types';
+import { getStreakMilestones, calculateCompoundStreakMultiplier, countActiveStreaks } from '../services/gamification';
 
 interface StreakDisplayProps {
   streaks: EnhancedStreak;

@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { useFamilyStore } from '@/stores/familyStore';
-import { Family, FamilyMember } from '@/types';
+import { useFamilyStore } from '../stores/familyStore';
+import { Family, FamilyMember } from '../types';
 
 /**
  * Zustand-based replacement for useFamily hook

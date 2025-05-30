@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { calculateLevel } from '@/services/gamification';
+import { calculateLevel } from '../../services/gamification';
 
 interface XPProgressBarProps {
   currentXP: number;

@@ -9,10 +9,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFamilyStore } from '@/stores/hooks';
+import { useFamilyStore } from '../stores/hooks';
 import TakeoverLeaderboard from './TakeoverLeaderboard';
 import ChoreHealthMetrics from './ChoreHealthMetrics';
-import { AnalyticsPeriod } from '@/types';
+import { AnalyticsPeriod } from '../types';
 
 export default function TakeoverAnalyticsDashboard() {
   const { family } = useFamilyStore((state) => state.family);

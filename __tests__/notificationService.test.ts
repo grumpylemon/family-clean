@@ -1,4 +1,4 @@
-import { notificationService } from '@/services/notificationService';
+import { notificationService } from '../services/notificationService';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 

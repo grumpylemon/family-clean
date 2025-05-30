@@ -1,7 +1,7 @@
 // Zustand Store Types for Family Clean App
 // Enhanced offline-first architecture with Zustand
 
-import { User, Family, FamilyMember, Chore, Reward, RewardRedemption } from '@/types';
+import { User, Family, FamilyMember, Chore, Reward, RewardRedemption } from '../types';
 import { AuthSlice } from './authSlice';
 import { FamilySlice } from './familySlice';
 

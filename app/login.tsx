@@ -1,5 +1,5 @@
-import { isMockImplementation } from '@/config/firebase';
-import { useAuth } from '@/hooks/useZustandHooks';
+import { isMockImplementation } from '../config/firebase';
+import { useAuth } from '../hooks/useZustandHooks';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { 
@@ -12,8 +12,8 @@ import {
   Image,
   Text
 } from 'react-native';
-import { WebIcon } from '@/components/ui/WebIcon';
-import { useTheme } from '@/contexts/ThemeContext';
+import { WebIcon } from '../components/ui/WebIcon';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Version tracking for updates
 console.log("Login Screen version: v4");

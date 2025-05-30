@@ -1,5 +1,5 @@
-import { processTakeoverAction, getTakeoverAnalytics } from '@/services/takeoverSyncService';
-import { OfflineAction } from '@/stores/types';
+import { processTakeoverAction, getTakeoverAnalytics } from '../services/takeoverSyncService';
+import { OfflineAction } from '../stores/types';
 import { 
   doc, 
   getDoc, 

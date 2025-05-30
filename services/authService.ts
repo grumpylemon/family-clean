@@ -1,7 +1,7 @@
 // Centralized Firebase Auth Service
 // This service handles all Firebase auth operations to avoid bundling issues
 
-import { isMockImplementation } from '@/config/firebase';
+import { isMockImplementation } from '../config/firebase';
 import { Platform } from 'react-native';
 
 // Import types only - avoid importing actual functions to prevent bundling issues

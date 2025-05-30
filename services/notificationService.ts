@@ -14,13 +14,13 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db, getUsersCollection } from '@/config/firebase';
+import { db, getUsersCollection } from '../config/firebase';
 import { 
   NotificationType, 
   NotificationSettings, 
   PushNotification,
   NotificationTemplate,
-} from '@/types';
+} from '../types';
 
 // Configure notification behavior
 Notifications.setNotificationHandler({

@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Platform, TouchableOpacity } from 'react-native';
-import { isMockImplementation, getMockModeReason } from '@/config/firebase';
+import { isMockImplementation, getMockModeReason } from '../config/firebase';
 
 interface MockModeIndicatorProps {
   position?: 'top' | 'bottom';

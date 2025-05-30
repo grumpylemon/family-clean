@@ -13,15 +13,15 @@ import {
   Modal,
   ActivityIndicator
 } from 'react-native';
-import { useAuth, useFamily } from '@/hooks/useZustandHooks';
-import { WebIcon } from '@/components/ui/WebIcon';
-import { Reward, RewardCategory, RewardRedemption } from '@/types';
+import { useAuth, useFamily } from '../../hooks/useZustandHooks';
+import { WebIcon } from '../../components/ui/WebIcon';
+import { Reward, RewardCategory, RewardRedemption } from '../../types';
 import { 
   getRewards, 
   canRedeemReward,
   redeemReward,
   getUserRedemptions
-} from '@/services/firestore';
+} from '../../services/firestore';
 
 export default function RewardsScreen() {
   const { user, loading: authLoading } = useAuth();

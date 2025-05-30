@@ -1,6 +1,6 @@
 import React from 'react';
 import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
-import PetManagement from '@/components/PetManagement';
+import PetManagement from '../../components/PetManagement';
 
 export default function PetsScreen() {
   return (

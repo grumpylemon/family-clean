@@ -10,8 +10,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { WebIcon } from '../ui/WebIcon';
-import { useFamilyStore } from '@/stores/hooks';
-import { ChoreTakeover } from '@/types';
+import { useFamilyStore } from '../../stores/hooks';
+import { ChoreTakeover } from '../../types';
 
 interface PendingTakeover extends ChoreTakeover {
   selected?: boolean;

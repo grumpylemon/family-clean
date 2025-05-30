@@ -3,11 +3,11 @@
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Switch } from 'react-native';
-import { useFamilyStore } from '@/stores/familyStore';
-import { useOfflineStatus } from '@/stores/hooks';
-import { enhancedSyncService } from '@/stores/enhancedSyncService';
-import { cacheService } from '@/stores/cacheService';
-import { cacheIntegration } from '@/stores/cacheIntegration';
+import { useFamilyStore } from '../stores/familyStore';
+import { useOfflineStatus } from '../stores/hooks';
+import { enhancedSyncService } from '../stores/enhancedSyncService';
+import { cacheService } from '../stores/cacheService';
+import { cacheIntegration } from '../stores/cacheIntegration';
 
 interface ZustandAdminPanelProps {
   visible: boolean;

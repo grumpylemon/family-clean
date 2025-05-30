@@ -17,7 +17,7 @@ import {
   deleteDoc,
   writeBatch
 } from 'firebase/firestore';
-import { db, auth, safeCollection } from '@/config/firebase';
+import { db, auth, safeCollection } from '../config/firebase';
 import { 
   HelpRequest, 
   HelpRequestStatus,
@@ -31,7 +31,7 @@ import {
   ChoreTradeDetails,
   Chore,
   Family
-} from '@/types';
+} from '../types';
 
 // Collection references
 const getHelpRequestsCollection = () => safeCollection('helpRequests');

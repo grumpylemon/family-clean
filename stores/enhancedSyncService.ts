@@ -13,7 +13,7 @@ import {
   onSnapshot,
   Timestamp
 } from 'firebase/firestore';
-import { safeCollection } from '@/config/firebase';
+import { safeCollection } from '../config/firebase';
 import {
   completeChore,
   createChore,
@@ -22,7 +22,7 @@ import {
   redeemReward,
   updateFamilyMember,
   updateFamily
-} from '@/services/firestore';
+} from '../services/firestore';
 
 // Conflict detection and resolution types
 export type ConflictType = 'data_conflict' | 'version_mismatch' | 'concurrent_edit' | 'deleted_resource';

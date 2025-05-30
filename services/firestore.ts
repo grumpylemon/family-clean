@@ -1,4 +1,4 @@
-import { auth, isMockImplementation, safeCollection } from '@/config/firebase';
+import { auth, isMockImplementation, safeCollection } from '../config/firebase';
 import {
   Chore,
   Family,
@@ -14,7 +14,7 @@ import {
   PetChore,
   PetCareRecord,
   EnhancedStreak
-} from '@/types';
+} from '../types';
 import { 
   processChoreCompletion, 
   applyCompletionRewards,

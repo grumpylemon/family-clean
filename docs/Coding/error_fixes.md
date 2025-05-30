@@ -2,6 +2,75 @@
 
 This document tracks all error fixes implemented in the Family Compass app, including detailed explanations and solutions.
 
+## Room Management Fix (v2.162)
+
+**Date**: May 30, 2025  
+**Error Type**: Firestore Index Error  
+
+### Room & Space Management Create Button
+**Issue**: Add New Room "Create" button not working - FirebaseError: The query requires an index  
+**Root Cause**: Complex query in `getFamilyRooms()` requires composite index  
+**Solution**: Deployed existing Firestore indexes from firestore.indexes.json  
+**Command**: `firebase deploy --only firestore:indexes`  
+**Result**: Room creation now works properly  
+
+**Technical Details**:
+- Query filters by: familyId, isActive, and orders by type then name
+- Index was already defined but not deployed to Firebase
+- Code has fallback mechanism for graceful degradation
+
+## Manual Intervention Scripts Created
+
+### Stale Points Data Script (scripts/clear-zustand-cache.js)
+**Purpose**: Clear persisted Zustand store data  
+**Use Case**: When points or other data shows stale values  
+**Instructions**: Run `node scripts/clear-zustand-cache.js` for platform-specific guidance  
+
+### Family Name Fix Script (scripts/fix-family-name.js)
+**Purpose**: Clear cached family name data  
+**Use Case**: When admin panel shows incorrect family name  
+**Instructions**: Run `node scripts/fix-family-name.js` for browser console commands  
+
+### Additional Points Fix Script (scripts/fix-stale-points.js)
+**Purpose**: Refresh points while staying logged in  
+**Options**: Clear cache or force refresh family data  
+**Instructions**: Run `node scripts/fix-stale-points.js` for options  
+
+## UI/UX and Functionality Fixes (v2.112-v2.137)
+
+**Date**: May 2025  
+**Error Type**: Various UI/UX and functionality issues  
+
+### Change Avatar Button (v2.131)
+**Issue**: Button not functioning on Settings page - no console logs when clicked  
+**Solution**: Implemented file upload functionality in Settings page  
+**Result**: Now properly opens file picker dialog  
+
+### Dark Mode Toggle (v2.131/v2.137)
+**Issue**: Toggle not working on Settings page  
+**Solution**: Implemented complete dark mode theme system  
+**Result**: Toggle now works correctly with full theme support  
+
+### Admin Panel Loop (v2.112)
+**Issue**: Continuous [useAuth] authData logs in console  
+**Solution**: Removed unnecessary reSign operations in auth loading  
+**Result**: No more infinite authentication loops  
+
+### Rewards Page Access (v2.128)
+**Issue**: Shows "Please join a family to access rewards" despite user being in family  
+**Solution**: Updated family membership detection logic  
+**Result**: Now correctly recognizes user's family membership  
+
+### Manage Chores Create Button (v2.128)
+**Issue**: FirebaseError - Unsupported field value: undefined for 'recurring' field  
+**Solution**: Added default value for 'recurring' field (false if not provided)  
+**Result**: Chore creation now works without errors  
+
+### Icon Consistency (v2.128)
+**Issue**: Icons not displaying correctly across various components  
+**Solution**: Standardized icon implementation using UniversalIcon component  
+**Result**: All icons now render consistently with emoji fallbacks
+
 ## iOS Build Error: react-native-safe-area-context Codegen Issue (v2.160)
 
 **Date**: January 2025  

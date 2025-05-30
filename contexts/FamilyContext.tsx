@@ -8,17 +8,17 @@ import {
     getUserProfile,
     updateFamily,
     updateFamilyMember
-} from '@/services/firestore';
+} from '../services/firestore';
 import {
     Family,
     FamilyMember,
     FamilyRole,
     User,
     UserRole
-} from '@/types';
+} from '../types';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
-import { useFamilyContextIntegration } from '@/stores/StoreProvider';
+import { useFamilyContextIntegration } from '../stores/StoreProvider';
 
 interface FamilyContextType {
   family: Family | null;

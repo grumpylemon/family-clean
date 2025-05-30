@@ -1,4 +1,4 @@
-import { auth } from '@/config/firebase';
+import { auth } from '../config/firebase';
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { ThemedText } from './ThemedText';

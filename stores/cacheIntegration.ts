@@ -3,7 +3,7 @@
 
 import { cacheService, CacheResult } from './cacheService';
 import { CACHE_POLICIES, CACHE_KEYS, getCachePolicy, getPoliciesByInvalidationEvent } from './cachePolicies';
-import { Family, Chore, Reward, User, FamilyMember } from '@/types';
+import { Family, Chore, Reward, User, FamilyMember } from '../types';
 
 // Cache event types for invalidation
 export type CacheEvent = 

@@ -17,7 +17,7 @@ import {
   NetworkStatus, 
   SyncStatus
 } from './types';
-import { User, Family, FamilyMember, Chore, Reward } from '@/types';
+import { User, Family, FamilyMember, Chore, Reward } from '../types';
 import { cacheService } from './cacheService';
 import { cacheIntegration } from './cacheIntegration';
 

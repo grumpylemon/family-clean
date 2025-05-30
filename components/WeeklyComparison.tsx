@@ -7,8 +7,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { WeeklyPointsData } from '@/types';
-import { getWeeklyComparison } from '@/services/firestore';
+import { WeeklyPointsData } from '../types';
+import { getWeeklyComparison } from '../services/firestore';
 
 interface WeeklyComparisonProps {
   userId: string;

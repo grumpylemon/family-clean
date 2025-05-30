@@ -7,8 +7,8 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFamilyStore } from '@/stores/hooks';
-import { ChoreHealthMetric } from '@/types';
+import { useFamilyStore } from '../stores/hooks';
+import { ChoreHealthMetric } from '../types';
 
 export default function ChoreHealthMetrics() {
   const { choreHealthMetrics } = useFamilyStore((state) => state.analytics);

@@ -12,8 +12,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { WebIcon } from '../ui/WebIcon';
-import { useFamilyStore } from '@/stores/hooks';
-import { CustomTakeoverRules, ChoreTypeRules, MemberRules, User } from '@/types';
+import { useFamilyStore } from '../../stores/hooks';
+import { CustomTakeoverRules, ChoreTypeRules, MemberRules, User } from '../../types';
 
 export default function CustomRulesManager() {
   const { family } = useFamilyStore((state) => state.family);

@@ -1,4 +1,4 @@
-import { auth, safeCollection } from '@/config/firebase';
+import { auth, safeCollection } from '../config/firebase';
 import { 
   PointTransaction, 
   PointMilestone, 
@@ -6,7 +6,7 @@ import {
   User,
   FamilyMember,
   Family
-} from '@/types';
+} from '../types';
 import {
   addDoc,
   collection,

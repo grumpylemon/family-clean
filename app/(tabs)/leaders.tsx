@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFamily } from '@/contexts/FamilyContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { calculateLevel } from '@/services/gamification';
+import { useFamily } from '../../contexts/FamilyContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { calculateLevel } from '../../services/gamification';
 
 export default function LeadersScreen() {
   const { family } = useFamily();

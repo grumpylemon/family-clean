@@ -3,7 +3,7 @@
 
 import { StateCreator } from 'zustand';
 import { FamilyStore, ChoreSlice } from './types';
-import { Chore, ChoreTakeover } from '@/types';
+import { Chore, ChoreTakeover } from '../types';
 
 export const createChoreSlice: StateCreator<
   FamilyStore,

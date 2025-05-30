@@ -1,18 +1,18 @@
-import { ChoreManagement } from '@/components/ChoreManagement';
-import { CompletionRewardModal } from '@/components/CompletionRewardModal';
-import { FamilySettings } from '@/components/FamilySettings';
-import { FamilySetup } from '@/components/FamilySetup';
-import { ManageMembers } from '@/components/ManageMembers';
-import { TestDataGenerator } from '@/components/TestDataGenerator';
-import WeeklyProgress from '@/components/WeeklyProgress';
-import WeeklyComparison from '@/components/WeeklyComparison';
-import { XPProgressBar } from '@/components/ui/XPProgressBar';
-import { OfflineStatusIndicator } from '@/components/OfflineStatusIndicator';
-import { useAuth, useFamily } from '@/hooks/useZustandHooks';
-import { VERSION_STRING, VERSION_DISPLAY } from '@/constants/Version';
-import { getChores, shouldResetWeeklyPoints, resetWeeklyPoints, completeChore } from '@/services/firestore';
-import { Chore, CompletionReward } from '@/types';
-import { UniversalIcon } from '@/components/ui/UniversalIcon';
+import { ChoreManagement } from '../../components/ChoreManagement';
+import { CompletionRewardModal } from '../../components/CompletionRewardModal';
+import { FamilySettings } from '../../components/FamilySettings';
+import { FamilySetup } from '../../components/FamilySetup';
+import { ManageMembers } from '../../components/ManageMembers';
+import { TestDataGenerator } from '../../components/TestDataGenerator';
+import WeeklyProgress from '../../components/WeeklyProgress';
+import WeeklyComparison from '../../components/WeeklyComparison';
+import { XPProgressBar } from '../../components/ui/XPProgressBar';
+import { OfflineStatusIndicator } from '../../components/OfflineStatusIndicator';
+import { useAuth, useFamily } from '../../hooks/useZustandHooks';
+import { VERSION_STRING, VERSION_DISPLAY } from '../../constants/Version';
+import { getChores, shouldResetWeeklyPoints, resetWeeklyPoints, completeChore } from '../../services/firestore';
+import { Chore, CompletionReward } from '../../types';
+import { UniversalIcon } from '../../components/ui/UniversalIcon';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -28,8 +28,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useTheme } from '@/contexts/ThemeContext';
-import { Colors } from '@/constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Colors } from '../../constants/Colors';
 
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;

@@ -10,14 +10,14 @@ import {
   StatusBar
 } from 'react-native';
 import { WebIcon } from './ui/WebIcon';
-import { useAccessControl } from '@/hooks/useAccessControl';
-import { useFamily } from '@/hooks/useZustandHooks';
-import RoomManagement from '@/components/RoomManagement';
-import ChoreManagement from '@/components/ChoreManagement';
-import ManageMembers from '@/components/ManageMembers';
-import RewardManagement from '@/components/RewardManagement';
-import FamilySettings from '@/components/FamilySettings';
-import { ZustandAdminPanel } from '@/components/ZustandAdminPanel';
+import { useAccessControl } from '../hooks/useAccessControl';
+import { useFamily } from '../hooks/useZustandHooks';
+import RoomManagement from './RoomManagement';
+import ChoreManagement from './ChoreManagement';
+import ManageMembers from './ManageMembers';
+import RewardManagement from './RewardManagement';
+import FamilySettings from './FamilySettings';
+import { ZustandAdminPanel } from './ZustandAdminPanel';
 
 interface AdminSettingsProps {
   visible: boolean;

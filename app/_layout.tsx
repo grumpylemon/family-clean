@@ -1,10 +1,10 @@
 // Import version logging first thing
 import '../constants/Version';
 
-import { initializeFirebase, isMockImplementation } from '@/config/firebase';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { FamilyProvider } from '@/contexts/FamilyContext';
-import { ThemeProvider as CustomThemeProvider } from '@/contexts/ThemeContext';
+import { initializeFirebase, isMockImplementation } from '../config/firebase';
+import { AuthProvider } from '../contexts/AuthContext';
+import { FamilyProvider } from '../contexts/FamilyContext';
+import { ThemeProvider as CustomThemeProvider } from '../contexts/ThemeContext';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -13,12 +13,12 @@ import React, { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { ToastProvider } from '@/components/ui/Toast';
-import { StoreProvider } from '@/stores/StoreProvider';
-import { MockModeIndicator, EnvironmentInfo } from '@/components/MockModeIndicator';
-import { notificationService } from '@/services/notificationService';
+import { useColorScheme } from '../hooks/useColorScheme';
+import { ErrorBoundary } from '../components/ui/ErrorBoundary';
+import { ToastProvider } from '../components/ui/Toast';
+import { StoreProvider } from '../stores/StoreProvider';
+import { MockModeIndicator, EnvironmentInfo } from '../components/MockModeIndicator';
+import { notificationService } from '../services/notificationService';
 
 // Inline polyfill to ensure it runs before any module evaluation
 if (typeof window !== 'undefined') {
@@ -120,7 +120,7 @@ export default function RootLayout() {
         if (Platform.OS === 'web' && !isMockImplementation()) {
           try {
             // Dynamically import to avoid bundling issues
-            const { auth } = await import('@/config/firebase');
+            const { auth } = await import('../config/firebase');
             const { getRedirectResult } = await import('firebase/auth');
             
             console.log('Checking for authentication redirect result...');

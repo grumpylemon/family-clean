@@ -1,8 +1,8 @@
-import { auth, isMockImplementation } from '@/config/firebase';
+import { auth, isMockImplementation } from '../config/firebase';
 import type { User } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
-import { useAuthContextIntegration } from '@/stores/StoreProvider';
+import { useAuthContextIntegration } from '../stores/StoreProvider';
 
 // Version to confirm updates (v6)
 console.log("AuthContext version: v6");
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Import authService to handle auth state changes properly
       const setupAuthListener = async () => {
         try {
-          const { authService } = await import('@/services/authService');
+          const { authService } = await import('../services/authService');
           unsubscribe = authService.onAuthStateChanged(auth, (currentUser) => {
             console.log("Auth state changed:", currentUser ? "User logged in" : "No user");
             setUser(currentUser);
@@ -138,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         // For web with valid Firebase config
         try {
-          const { authService } = await import('@/services/authService');
+          const { authService } = await import('../services/authService');
           const result = await authService.signInWithGoogle(auth);
           console.log("Google sign in successful", result.user ? "with user" : "but no user returned");
         } catch (authError: any) {
@@ -198,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         // Try real anonymous auth
         try {
-          const { authService } = await import('@/services/authService');
+          const { authService } = await import('../services/authService');
           const result = await authService.signInAnonymously(auth);
           console.log("Anonymous sign in successful", result.user ? "with user" : "but no user returned");
           
@@ -244,7 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       } else {
         // Use Firebase signOut for real mode
-        const { authService } = await import('@/services/authService');
+        const { authService } = await import('../services/authService');
         await authService.signOut(auth);
       }
       

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useColorScheme as useDeviceColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Colors, getThemeColors } from '@/constants/Colors';
+import { Colors, getThemeColors } from '../constants/Colors';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 

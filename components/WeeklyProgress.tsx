@@ -7,8 +7,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { WeeklyPointsData } from '@/types';
-import { getWeeklyPointsData } from '@/services/firestore';
+import { WeeklyPointsData } from '../types';
+import { getWeeklyPointsData } from '../services/firestore';
 
 interface WeeklyProgressProps {
   userId: string;

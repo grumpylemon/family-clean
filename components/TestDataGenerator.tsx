@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { ThemedText } from './ThemedText';
-import { useAuth } from '@/contexts/AuthContext';
-import { useFamily } from '@/contexts/FamilyContext';
-import { createChore } from '@/services/firestore';
-import { Chore } from '@/types';
+import { useAuth } from '../contexts/AuthContext';
+import { useFamily } from '../contexts/FamilyContext';
+import { createChore } from '../services/firestore';
+import { Chore } from '../types';
 
 export function TestDataGenerator() {
   const { user } = useAuth();

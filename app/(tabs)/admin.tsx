@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAccessControl } from '@/hooks/useAccessControl';
-import { useFamily } from '@/hooks/useZustandHooks';
-import RoomManagement from '@/components/RoomManagement';
-import ChoreManagement from '@/components/ChoreManagement';
-import ManageMembers from '@/components/ManageMembers';
-import RewardManagement from '@/components/RewardManagement';
-import FamilySettings from '@/components/FamilySettings';
-import { ZustandAdminPanel } from '@/components/ZustandAdminPanel';
-import TakeoverAnalyticsDashboard from '@/components/TakeoverAnalyticsDashboard';
-import TakeoverApprovalQueue from '@/components/admin/TakeoverApprovalQueue';
-import CustomRulesManager from '@/components/admin/CustomRulesManager';
-import PerformanceExportPanel from '@/components/admin/PerformanceExportPanel';
+import { useAccessControl } from '../../hooks/useAccessControl';
+import { useFamily } from '../../hooks/useZustandHooks';
+import RoomManagement from '../../components/RoomManagement';
+import ChoreManagement from '../../components/ChoreManagement';
+import ManageMembers from '../../components/ManageMembers';
+import RewardManagement from '../../components/RewardManagement';
+import FamilySettings from '../../components/FamilySettings';
+import { ZustandAdminPanel } from '../../components/ZustandAdminPanel';
+import TakeoverAnalyticsDashboard from '../../components/TakeoverAnalyticsDashboard';
+import TakeoverApprovalQueue from '../../components/admin/TakeoverApprovalQueue';
+import CustomRulesManager from '../../components/admin/CustomRulesManager';
+import PerformanceExportPanel from '../../components/admin/PerformanceExportPanel';
 
 export default function AdminScreen() {
   const { canManageFamily, canManageChores, canManageRewards } = useAccessControl();

@@ -12,8 +12,8 @@ import {
   TextInput,
 } from 'react-native';
 import { WebIcon } from '../ui/WebIcon';
-import { useFamilyStore } from '@/stores/hooks';
-import { PerformanceReport, ExportSettings } from '@/types';
+import { useFamilyStore } from '../../stores/hooks';
+import { PerformanceReport, ExportSettings } from '../../types';
 
 type ExportFormat = 'csv' | 'pdf' | 'both';
 type ExportFrequency = 'daily' | 'weekly' | 'monthly';

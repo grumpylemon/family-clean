@@ -1,6 +1,6 @@
-import { useAuth, useFamily } from '@/hooks/useZustandHooks';
-import { useAccessControl } from '@/hooks/useAccessControl';
-import { FamilyMember, FamilyRole, Room, RoomAssignment } from '@/types';
+import { useAuth, useFamily } from '../hooks/useZustandHooks';
+import { useAccessControl } from '../hooks/useAccessControl';
+import { FamilyMember, FamilyRole, Room, RoomAssignment } from '../types';
 import React, { useState, useEffect } from 'react';
 import {
     ActivityIndicator,
@@ -24,7 +24,7 @@ import {
   removeMemberFromRoom,
   getRoomTypeEmoji,
   getRoomTypeDisplayName 
-} from '@/services/roomService';
+} from '../services/roomService';
 
 interface ManageMembersProps {
   visible: boolean;

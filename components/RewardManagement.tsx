@@ -10,15 +10,15 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Reward, RewardCategory } from '@/types';
+import { Reward, RewardCategory } from '../types';
 import { 
   getRewards, 
   createReward, 
   updateReward, 
   deleteReward,
   getFamilyRedemptions
-} from '@/services/firestore';
-import { useFamily } from '@/contexts/FamilyContext';
+} from '../services/firestore';
+import { useFamily } from '../contexts/FamilyContext';
 
 interface RewardManagementProps {
   visible: boolean;

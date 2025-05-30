@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react-hooks';
-import { useFamilyStore } from '@/stores/hooks';
-import { Chore, Family, FamilyMember } from '@/types';
+import { useFamilyStore } from '../stores/hooks';
+import { Chore, Family, FamilyMember } from '../types';
 
 // Mock data
 const mockUser = {

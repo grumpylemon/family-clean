@@ -2,7 +2,7 @@ import {
   Achievement, LevelConfig, User, FamilyMember, CompletionReward, UserAchievement, Badge,
   StreakType, StreakCategory, StreakData, EnhancedStreak, StreakMultiplier, StreakBonus, StreakMilestone,
   Chore, ChoreType, ChoreDifficulty
-} from '@/types';
+} from '../types';
 
 // Level configuration system
 const LEVEL_CONFIGS: LevelConfig[] = [

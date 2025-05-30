@@ -10,14 +10,14 @@ import {
   ScrollView,
 } from 'react-native';
 import { WebIcon } from './ui/WebIcon';
-import { NotificationSettings as NotificationSettingsType } from '@/types';
-import { useAuth } from '@/hooks/useZustandHooks';
+import { NotificationSettings as NotificationSettingsType } from '../types';
+import { useAuth } from '../hooks/useZustandHooks';
 
 // Conditionally import notification service only on mobile platforms
 let notificationService: any = null;
 if (Platform.OS !== 'web') {
   try {
-    notificationService = require('@/services/notificationService').notificationService;
+    notificationService = require('../services/notificationService').notificationService;
   } catch (error) {
     console.log('Notification service not available on this platform');
   }

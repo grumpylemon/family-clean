@@ -11,9 +11,9 @@ import {
   getChoresForFamily,
   getRewardsForFamily,
   getUserProfile
-} from '@/services/firestore';
+} from '../services/firestore';
 import { User } from 'firebase/auth';
-import { Family, Chore, Reward } from '@/types';
+import { Family, Chore, Reward } from '../types';
 
 // Auth hooks - replacement for useAuth from Context
 export const useAuth = () => {

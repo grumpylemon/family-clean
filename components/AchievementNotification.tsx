@@ -8,7 +8,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
-import { Achievement } from '@/types';
+import { Achievement } from '../types';
 
 interface AchievementNotificationProps {
   visible: boolean;

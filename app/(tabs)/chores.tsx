@@ -1,11 +1,11 @@
-import { useAuth, useFamily } from '@/hooks/useZustandHooks';
-import { completeChore, getChores, claimChore, takeoverChore } from '@/services/firestore';
-import { Chore, ChoreStatus, CompletionReward } from '@/types';
-import { CompletionRewardModal } from '@/components/CompletionRewardModal';
-import ChoreTakeoverModal from '@/components/ChoreTakeoverModal';
-import { UniversalIcon } from '@/components/ui/UniversalIcon';
-import { createHelpRequest, createTradeProposal } from '@/services/collaborationService';
-import { useFamilyStore } from '@/stores/familyStore';
+import { useAuth, useFamily } from '../../hooks/useZustandHooks';
+import { completeChore, getChores, claimChore, takeoverChore } from '../../services/firestore';
+import { Chore, ChoreStatus, CompletionReward } from '../../types';
+import { CompletionRewardModal } from '../../components/CompletionRewardModal';
+import ChoreTakeoverModal from '../../components/ChoreTakeoverModal';
+import { UniversalIcon } from '../../components/ui/UniversalIcon';
+import { createHelpRequest, createTradeProposal } from '../../services/collaborationService';
+import { useFamilyStore } from '../../stores/familyStore';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useFamilyStore } from '@/stores/familyStore';
-import { User } from '@/types';
+import { useFamilyStore } from '../stores/familyStore';
+import { User } from '../types';
 import { shallow } from 'zustand/shallow';
 
 /**

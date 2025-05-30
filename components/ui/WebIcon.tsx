@@ -124,8 +124,6 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
   'rocket': '🚀',
   'flask': '🧪',
   'square-outline': '⬜',
-  'document-text': '📄',
-  'volume-high': '🔊',
   'checkmark-done-circle': '✅',
   
   // Technology
@@ -238,8 +236,6 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
   'list-circle': '📋',
   
   // Additional icons for admin components
-  'document-text': '📄',
-  'volume-high': '🔊',
   'volume-mute': '🔇',
   'notifications-off': '🔕',
   'moon-outline': '🌙',

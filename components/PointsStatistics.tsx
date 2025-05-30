@@ -14,8 +14,8 @@ import {
   getPointStatistics, 
   getPointTransactionHistory, 
   getAllPointMilestones 
-} from '@/services/pointsService';
-import { PointTransaction, PointMilestone } from '@/types';
+} from '../services/pointsService';
+import { PointTransaction, PointMilestone } from '../types';
 import { PointTransfer } from './PointTransfer';
 
 const { width } = Dimensions.get('window');

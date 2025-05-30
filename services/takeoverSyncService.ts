@@ -17,9 +17,9 @@ import {
   getChoresCollection, 
   getFamiliesCollection,
   db,
-} from '@/config/firebase';
-import { OfflineAction } from '@/stores/types';
-import { Chore, ChoreTakeover, FamilyMember } from '@/types';
+} from '../config/firebase';
+import { OfflineAction } from '../stores/types';
+import { Chore, ChoreTakeover, FamilyMember } from '../types';
 import { checkAchievementProgress } from './gamification';
 import { 
   sendAchievementNotification,

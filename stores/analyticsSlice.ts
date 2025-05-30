@@ -3,7 +3,7 @@
 
 import { StateCreator } from 'zustand';
 import { FamilyStore } from './types';
-import { ChoreTakeover, FamilyMember, Chore } from '@/types';
+import { ChoreTakeover, FamilyMember, Chore } from '../types';
 
 // Analytics period types
 export type AnalyticsPeriod = 'week' | 'month' | 'all_time';

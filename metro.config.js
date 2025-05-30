@@ -3,6 +3,15 @@ const path = require('path');
 
 const config = getDefaultConfig(__dirname);
 
+// Remove path aliases since we've converted to relative imports
+// config.resolver.extraNodeModules = {
+//   '@': path.resolve(__dirname),
+// };
+
+// config.resolver.alias = {
+//   '@': path.resolve(__dirname),
+// };
+
 // Fix for Expo Vector Icons on web
 config.resolver.assetExts.push('ttf');
 
@@ -10,11 +19,8 @@ config.resolver.assetExts.push('ttf');
 config.resolver.sourceExts.push('cjs');
 
 // Exclude debugger frontend from web builds to avoid import.meta issues
-// Also exclude react-native-safe-area-context specs from codegen processing to fix iOS build
 config.resolver.blockList = [
   /.*\/@react-native\/debugger-frontend\/.*/,
-  // Fix for iOS build error with react-native-safe-area-context codegen
-  /node_modules\/react-native-safe-area-context\/lib\/specs\/.*/,
 ];
 
 // CRITICAL FIX: Prioritize CommonJS over ESM to avoid import.meta issues with Zustand v5

@@ -2,10 +2,10 @@
 // Integrates with Firebase Auth for seamless migration from React Context
 
 import { StateCreator } from 'zustand';
-import { User } from '@/types';
-import { auth, isMockImplementation } from '@/config/firebase';
-import { createOrUpdateUserProfile, getUserProfile } from '@/services/firestore';
-import { authService } from '@/services/authService';
+import { User } from '../types';
+import { auth, isMockImplementation } from '../config/firebase';
+import { createOrUpdateUserProfile, getUserProfile } from '../services/firestore';
+import { authService } from '../services/authService';
 import { FamilyStore } from './types';
 import { Platform } from 'react-native';
 
@@ -305,7 +305,7 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
           // For real Firebase on web, check for redirect results first
           if (!isMock && Platform.OS === 'web') {
             try {
-              const { firebaseAuthBrowser } = await import('@/services/firebaseAuthBrowser');
+              const { firebaseAuthBrowser } = await import('../services/firebaseAuthBrowser');
               const { getRedirectResult } = await import('firebase/auth');
               
               console.log('[AuthSlice] Checking for redirect authentication result...');

@@ -11,9 +11,9 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFamily , useAuth } from '@/hooks/useZustandHooks';
-import { createPointTransferRequest } from '@/services/pointsService';
-import { FamilyMember } from '@/types';
+import { useFamily , useAuth } from '../hooks/useZustandHooks';
+import { createPointTransferRequest } from '../services/pointsService';
+import { FamilyMember } from '../types';
 
 interface PointTransferProps {
   visible: boolean;
