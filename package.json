@@ -9,6 +9,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "test": "jest",
     "clear-cache": "rm -rf node_modules/.cache && npx expo start --clear",
     "export-web": "node ./scripts/increment-version.js",
     "build-ios": "node ./scripts/increment-ios-build.js 'eas build --platform ios --auto-submit'",

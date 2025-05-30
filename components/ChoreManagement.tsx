@@ -23,7 +23,7 @@ import { LoadingSpinner } from './ui/LoadingSpinner';
 import { Toast } from './ui/Toast';
 import { ConfirmDialog } from './ui/ConfirmDialog';
 import { ValidatedInput } from './ui/ValidatedInput';
-import { useFormValidation, validationRules } from '../hooks/useFormValidation';
+import { useFormValidation, validationRules, crossFieldValidations } from '../hooks/useFormValidation';
 
 interface ChoreManagementProps {
   visible: boolean;
@@ -42,12 +42,28 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   const [choreToDelete, setChoreToDelete] = useState<Chore | null>(null);
   
   // Form validation
-  const { errors, handleFieldChange, handleFieldBlur, validateAll, resetValidation, isFieldValid } = useFormValidation({
-    title: [validationRules.required('Chore title is required'), validationRules.maxLength(50)],
-    description: [validationRules.maxLength(200, 'Description is too long')],
-    points: [validationRules.required('Points are required'), validationRules.numeric(), validationRules.min(1), validationRules.max(100)],
-    frequencyDays: [validationRules.numeric(), validationRules.min(1), validationRules.max(365)],
-    cooldownHours: [validationRules.numeric(), validationRules.min(0), validationRules.max(168, 'Maximum 1 week')],
+  const { 
+    errors, 
+    warnings,
+    isValidating,
+    handleFieldChange, 
+    handleFieldBlur, 
+    validateAll, 
+    resetValidation, 
+    isFieldValid,
+    hasErrors,
+    getFieldError 
+  } = useFormValidation({
+    title: [validationRules.choreTitle()],
+    description: [validationRules.maxLength(200, 'Description must be under 200 characters')],
+    points: [validationRules.chorePoints()],
+    frequencyDays: [validationRules.positiveInteger('Frequency must be a positive number'), validationRules.max(365, 'Maximum 365 days')],
+    cooldownHours: [validationRules.numeric('Must be a number'), validationRules.min(0, 'Cannot be negative'), validationRules.max(168, 'Maximum 1 week (168 hours)')],
+  }, {
+    crossFieldValidations: [
+      crossFieldValidations.cooldownVsFrequency('cooldownHours', 'frequencyDays')
+    ],
+    debounceMs: 300
   });
   
   // Form state
@@ -356,7 +372,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
               </Text>
 
               <ValidatedInput
-                label="Title *"
+                label="Title"
                 value={title}
                 onChangeText={(text) => {
                   setTitle(text);
@@ -364,8 +380,12 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 }}
                 onBlur={() => handleFieldBlur('title', title)}
                 placeholder="Enter chore title"
-                error={errors.title}
+                error={getFieldError('title')}
                 isValid={isFieldValid('title')}
+                isValidating={isValidating}
+                required={true}
+                characterLimit={50}
+                hint="Give your chore a clear, descriptive name"
               />
 
               <ValidatedInput
@@ -380,8 +400,11 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 multiline
                 numberOfLines={3}
                 style={styles.textArea}
-                error={errors.description}
+                error={getFieldError('description')}
                 isValid={isFieldValid('description')}
+                isValidating={isValidating}
+                characterLimit={200}
+                hint="Add details about what this chore involves"
               />
 
               <View style={styles.inputGroup}>
@@ -489,8 +512,11 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 onBlur={() => handleFieldBlur('points', points)}
                 placeholder="10"
                 keyboardType="numeric"
-                error={errors.points}
+                error={getFieldError('points')}
                 isValid={isFieldValid('points')}
+                isValidating={isValidating}
+                required={true}
+                hint="Points awarded for completing this chore (1-100)"
               />
 
               <View style={styles.inputGroup}>
@@ -549,12 +575,24 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                   <View style={[styles.checkbox, isRecurring && styles.checkboxChecked]} />
                 </TouchableOpacity>
                 {isRecurring && (
-                  <TextInput
-                    style={styles.input}
+                  <ValidatedInput
+                    label="Frequency (days)"
                     value={frequencyDays}
-                    onChangeText={setFrequencyDays}
+                    onChangeText={(text) => {
+                      setFrequencyDays(text);
+                      const allValues = { frequencyDays: text, cooldownHours };
+                      handleFieldChange('frequencyDays', text, allValues);
+                    }}
+                    onBlur={() => {
+                      const allValues = { frequencyDays, cooldownHours };
+                      handleFieldBlur('frequencyDays', frequencyDays, allValues);
+                    }}
                     placeholder="7"
                     keyboardType="numeric"
+                    error={getFieldError('frequencyDays')}
+                    isValid={isFieldValid('frequencyDays')}
+                    isValidating={isValidating}
+                    hint="How often should this chore repeat?"
                   />
                 )}
               </View>
@@ -564,13 +602,19 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 value={cooldownHours}
                 onChangeText={(text) => {
                   setCooldownHours(text);
-                  handleFieldChange('cooldownHours', text);
+                  const allValues = { frequencyDays, cooldownHours: text };
+                  handleFieldChange('cooldownHours', text, allValues);
                 }}
-                onBlur={() => handleFieldBlur('cooldownHours', cooldownHours)}
+                onBlur={() => {
+                  const allValues = { frequencyDays, cooldownHours };
+                  handleFieldBlur('cooldownHours', cooldownHours, allValues);
+                }}
                 placeholder="24"
                 keyboardType="numeric"
-                error={errors.cooldownHours}
+                error={getFieldError('cooldownHours')}
                 isValid={isFieldValid('cooldownHours')}
+                isValidating={isValidating}
+                hint="Hours before chore can be completed again"
               />
 
               <View style={styles.formActions}>
@@ -581,9 +625,13 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.saveButton]}
+                  style={[
+                    styles.actionButton, 
+                    styles.saveButton,
+                    (hasErrors || savingChore) && styles.saveButtonDisabled
+                  ]}
                   onPress={handleSaveChore}
-                  disabled={savingChore}
+                  disabled={hasErrors || savingChore}
                 >
                   {savingChore ? (
                     <LoadingSpinner size="small" />
@@ -1035,6 +1083,10 @@ const styles = StyleSheet.create({
     minWidth: 80,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#f9a8d4',
+    opacity: 0.6,
   },
   saveButtonText: {
     color: 'white',

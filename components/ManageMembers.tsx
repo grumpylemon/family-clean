@@ -17,6 +17,8 @@ import { ThemedText } from './ThemedText';
 import { Avatar } from './ui/Avatar';
 import { Toast } from './ui/Toast';
 import { WebIcon } from './ui/WebIcon';
+import { ValidatedInput } from './ui/ValidatedInput';
+import { useFormValidation, validationRules } from '../hooks/useFormValidation';
 import { 
   getUserRoomAssignments, 
   getFamilyRooms, 
@@ -511,6 +513,21 @@ function EditMemberModal({
   const [editedName, setEditedName] = useState(member?.name || '');
   const [editedRole, setEditedRole] = useState<FamilyRole>(member?.familyRole || 'child');
 
+  // Form validation
+  const { 
+    errors, 
+    isValidating,
+    handleFieldChange, 
+    handleFieldBlur, 
+    validateAll, 
+    resetValidation, 
+    isFieldValid,
+    hasErrors,
+    getFieldError 
+  } = useFormValidation({
+    displayName: [validationRules.displayName()],
+  });
+
   // Get the most current member data from the family members list
   const currentMemberData = familyMembers.find(m => m.uid === member?.uid) || member;
 
@@ -547,8 +564,10 @@ function EditMemberModal({
   };
 
   const handleSaveName = async () => {
-    if (!editedName.trim()) {
-      showErrorMessage('Name cannot be empty');
+    const values = { displayName: editedName };
+    
+    if (!validateAll(values)) {
+      showErrorMessage('Please fix the name validation errors');
       return;
     }
 
@@ -754,17 +773,31 @@ function EditMemberModal({
             <View style={styles.editSection}>
               <Text style={styles.editSectionTitle}>Name</Text>
               <View style={styles.editRow}>
-                <TextInput
-                  style={styles.editInput}
-                  value={editedName}
-                  onChangeText={setEditedName}
-                  placeholder="Enter name"
-                  placeholderTextColor="#f9a8d4"
-                />
+                <View style={styles.editInputContainer}>
+                  <ValidatedInput
+                    value={editedName}
+                    onChangeText={(text) => {
+                      setEditedName(text);
+                      handleFieldChange('displayName', text);
+                    }}
+                    onBlur={() => handleFieldBlur('displayName', editedName)}
+                    placeholder="Enter name"
+                    error={getFieldError('displayName')}
+                    isValid={isFieldValid('displayName')}
+                    isValidating={isValidating}
+                    required={true}
+                    characterLimit={30}
+                    hint="Display name for this family member"
+                    style={styles.editInput}
+                  />
+                </View>
                 <TouchableOpacity
-                  style={[styles.smallSaveButton, { opacity: editedName !== currentMemberData.name ? 1 : 0.5 }]}
+                  style={[
+                    styles.smallSaveButton, 
+                    { opacity: (editedName !== currentMemberData.name && !hasErrors) ? 1 : 0.5 }
+                  ]}
                   onPress={handleSaveName}
-                  disabled={loading || editedName === currentMemberData.name}
+                  disabled={loading || editedName === currentMemberData.name || hasErrors}
                 >
                   <Text style={styles.smallSaveButtonText}>Save</Text>
                 </TouchableOpacity>
@@ -1391,10 +1424,12 @@ const styles = StyleSheet.create({
   editRow: {
     flexDirection: 'row',
     gap: 12,
-    alignItems: 'center',
+    alignItems: 'flex-start',
+  },
+  editInputContainer: {
+    flex: 1,
   },
   editInput: {
-    flex: 1,
     backgroundColor: '#fdf2f8',
     borderRadius: 12,
     paddingHorizontal: 16,

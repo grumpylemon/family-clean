@@ -267,10 +267,16 @@ Last Updated: May 30, 2025
    - Custom events for chore completion
    - Funnel analysis for onboarding
 
-2. **Sentry or Bugsnag**
-   - Real-time error monitoring
-   - Performance tracking
-   - User session replay
+2. **Sentry Error Monitoring** (Implemented v2.163, iOS fix v2.168)
+   - ✅ Configured for web and mobile platforms
+   - ✅ Real-time error tracking with context
+   - ✅ Performance monitoring with sampling
+   - ✅ Custom error filtering for network/auth errors
+   - 🚨 **iOS Production Fix** (v2.168): Temporarily disabled for iOS to prevent TestFlight crashes
+     - SIGABRT crashes occurred during Sentry initialization on iOS production builds
+     - Sentry remains enabled for web platform only
+     - Investigation ongoing for iOS-compatible configuration
+   - Environment-aware initialization (disabled in development and mock mode)
 
 ### Push Notifications
 1. **Firebase Cloud Messaging (FCM)**

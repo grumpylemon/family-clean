@@ -10,6 +10,9 @@ import {
   Platform
 } from 'react-native';
 import UniversalIcon from './ui/UniversalIcon';
+import { ValidatedInput } from './ui/ValidatedInput';
+import { LoadingSpinner } from './ui/LoadingSpinner';
+import { Toast } from './ui/Toast';
 import { Reward, RewardCategory } from '../types';
 import { 
   getRewards, 
@@ -18,7 +21,8 @@ import {
   deleteReward,
   getFamilyRedemptions
 } from '../services/firestore';
-import { useFamily } from '../contexts/FamilyContext';
+import { useFamily } from '../hooks/useZustandHooks';
+import { useFormValidation, validationRules } from '../hooks/useFormValidation';
 
 interface RewardManagementProps {
   visible: boolean;
@@ -40,6 +44,7 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
   
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingReward, setEditingReward] = useState<Reward | null>(null);
   const [formData, setFormData] = useState({
@@ -54,6 +59,26 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
     isUnlimited: true,
     isRepeatable: true,
     featured: false
+  });
+
+  // Form validation
+  const { 
+    errors, 
+    isValidating,
+    handleFieldChange, 
+    handleFieldBlur, 
+    validateAll, 
+    resetValidation, 
+    isFieldValid,
+    hasErrors,
+    getFieldError 
+  } = useFormValidation({
+    name: [validationRules.rewardName()],
+    description: [validationRules.maxLength(200, 'Description must be under 200 characters')],
+    pointsCost: [validationRules.rewardCost()],
+    minLevel: [validationRules.min(1, 'Level must be at least 1'), validationRules.max(10, 'Level cannot exceed 10')],
+    cooldownDays: [validationRules.numeric('Must be a number'), validationRules.min(0, 'Cannot be negative')],
+    stockCount: [validationRules.positiveInteger('Must be a positive number')],
   });
 
   useEffect(() => {
@@ -76,10 +101,10 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
   };
 
   const showAlert = (title: string, message: string) => {
-    if (Platform.OS === 'web') {
-      alert(`${title}: ${message}`);
+    if (title === 'Error') {
+      Toast.error(message);
     } else {
-      Alert.alert(title, message);
+      Toast.success(message);
     }
   };
 
@@ -98,19 +123,26 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
       featured: false
     });
     setEditingReward(null);
+    setShowCreateModal(false);
+    resetValidation();
   };
 
   const handleSaveReward = async () => {
-    if (!formData.name.trim()) {
-      showAlert('Error', 'Please enter a reward name');
+    const values = {
+      name: formData.name,
+      description: formData.description,
+      pointsCost: formData.pointsCost,
+      minLevel: formData.minLevel,
+      cooldownDays: formData.cooldownDays,
+      stockCount: formData.hasStock ? formData.stockCount : undefined
+    };
+    
+    if (!validateAll(values)) {
+      showAlert('Error', 'Please fix the form errors');
       return;
     }
 
-    if (!formData.pointsCost || isNaN(Number(formData.pointsCost))) {
-      showAlert('Error', 'Please enter a valid point cost');
-      return;
-    }
-
+    setSaving(true);
     try {
       const rewardData: Omit<Reward, 'id' | 'createdAt' | 'updatedAt'> = {
         name: formData.name.trim(),
@@ -144,6 +176,8 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
     } catch (error) {
       console.error('Error saving reward:', error);
       showAlert('Error', 'Failed to save reward');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -541,89 +575,85 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
             {/* Form */}
             <ScrollView style={{ flex: 1, padding: 20 }}>
               {/* Name */}
-              <View style={{ marginBottom: 20 }}>
-                <Text style={{
+              <ValidatedInput
+                label="Reward Name"
+                value={formData.name}
+                onChangeText={(text) => {
+                  setFormData({ ...formData, name: text });
+                  handleFieldChange('name', text);
+                }}
+                onBlur={() => handleFieldBlur('name', formData.name)}
+                placeholder="e.g., Extra screen time"
+                error={getFieldError('name')}
+                isValid={isFieldValid('name')}
+                isValidating={isValidating}
+                required={true}
+                characterLimit={50}
+                hint="Choose a motivating name for this reward"
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: 16,
+                  padding: 12,
                   fontSize: 16,
-                  fontWeight: '600',
-                  color: '#831843',
-                  marginBottom: 8
-                }}>
-                  Reward Name *
-                </Text>
-                <TextInput
-                  style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: 16,
-                    padding: 12,
-                    fontSize: 16,
-                    borderWidth: 2,
-                    borderColor: '#f9a8d4',
-                    color: '#831843'
-                  }}
-                  value={formData.name}
-                  onChangeText={(text) => setFormData({ ...formData, name: text })}
-                  placeholder="e.g., Extra screen time"
-                  placeholderTextColor="#9f1239"
-                />
-              </View>
+                  borderWidth: 2,
+                  color: '#831843'
+                }}
+              />
 
               {/* Description */}
-              <View style={{ marginBottom: 20 }}>
-                <Text style={{
+              <ValidatedInput
+                label="Description"
+                value={formData.description}
+                onChangeText={(text) => {
+                  setFormData({ ...formData, description: text });
+                  handleFieldChange('description', text);
+                }}
+                onBlur={() => handleFieldBlur('description', formData.description)}
+                placeholder="Describe what this reward includes..."
+                error={getFieldError('description')}
+                isValid={isFieldValid('description')}
+                isValidating={isValidating}
+                characterLimit={200}
+                hint="Add details about what this reward involves"
+                multiline
+                numberOfLines={3}
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: 16,
+                  padding: 12,
                   fontSize: 16,
-                  fontWeight: '600',
+                  borderWidth: 2,
                   color: '#831843',
-                  marginBottom: 8
-                }}>
-                  Description
-                </Text>
-                <TextInput
-                  style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: 16,
-                    padding: 12,
-                    fontSize: 16,
-                    borderWidth: 2,
-                    borderColor: '#f9a8d4',
-                    color: '#831843',
-                    minHeight: 80
-                  }}
-                  value={formData.description}
-                  onChangeText={(text) => setFormData({ ...formData, description: text })}
-                  placeholder="Describe what this reward includes..."
-                  placeholderTextColor="#9f1239"
-                  multiline
-                  textAlignVertical="top"
-                />
-              </View>
+                  minHeight: 80,
+                  textAlignVertical: 'top'
+                }}
+              />
 
               {/* Points Cost */}
-              <View style={{ marginBottom: 20 }}>
-                <Text style={{
+              <ValidatedInput
+                label="Point Cost"
+                value={formData.pointsCost}
+                onChangeText={(text) => {
+                  setFormData({ ...formData, pointsCost: text });
+                  handleFieldChange('pointsCost', text);
+                }}
+                onBlur={() => handleFieldBlur('pointsCost', formData.pointsCost)}
+                placeholder="e.g., 50"
+                error={getFieldError('pointsCost')}
+                isValid={isFieldValid('pointsCost')}
+                isValidating={isValidating}
+                required={true}
+                hint="How many points does this reward cost? (1-1000)"
+                keyboardType="numeric"
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: 16,
+                  padding: 12,
                   fontSize: 16,
-                  fontWeight: '600',
-                  color: '#831843',
-                  marginBottom: 8
-                }}>
-                  Point Cost *
-                </Text>
-                <TextInput
-                  style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: 16,
-                    padding: 12,
-                    fontSize: 16,
-                    borderWidth: 2,
-                    borderColor: '#f9a8d4',
-                    color: '#831843'
-                  }}
-                  value={formData.pointsCost}
-                  onChangeText={(text) => setFormData({ ...formData, pointsCost: text })}
-                  placeholder="e.g., 50"
-                  placeholderTextColor="#9f1239"
-                  keyboardType="numeric"
-                />
-              </View>
+                  borderWidth: 2,
+                  color: '#831843'
+                }}
+              />
 
               {/* Category */}
               <View style={{ marginBottom: 20 }}>
@@ -788,26 +818,32 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
               {/* Save Button */}
               <TouchableOpacity
                 style={{
-                  backgroundColor: '#be185d',
+                  backgroundColor: (hasErrors || saving) ? '#f9a8d4' : '#be185d',
                   borderRadius: 24,
                   padding: 16,
                   alignItems: 'center',
                   marginBottom: 40,
                   shadowColor: '#be185d',
                   shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
+                  shadowOpacity: (hasErrors || saving) ? 0.1 : 0.3,
                   shadowRadius: 8,
-                  elevation: 4
+                  elevation: 4,
+                  opacity: (hasErrors || saving) ? 0.6 : 1
                 }}
                 onPress={handleSaveReward}
+                disabled={hasErrors || saving}
               >
-                <Text style={{
-                  color: '#ffffff',
-                  fontSize: 16,
-                  fontWeight: '600'
-                }}>
-                  {editingReward ? 'Update Reward' : 'Create Reward'}
-                </Text>
+                {saving ? (
+                  <LoadingSpinner size="small" />
+                ) : (
+                  <Text style={{
+                    color: '#ffffff',
+                    fontSize: 16,
+                    fontWeight: '600'
+                  }}>
+                    {editingReward ? 'Update Reward' : 'Create Reward'}
+                  </Text>
+                )}
               </TouchableOpacity>
             </ScrollView>
           </View>

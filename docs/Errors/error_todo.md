@@ -2,6 +2,17 @@
 
 ## Active High Priority Issues to Fix
 
+### Critical Production Issues
+- [ ] **iOS TestFlight Crash - Sentry Initialization** 
+  - **Status**: FIXED in v2.168 (2025-05-30)
+  - **Root Cause**: Sentry initialization causing SIGABRT crashes on iOS production builds
+  - **Fix Applied**: Temporarily disabled Sentry for iOS platform in `config/sentry.ts`
+  - **Evidence**: Console logs showed immediate crash after successful app launch
+  - **Next Steps**: 
+    - [ ] Test v2.168 build 28 on TestFlight to confirm fix
+    - [ ] Investigate iOS-compatible Sentry configuration
+    - [ ] Consider alternative error monitoring for iOS if needed
+  - **Impact**: Critical - App was completely unusable on TestFlight
 
 
 ### Manual Intervention Required (Scripts Available)
@@ -26,6 +37,10 @@
 - [ ] **Dark Mode Color issues** Some colors in Dark mode don't have enough contras so Header letters on Buttons disapear and are unreadable, for example the "Change Avatar" Button
 
 ## Recently Fixed
+- [x] **iOS TestFlight Critical Crash** - Fixed in v2.168 (2025-05-30)
+  - Root cause: Sentry initialization causing SIGABRT on iOS production builds
+  - Solution: Disabled Sentry for iOS platform temporarily
+  - Version bumped to 2.168 build 28 for TestFlight testing
 - [x] **Create Chore Button not working** - Fixed in v2.163 (2025-05-30)
   - Fixed familyId undefined error in createChore function
 - [x] **Creating new Pet** - Fixed in v2.163 (2025-05-30)
