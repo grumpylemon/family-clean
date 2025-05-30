@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Chore } from '@/types';
-import { useFamilyStore } from '@/stores/hooks';
+import { useFamilyStore } from '@/stores/familyStore';
 import Toast from './ui/Toast';
 
 interface ChoreTakeoverModalProps {

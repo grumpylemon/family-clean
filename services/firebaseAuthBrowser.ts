@@ -14,9 +14,11 @@ let onAuthStateChanged: any;
 let getAuth: any;
 
 // Dynamic import for browser environment
+let authLoadPromise: Promise<void> | null = null;
+
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   // Use dynamic import to ensure we get the browser version
-  import('firebase/auth').then((firebaseAuth) => {
+  authLoadPromise = import('firebase/auth').then((firebaseAuth) => {
     signInWithPopup = firebaseAuth.signInWithPopup;
     GoogleAuthProvider = firebaseAuth.GoogleAuthProvider;
     signInAnonymously = firebaseAuth.signInAnonymously;
@@ -28,27 +30,47 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     console.log('Available functions:', Object.keys(firebaseAuth).filter(k => typeof (firebaseAuth as any)[k] === 'function').join(', '));
   }).catch(error => {
     console.error('Failed to load Firebase Auth:', error);
+    // Re-throw to ensure promise rejection is handled
+    throw error;
+  });
+  
+  // Handle any unhandled promise rejections
+  authLoadPromise.catch(error => {
+    console.error('Unhandled Firebase Auth loading error:', error);
   });
 }
 
 // Export wrapper that ensures functions are available
 export const firebaseAuthBrowser = {
   async waitForAuth(): Promise<void> {
-    // Wait for dynamic imports to complete
-    let attempts = 0;
-    while (!signInWithPopup && attempts < 50) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
+    // If we have a promise, wait for it to complete
+    if (authLoadPromise) {
+      try {
+        await authLoadPromise;
+      } catch (error) {
+        console.error('Firebase Auth loading failed:', error);
+        throw new Error('Firebase Auth failed to load');
+      }
     }
+    
+    // Additional safety check
     if (!signInWithPopup) {
-      throw new Error('Firebase Auth failed to load after 5 seconds');
+      // Wait for dynamic imports to complete
+      let attempts = 0;
+      while (!signInWithPopup && attempts < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      if (!signInWithPopup) {
+        throw new Error('Firebase Auth failed to load after 5 seconds');
+      }
     }
   },
 
   async signInWithGoogle(auth: Auth): Promise<UserCredential> {
     await this.waitForAuth();
     
-    if (!signInWithPopup || !GoogleAuthProvider) {
+    if (!GoogleAuthProvider) {
       throw new Error('Firebase Auth not properly loaded');
     }
     
@@ -56,40 +78,29 @@ export const firebaseAuthBrowser = {
     provider.addScope('profile');
     provider.addScope('email');
     
+    // On web, prefer redirect flow to avoid COOP warnings
+    // This provides a cleaner user experience
+    const { signInWithRedirect, getRedirectResult } = await import('firebase/auth');
+    
     try {
-      // Try popup first
-      console.log('Attempting signInWithPopup...');
-      return await signInWithPopup(auth, provider);
-    } catch (error: any) {
-      console.warn('signInWithPopup failed, trying redirect method:', error.message);
-      
-      // If popup fails due to CORS or blocking, fall back to redirect
-      if (error.code === 'auth/popup-blocked' || 
-          error.code === 'auth/popup-closed-by-user' ||
-          error.message?.includes('Cross-Origin-Opener-Policy') ||
-          error.message?.includes('popup')) {
-        
-        // Load redirect methods
-        const { signInWithRedirect, getRedirectResult } = await import('firebase/auth');
-        
-        // Check if we're returning from a redirect
-        const redirectResult = await getRedirectResult(auth);
-        if (redirectResult) {
-          console.log('Redirect authentication successful');
-          return redirectResult;
-        }
-        
-        // Start redirect flow
-        console.log('Starting redirect authentication...');
-        await signInWithRedirect(auth, provider);
-        
-        // This will never return as the page redirects
-        throw new Error('Redirect initiated');
+      // First check if we're returning from a redirect
+      const redirectResult = await getRedirectResult(auth);
+      if (redirectResult) {
+        console.log('Redirect authentication successful');
+        return redirectResult;
       }
-      
-      // Re-throw other errors
-      throw error;
+    } catch (error) {
+      // Ignore redirect check errors
     }
+    
+    // If popup is available and user prefers it (e.g., desktop)
+    // we could add logic here to detect desktop vs mobile
+    // For now, always use redirect for consistency
+    console.log('Starting Google authentication...');
+    await signInWithRedirect(auth, provider);
+    
+    // This will never return as the page redirects
+    throw new Error('Redirect initiated');
   },
 
   async signInAnonymously(auth: Auth): Promise<UserCredential> {
@@ -115,7 +126,7 @@ export const firebaseAuthBrowser = {
   onAuthStateChanged(auth: Auth, callback: (user: FirebaseUser | null) => void) {
     // For auth state changes, we need to handle the async loading
     if (!onAuthStateChanged) {
-      console.warn('onAuthStateChanged not yet loaded, setting up delayed listener');
+      // Silently wait for auth to load - this is normal during initialization
       
       // Set up the listener once Firebase Auth loads
       const checkInterval = setInterval(() => {

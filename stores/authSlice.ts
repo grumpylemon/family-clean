@@ -473,7 +473,17 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
               }));
             }
           } else {
+            // Check if we already have an auth listener
+            if (Platform.OS === 'web' && typeof window !== 'undefined' && (window as any).__authUnsubscribe) {
+              console.log('[AuthSlice] Auth state listener already exists, skipping duplicate setup');
+              set((state) => ({
+                auth: { ...state.auth, isLoading: false }
+              }));
+              return;
+            }
+
             // Use Firebase auth state listener from centralized service
+            console.log('[AuthSlice] Setting up new auth state listener');
             const unsubscribe = authService.onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
               if (firebaseUser) {
                 try {
@@ -569,7 +579,9 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
             });
 
             // Store unsubscribe function for cleanup
-            (window as any).__authUnsubscribe = unsubscribe;
+            if (Platform.OS === 'web' && typeof window !== 'undefined') {
+              (window as any).__authUnsubscribe = unsubscribe;
+            }
           }
         },
 

@@ -48,7 +48,7 @@ export function useFamily() {
       return { currentMember: null, isAdmin: false };
     }
 
-    const member = members.find(m => m.userId === user.uid);
+    const member = members.find(m => m.uid === user.uid); // Fixed: use uid, not userId
     const adminStatus = member?.role === 'admin' || family.adminId === user.uid;
 
     return {
@@ -59,10 +59,11 @@ export function useFamily() {
 
   // Refresh family data when user changes
   useEffect(() => {
-    if (user && family?.id && fetchFamily && typeof fetchFamily === 'function') {
-      fetchFamily(family.id);
+    if (user?.familyId && user.familyId !== family?.id && fetchFamily && typeof fetchFamily === 'function') {
+      // Only fetch if the familyId is different from current family
+      fetchFamily(user.familyId);
     }
-  }, [user?.uid, family?.id, fetchFamily]);
+  }, [user?.familyId]); // Only depend on user's familyId, not the function reference
 
   // Create refreshFamily function for backward compatibility
   const refreshFamily = async (): Promise<boolean> => {

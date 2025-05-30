@@ -11,8 +11,17 @@ import {
 } from 'react-native';
 import { WebIcon } from './ui/WebIcon';
 import { NotificationSettings as NotificationSettingsType } from '@/types';
-import { notificationService } from '@/services/notificationService';
 import { useFamilyStore } from '@/stores/hooks';
+
+// Conditionally import notification service only on mobile platforms
+let notificationService: any = null;
+if (Platform.OS !== 'web') {
+  try {
+    notificationService = require('@/services/notificationService').notificationService;
+  } catch (error) {
+    console.log('Notification service not available on this platform');
+  }
+}
 
 const DEFAULT_SETTINGS: NotificationSettingsType = {
   enabled: true,
@@ -63,7 +72,9 @@ export default function NotificationSettings() {
       current[path[path.length - 1]] = value;
 
       setSettings(newSettings);
-      await notificationService.updateNotificationSettings(user.uid, newSettings);
+      if (notificationService) {
+        await notificationService.updateNotificationSettings(user.uid, newSettings);
+      }
     } catch (error) {
       console.error('Failed to update notification settings:', error);
       Alert.alert('Error', 'Failed to update notification settings');
@@ -74,15 +85,22 @@ export default function NotificationSettings() {
 
   const requestPermissions = async (): Promise<void> => {
     try {
-      const permission = await notificationService.requestPermissions();
-      
-      if (permission === 'granted') {
-        await notificationService.initialize(user?.uid || '');
-        Alert.alert('Success', 'Notifications enabled successfully!');
-      } else if (permission === 'denied') {
+      if (notificationService) {
+        const permission = await notificationService.requestPermissions();
+        
+        if (permission === 'granted') {
+          await notificationService.initialize(user?.uid || '');
+          Alert.alert('Success', 'Notifications enabled successfully!');
+        } else if (permission === 'denied') {
+          Alert.alert(
+            'Permission Denied',
+            'To enable notifications, please go to Settings > Notifications and allow notifications for Family Compass.'
+          );
+        }
+      } else {
         Alert.alert(
-          'Permission Denied',
-          'To enable notifications, please go to Settings > Notifications and allow notifications for Family Compass.'
+          'Notifications Not Available',
+          'Push notifications are only available on mobile devices.'
         );
       }
     } catch (error) {
@@ -276,21 +294,39 @@ export default function NotificationSettings() {
       </View>
 
       {/* Test Notification */}
-      <View style={styles.section}>
-        <TouchableOpacity 
-          style={[styles.testButton, !settings.enabled && styles.testButtonDisabled]}
-          onPress={() => {
-            // TODO: Send test notification
-            Alert.alert('Test Notification', 'Test notification sent!');
-          }}
-          disabled={!settings.enabled}
-        >
-          <WebIcon name="flask" size={20} color={settings.enabled ? '#be185d' : '#9ca3af'} />
-          <Text style={[styles.testButtonText, !settings.enabled && styles.disabledText]}>
-            Send Test Notification
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {Platform.OS !== 'web' && (
+        <View style={styles.section}>
+          <TouchableOpacity 
+            style={[styles.testButton, !settings.enabled && styles.testButtonDisabled]}
+            onPress={() => {
+              if (notificationService) {
+                Alert.alert('Test Notification', 'Test notification sent!');
+              } else {
+                Alert.alert('Not Available', 'Notifications are only available on mobile devices.');
+              }
+            }}
+            disabled={!settings.enabled}
+          >
+            <WebIcon name="flask" size={20} color={settings.enabled ? '#be185d' : '#9ca3af'} />
+            <Text style={[styles.testButtonText, !settings.enabled && styles.disabledText]}>
+              Send Test Notification
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      
+      {/* Web Platform Notice */}
+      {Platform.OS === 'web' && (
+        <View style={styles.section}>
+          <View style={styles.webNotice}>
+            <WebIcon name="information-circle" size={24} color="#f59e0b" />
+            <Text style={styles.webNoticeText}>
+              Push notifications are currently only available on mobile devices. 
+              Web notification support is coming soon!
+            </Text>
+          </View>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -434,5 +470,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#be185d',
+  },
+  webNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
+  },
+  webNoticeText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#92400e',
+    lineHeight: 20,
   },
 });

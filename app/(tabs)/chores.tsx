@@ -5,7 +5,7 @@ import { CompletionRewardModal } from '@/components/CompletionRewardModal';
 import ChoreTakeoverModal from '@/components/ChoreTakeoverModal';
 import { UniversalIcon } from '@/components/ui/UniversalIcon';
 import { createHelpRequest, createTradeProposal } from '@/services/collaborationService';
-import { useFamilyStore } from '@/stores/hooks';
+import { useFamilyStore } from '@/stores/familyStore';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -116,7 +116,7 @@ export default function ChoresScreen() {
   };
 
   const handleClaimChore = async (choreId: string) => {
-    if (!user || !currentFamily) return;
+    if (!user || !family) return;
 
     try {
       const displayName = user.displayName || user.email || 'User';

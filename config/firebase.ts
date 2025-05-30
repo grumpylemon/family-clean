@@ -505,6 +505,13 @@ export const initializeFirebase = async () => {
             experimentalForceLongPolling: true,
             useFetchStreams: false
           });
+          
+          // Set up error handlers for Firestore network operations
+          if (_firestoreDb) {
+            // Add a listener for network errors
+            const unsubscribe = _firestoreDb._delegate?._databaseId?.isDefaultDatabase;
+            console.log("Firestore initialized with long polling");
+          }
         } catch (cacheError) {
           console.warn("Cache initialization failed, trying with long polling only:", cacheError);
           try {

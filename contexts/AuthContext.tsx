@@ -77,16 +77,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Setting up auth state listener");
       
       // Import authService to handle auth state changes properly
-      import('@/services/authService').then(({ authService }) => {
-        unsubscribe = authService.onAuthStateChanged(auth, (currentUser) => {
-          console.log("Auth state changed:", currentUser ? "User logged in" : "No user");
-          setUser(currentUser);
+      const setupAuthListener = async () => {
+        try {
+          const { authService } = await import('@/services/authService');
+          unsubscribe = authService.onAuthStateChanged(auth, (currentUser) => {
+            console.log("Auth state changed:", currentUser ? "User logged in" : "No user");
+            setUser(currentUser);
+            setLoading(false);
+          });
+        } catch (err) {
+          console.error("Error importing authService:", err);
+          setError("Failed to initialize authentication");
           setLoading(false);
-        });
-      }).catch(err => {
-        console.error("Error importing authService:", err);
-        setLoading(false);
-      });
+        }
+      };
+      
+      setupAuthListener();
     } catch (err) {
       console.error("Error setting up auth state listener:", err);
       setLoading(false);

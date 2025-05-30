@@ -12,6 +12,17 @@ interface StoreProviderProps {
 
 export function StoreProvider({ children }: StoreProviderProps) {
   useEffect(() => {
+    // Check if store was already initialized
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && (window as any).__storeInitialized) {
+      console.log('🏪 StoreProvider: Store already initialized, skipping');
+      return;
+    }
+    
+    // Mark store as initialized
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      (window as any).__storeInitialized = true;
+    }
+    
     // Defer initialization to prevent render conflicts
     const timeoutId = setTimeout(() => {
       console.log('🏪 StoreProvider: Initializing Zustand store');
@@ -64,6 +75,11 @@ export function StoreProvider({ children }: StoreProviderProps) {
     return () => {
       clearTimeout(timeoutId);
       networkService.cleanup();
+      // Reset initialization flags for hot reload
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        (window as any).__storeInitialized = false;
+        (window as any).__authUnsubscribe = null;
+      }
     };
   }, []);
 

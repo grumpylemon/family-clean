@@ -981,11 +981,6 @@ export default function DashboardScreen() {
         )}
 
         {/* Admin Tools and Family Code moved to Admin page */}
-
-        {/* App Version */}
-        <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>{VERSION_DISPLAY}</Text>
-        </View>
       </ScrollView>
 
       {/* Modals */}

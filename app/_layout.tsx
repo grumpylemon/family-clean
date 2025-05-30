@@ -52,7 +52,7 @@ if (typeof window !== 'undefined') {
 console.log("App Layout version: v6 - Zustand Integration");
 
 // Feature flag to test Zustand migration
-const USE_ZUSTAND_ONLY = false; // Set to true to use Zustand exclusively
+const USE_ZUSTAND_ONLY = true; // Using Zustand exclusively to prevent duplicate context initialization
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -65,6 +65,40 @@ export default function RootLayout() {
   // Initialize client-side state to prevent hydration mismatch
   useEffect(() => {
     setIsClient(true);
+    
+    // Set up global error handlers for unhandled promises
+    if (typeof window !== 'undefined') {
+      const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+        const error = event.reason;
+        
+        // Handle specific types of errors silently
+        if (error && error.name === 'NetworkError') {
+          console.warn('Network error occurred (likely from Firebase):', error.message || 'Unknown network error');
+          event.preventDefault();
+          return;
+        }
+        
+        if (error && error.message && (
+          error.message.includes('Failed to fetch') ||
+          error.message.includes('Network request failed') ||
+          error.message.includes('auth/network-request-failed')
+        )) {
+          console.warn('Network request failed, likely temporary:', error.message);
+          event.preventDefault();
+          return;
+        }
+        
+        // Log other unhandled rejections
+        console.error('Unhandled promise rejection:', error);
+        event.preventDefault();
+      };
+      
+      window.addEventListener('unhandledrejection', handleUnhandledRejection);
+      
+      return () => {
+        window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      };
+    }
   }, []);
 
   // Initialize Firebase on app start (only on client side)
@@ -82,6 +116,25 @@ export default function RootLayout() {
         console.log(`Using mock Firebase: ${isMockImplementation()}`);
         console.log(`Firebase initialization completed successfully`);
         
+        // Check for redirect result on web platform
+        if (Platform.OS === 'web' && !isMockImplementation()) {
+          try {
+            // Dynamically import to avoid bundling issues
+            const { auth } = await import('@/config/firebase');
+            const { getRedirectResult } = await import('firebase/auth');
+            
+            console.log('Checking for authentication redirect result...');
+            const redirectResult = await getRedirectResult(auth);
+            
+            if (redirectResult?.user) {
+              console.log('User authenticated via redirect:', redirectResult.user.email);
+            }
+          } catch (redirectError) {
+            console.warn('Error checking redirect result on startup:', redirectError);
+            // This is not critical, continue with normal flow
+          }
+        }
+        
         // For iOS, we deliberately use mock implementation due to Expo Go limitations
         if (Platform.OS === 'ios') {
           console.log('iOS detected, using mock Firebase implementation for compatibility');
@@ -97,7 +150,9 @@ export default function RootLayout() {
       }
     };
     
-    initFirebase();
+    initFirebase().catch(error => {
+      console.error('Unhandled Firebase init error:', error);
+    });
   }, [isClient]);
 
   if (!loaded) {

@@ -9,8 +9,8 @@ import {
   Modal,
   TextInput
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useFamily } from '../contexts/FamilyContext';
+import { UniversalIcon } from './ui/UniversalIcon';
+import { useFamily } from '../hooks/useZustandHooks';
 import { useAccessControl } from '../hooks/useAccessControl';
 import { Pet, PetType, PetSize, PetActivityLevel } from '../types';
 import { 
@@ -279,7 +279,7 @@ const PetManagement: React.FC<PetManagementProps> = () => {
         <Text style={styles.title}>Our Lovely Pets</Text>
         {canManageChores && (
           <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
-            <Ionicons name="add" size={20} color="#ffffff" />
+            <UniversalIcon name="add" size={20} color="#ffffff" />
             <Text style={styles.addButtonText}>Add New Pet</Text>
           </TouchableOpacity>
         )}
@@ -326,7 +326,7 @@ const PetManagement: React.FC<PetManagementProps> = () => {
                   <Text style={styles.relatedTitle}>Related Chores:</Text>
                   {getTemplatesForPetType(pet.type).slice(0, 2).map((template, index) => (
                     <View key={index} style={styles.choreItem}>
-                      <Ionicons name="paw" size={16} color="#f9a8d4" />
+                      <UniversalIcon name="paw" size={16} color="#f9a8d4" />
                       <Text style={styles.choreText}>
                         {template.name.replace('for ${pet.name}', '')} ({template.points} pts)
                       </Text>
@@ -346,7 +346,7 @@ const PetManagement: React.FC<PetManagementProps> = () => {
                         <LoadingSpinner size="small" />
                       ) : (
                         <>
-                          <Ionicons name="add-circle" size={16} color="#10b981" />
+                          <UniversalIcon name="add-circle" size={16} color="#10b981" />
                           <Text style={styles.actionText}>Generate Chores</Text>
                         </>
                       )}
@@ -356,7 +356,7 @@ const PetManagement: React.FC<PetManagementProps> = () => {
                       style={styles.actionButton}
                       onPress={() => openEditModal(pet)}
                     >
-                      <Ionicons name="pencil" size={16} color="#be185d" />
+                      <UniversalIcon name="pencil" size={16} color="#be185d" />
                       <Text style={styles.actionText}>Edit</Text>
                     </TouchableOpacity>
                     
@@ -364,7 +364,7 @@ const PetManagement: React.FC<PetManagementProps> = () => {
                       style={styles.actionButton}
                       onPress={() => setDeletingPet(pet)}
                     >
-                      <Ionicons name="trash" size={16} color="#ef4444" />
+                      <UniversalIcon name="trash" size={16} color="#ef4444" />
                       <Text style={styles.actionText}>Remove</Text>
                     </TouchableOpacity>
                   </View>
@@ -385,7 +385,7 @@ const PetManagement: React.FC<PetManagementProps> = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={closeModal}>
-              <Ionicons name="close" size={24} color="#831843" />
+              <UniversalIcon name="close" size={24} color="#831843" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>
               {editingPet ? 'Edit Pet' : 'Add New Pet'}

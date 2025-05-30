@@ -143,10 +143,10 @@ export default function SettingsScreen() {
       .slice(0, 2);
   };
 
-  // Show loading while theme is initializing
-  if (themeLoading) {
+  // Show loading while theme is initializing or colors not available
+  if (themeLoading || !colors) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fdf2f8' }}>
         <ActivityIndicator size="large" color="#be185d" />
       </SafeAreaView>
     );

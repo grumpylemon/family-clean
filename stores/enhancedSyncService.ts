@@ -13,10 +13,8 @@ import {
   onSnapshot,
   Timestamp
 } from 'firebase/firestore';
-import { 
-  getFamiliesCollection, 
-  getChoresCollection, 
-  getUsersCollection,
+import { safeCollection } from '@/config/firebase';
+import {
   completeChore,
   createChore,
   updateChore,
@@ -101,8 +99,8 @@ class EnhancedSyncService {
   // Set up real-time listeners for conflict detection
   private setupConflictDetection() {
     const store = this.getStore();
-    const user = store.auth.user;
-    const family = store.family.family;
+    const user = store?.auth?.user;
+    const family = store?.family?.family;
 
     if (!user || !family?.id) {
       console.log('🔄 Conflict detection skipped: No user or family');
@@ -110,8 +108,17 @@ class EnhancedSyncService {
     }
 
     try {
+      // Get collection references
+      const familiesCollection = safeCollection('families');
+      const choresCollection = safeCollection('chores');
+      
+      if (!familiesCollection || !choresCollection) {
+        console.log('🔄 Collections not available, skipping conflict detection');
+        return;
+      }
+      
       // Listen for family changes
-      const familyRef = doc(getFamiliesCollection(), family.data.id);
+      const familyRef = doc(familiesCollection, family.id);
       const familyUnsubscribe = onSnapshot(familyRef, (snapshot) => {
         if (snapshot.exists()) {
           this.handleServerDataChange('family', snapshot.data(), snapshot.metadata.fromCache);
@@ -119,8 +126,7 @@ class EnhancedSyncService {
       });
 
       // Listen for chore changes
-      const choresRef = getChoresCollection();
-      const choresUnsubscribe = onSnapshot(choresRef, (snapshot) => {
+      const choresUnsubscribe = onSnapshot(choresCollection, (snapshot) => {
         const chores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         this.handleServerDataChange('chores', chores, snapshot.metadata.fromCache);
       });
@@ -137,7 +143,7 @@ class EnhancedSyncService {
     if (fromCache) return; // Ignore cached data
     
     const store = this.getStore();
-    const pendingActions = store.pendingActions;
+    const pendingActions = store?.offline?.pendingActions || [];
     
     // Check for conflicts with pending actions
     const conflicts = this.detectConflicts(dataType, serverData, pendingActions);
