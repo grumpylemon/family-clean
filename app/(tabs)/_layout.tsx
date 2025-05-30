@@ -10,7 +10,12 @@ console.log("Tabs Layout version: v3.1 - Dark Mode Support");
 
 export default function TabLayout() {
   const { user } = useAuth();
-  const { colors, theme } = useTheme();
+  const { colors, theme, isLoading: themeLoading } = useTheme();
+
+  // Show nothing while theme is loading to prevent style errors
+  if (themeLoading) {
+    return null;
+  }
 
   return (
     <Tabs

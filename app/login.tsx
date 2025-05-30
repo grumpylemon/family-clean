@@ -22,7 +22,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const { user, loading, error, signInWithGoogle, signInAsGuest } = useAuth();
-  const { colors, theme } = useTheme();
+  const { colors, theme, isLoading: themeLoading } = useTheme();
   const [isIOS, setIsIOS] = useState(false);
   // Get mock status immediately and synchronously
   const [isMock, setIsMock] = useState(isMockImplementation());
@@ -71,6 +71,15 @@ export default function LoginScreen() {
       console.error('Guest sign in error:', err);
     }
   };
+
+  // Show loading while theme is initializing
+  if (themeLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fdf2f8' }}>
+        <ActivityIndicator size="large" color="#be185d" />
+      </View>
+    );
+  }
 
   const styles = StyleSheet.create({
     container: {

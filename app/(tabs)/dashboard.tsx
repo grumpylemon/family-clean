@@ -36,7 +36,7 @@ const isTablet = width >= 768;
 export default function DashboardScreen() {
   const { user, loading: authLoading, logout } = useAuth();
   const { family, loading: familyLoading, isAdmin, currentMember } = useFamily();
-  const { colors, theme } = useTheme();
+  const { colors, theme, isLoading: themeLoading } = useTheme();
   const [showManageMembers, setShowManageMembers] = useState(false);
   const [showChoreManagement, setShowChoreManagement] = useState(false);
   const [showFamilySettings, setShowFamilySettings] = useState(false);
@@ -181,6 +181,15 @@ export default function DashboardScreen() {
   const unassignedChores = chores.filter(chore => 
     !chore.assignedTo && chore.status === 'open'
   );
+
+  // Show loading while theme is initializing
+  if (themeLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#be185d" />
+      </View>
+    );
+  }
 
   const styles = StyleSheet.create({
     container: {

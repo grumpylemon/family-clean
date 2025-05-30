@@ -10,7 +10,8 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WebIcon } from '@/components/ui/WebIcon';
@@ -25,7 +26,7 @@ export default function SettingsScreen() {
   const { user } = useAuth();
   const { family } = useFamily();
   const { canManageFamily } = useAccessControl();
-  const { colors, theme, themeMode, setThemeMode } = useTheme();
+  const { colors, theme, themeMode, setThemeMode, isLoading: themeLoading } = useTheme();
   
   const [name, setName] = useState(user?.displayName || '');
   const [showAdminSettings, setShowAdminSettings] = useState(false);
@@ -141,6 +142,15 @@ export default function SettingsScreen() {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  // Show loading while theme is initializing
+  if (themeLoading) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#be185d" />
+      </SafeAreaView>
+    );
+  }
 
   const styles = StyleSheet.create({
     container: {
