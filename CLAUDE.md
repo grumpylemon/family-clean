@@ -24,13 +24,19 @@ This is a React Native/Expo app called "Family Compass" - a family chore managem
 - Firebase Project: family-fun-app
 - Live Web: https://family-fun-app.web.app
 
+### Utility Scripts
+- `npm run lint` - Run ESLint
+- `node scripts/clear-test-data.js` - Clear all Firebase test data (keeps structure)
+- `node scripts/clear-all-data.js` - Clear Firebase data + instructions for localStorage
+- `node scripts/fix-demo-family-id.js` - Fix families with hardcoded demo-family-id
+
 ## Architecture & Important Patterns
 
 - Add helpful code comments in all generated code
 - Always reference [development_task_list.md](docs/development_task_list.md) for task tracking
 - Version numbers auto-increment with deployment commands
 
-### Firebase Integration
+### Firebase Integration (Updated: 2025-05-29)
 The app uses a hybrid Firebase implementation to support both web and mobile platforms:
 
 1. **Configuration** (`config/firebase.ts`):
@@ -39,6 +45,8 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
    - Web uses real Firebase with IndexedDB persistence
    - Exports `auth`, `safeCollection`, and helper functions
    - Uses dynamic collection references to handle initialization timing
+   - **IMPORTANT**: Family creation now uses unique auto-generated IDs (fixed v2.108)
+   - Authentication supports popup with fallback to redirect for CORS issues
 
 2. **State Management** (Zustand-based Architecture - Updated: 2025-05-29):
    - **Primary Store** (`stores/familyStore.ts`): Centralized Zustand store for all state
@@ -385,3 +393,17 @@ The app now includes a comprehensive set of reusable UI components for professio
    - Or visit: http://localhost:8081
 
 3. **Firebase initialization timing**: Collection references use dynamic getters to ensure Firebase is ready
+
+4. **Clearing Cached Data**: When encountering stale data issues:
+   - Run `node scripts/clear-all-data.js` to clear Firebase
+   - Open browser console and run: `localStorage.clear(); location.reload();`
+   - This clears both Firebase and Zustand cached data
+
+5. **Authentication Loops**: Fixed in v2.108 with redirect fallback
+   - If popup auth fails, app automatically uses redirect method
+   - Check for redirect result on page load
+
+6. **Zustand Admin Panel Access**:
+   - Settings → Admin Panel → Zustand Remote Admin
+   - Or direct from Admin tab (if you have admin tab enabled)
+   - Provides offline queue management, cache control, and store debugging

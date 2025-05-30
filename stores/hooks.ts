@@ -370,28 +370,29 @@ export const useRewards = () => {
 // Offline status hook
 export const useOfflineStatus = () => {
   const {
-    isOnline,
-    networkStatus,
-    pendingActions,
-    failedActions,
-    syncStatus
+    offline: {
+      isOnline,
+      networkStatus,
+      pendingActions,
+      failedActions,
+      syncStatus,
+      retryFailedAction,
+      clearFailedActions
+    }
   } = useFamilyStore();
 
   const manualSync = useCallback(async () => {
     await networkService.triggerSync();
   }, []);
 
-  const retryFailedAction = useFamilyStore(state => state.retryFailedAction);
-  const clearFailedActions = useFamilyStore(state => state.clearFailedActions);
-
   return {
     isOnline,
     networkStatus,
-    pendingActions,
-    failedActions,
+    pendingActions: pendingActions || [],
+    failedActions: failedActions || [],
     syncStatus,
-    hasPendingActions: pendingActions.length > 0,
-    hasFailedActions: failedActions.length > 0,
+    hasPendingActions: (pendingActions || []).length > 0,
+    hasFailedActions: (failedActions || []).length > 0,
     manualSync,
     retryFailedAction,
     clearFailedActions

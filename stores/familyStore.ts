@@ -30,6 +30,37 @@ export const useFamilyStore = create<FamilyStore>()(
       ...createOfflineSlice(...args),
       ...createChoreSlice(...args),
       ...createRewardSlice(...args),
+      
+      // Additional methods for cache management
+      calculateCacheSize: () => {
+        try {
+          const state = JSON.stringify(args[0]());
+          return new TextEncoder().encode(state).length;
+        } catch (error) {
+          console.error('Failed to calculate cache size:', error);
+          return 0;
+        }
+      },
+      
+      cleanupCache: () => {
+        console.log('Cache cleanup requested');
+        // This would be implemented with actual cache cleanup logic
+      },
+      
+      invalidateCache: () => {
+        console.log('Cache invalidation requested');
+        // This would trigger a full data refresh
+      },
+      
+      reset: () => {
+        args[1](() => ({
+          ...createAuthSlice(...args),
+          ...createFamilySlice(...args),
+          ...createOfflineSlice(...args),
+          ...createChoreSlice(...args),
+          ...createRewardSlice(...args),
+        }));
+      },
     }),
     {
       name: 'family-store',

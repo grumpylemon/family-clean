@@ -7,6 +7,7 @@ import { auth, isMockImplementation } from '@/config/firebase';
 import { createOrUpdateUserProfile, getUserProfile } from '@/services/firestore';
 import { authService } from '@/services/authService';
 import { FamilyStore } from './types';
+import { Platform } from 'react-native';
 
 // Import types only
 import type { 
@@ -262,6 +263,83 @@ export const createAuthSlice: StateCreator<
       set((state) => ({
         auth: { ...state.auth, isLoading: true }
       }));
+
+      // For real Firebase on web, check for redirect results first
+      if (!isMock && Platform.OS === 'web') {
+        try {
+          const { firebaseAuthBrowser } = await import('@/services/firebaseAuthBrowser');
+          const { getRedirectResult } = await import('firebase/auth');
+          
+          console.log('[AuthSlice] Checking for redirect authentication result...');
+          const redirectResult = await getRedirectResult(auth);
+          
+          if (redirectResult) {
+            console.log('[AuthSlice] Found redirect result, processing user...');
+            // Handle redirect result similar to normal sign in
+            const firebaseUser = redirectResult.user;
+            
+            // Try to get existing user profile
+            let user: User | null = await getUserProfile(firebaseUser.uid);
+            
+            if (!user) {
+              // Create new user if profile doesn't exist
+              user = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email || null,
+                displayName: firebaseUser.displayName || null,
+                photoURL: firebaseUser.photoURL || null,
+                familyId: null,
+                points: {
+                  current: 0,
+                  weekly: 0,
+                  lifetime: 0,
+                  lastReset: new Date().toISOString()
+                },
+                level: 1,
+                xp: 0,
+                achievements: [],
+                streakDays: 0,
+                lastActiveDate: new Date().toISOString(),
+                preferences: {
+                  notifications: true,
+                  theme: 'light',
+                  defaultChoreDifficulty: 'medium'
+                },
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+              
+              await createOrUpdateUserProfile(user.uid, user);
+            }
+            
+            console.log('[AuthSlice] Redirect auth completed, setting user state');
+            set((state) => ({
+              auth: {
+                ...state.auth,
+                user,
+                isAuthenticated: true,
+                isLoading: false
+              }
+            }));
+            
+            // Load family data if user has a familyId
+            if (user.familyId) {
+              const familySlice = get().family;
+              if (familySlice.fetchFamily) {
+                try {
+                  await familySlice.fetchFamily(user.familyId);
+                } catch (familyError) {
+                  console.error('[AuthSlice] Error loading family data after redirect:', familyError);
+                }
+              }
+            }
+            
+            return; // Exit early as redirect auth is complete
+          }
+        } catch (error) {
+          console.warn('[AuthSlice] Error checking redirect result:', error);
+        }
+      }
 
       if (isMock) {
         // For mock auth, check current user

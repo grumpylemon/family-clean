@@ -49,7 +49,7 @@ const mockData: { [collection: string]: { [id: string]: any } } = {
   },
   'families': {
     'mock-family-id': {
-      name: 'Demo Family',
+      name: 'Mock Test Family',
       adminId: 'mock-user-id',
       createdAt: new Date(),
       members: [

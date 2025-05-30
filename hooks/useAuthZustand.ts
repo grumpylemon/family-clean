@@ -24,19 +24,20 @@ export function useAuth() {
     shallow
   );
 
-  // Debug logging in development and production for troubleshooting
-  if (typeof window !== 'undefined') {
-    console.log('[useAuth] authData:', authData);
-    console.log('[useAuth] signInWithGoogle type:', typeof authData.signInWithGoogle);
-    console.log('[useAuth] signInWithGoogle value:', authData.signInWithGoogle);
-    
-    // Additional debugging for production
-    if (typeof authData.signInWithGoogle === 'undefined') {
-      console.error('[useAuth] ERROR: signInWithGoogle is undefined!');
-      console.log('[useAuth] Full store state:', useFamilyStore.getState());
-      console.log('[useAuth] Auth slice:', useFamilyStore.getState().auth);
+  // Debug logging only in development to prevent infinite renders
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+      console.log('[useAuth] authData:', authData);
+      console.log('[useAuth] signInWithGoogle type:', typeof authData.signInWithGoogle);
+      
+      // Additional debugging for production
+      if (typeof authData.signInWithGoogle === 'undefined') {
+        console.error('[useAuth] ERROR: signInWithGoogle is undefined!');
+        console.log('[useAuth] Full store state:', useFamilyStore.getState());
+        console.log('[useAuth] Auth slice:', useFamilyStore.getState().auth);
+      }
     }
-  }
+  }, [authData.signInWithGoogle]); // Only log when the function reference changes
 
   // Note: checkAuthState is handled by AuthContext, not here
   // This prevents circular updates between context and store
@@ -47,16 +48,9 @@ export function useAuth() {
     : null;
 
   // Provide the same API as the React Context version
-  // Add fallback functions if they're undefined (due to minification issues)
-  const signInWithGoogle = authData.signInWithGoogle || (() => {
-    console.error('[useAuth] signInWithGoogle is undefined, using direct store access');
-    return useFamilyStore.getState().auth.signInWithGoogle?.();
-  });
-  
-  const signInAsGuest = authData.signInAsGuest || (() => {
-    console.error('[useAuth] signInAsGuest is undefined, using direct store access');
-    return useFamilyStore.getState().auth.signInAsGuest?.();
-  });
+  // Use direct store access as fallback if functions are undefined
+  const signInWithGoogle = authData.signInWithGoogle || useFamilyStore.getState().auth.signInWithGoogle;
+  const signInAsGuest = authData.signInAsGuest || useFamilyStore.getState().auth.signInAsGuest;
   
   return {
     user: authData.user,

@@ -75,8 +75,13 @@ class EnhancedSyncService {
   
   // Lazily get the store to avoid circular dependencies
   private getStore() {
-    const { useFamilyStore } = require('./familyStore');
-    return useFamilyStore.getState();
+    try {
+      const { useFamilyStore } = require('./familyStore');
+      return useFamilyStore.getState();
+    } catch (error) {
+      console.error('Failed to get store:', error);
+      return null;
+    }
   }
 
   // Initialize enhanced sync capabilities
@@ -327,9 +332,12 @@ class EnhancedSyncService {
   // Resolution strategy: Server wins
   private async resolveServerWins(conflict: DataConflict): Promise<boolean> {
     const store = this.getStore();
+    if (!store) return false;
     
     // Remove the conflicting action from queue
-    store.offline.removePendingAction(conflict.localAction.id);
+    if (store.offline && typeof store.offline.removePendingAction === 'function') {
+      store.offline.removePendingAction(conflict.localAction.id);
+    }
     
     // Update local store with server data
     switch (conflict.localAction.type) {
@@ -473,9 +481,12 @@ class EnhancedSyncService {
   // Execute merged update
   private async executeMergedUpdate(originalAction: OfflineAction, mergedData: any): Promise<boolean> {
     const store = this.getStore();
+    if (!store) return false;
     
     // Remove original action
-    store.removePendingAction(originalAction.id);
+    if (store.offline && typeof store.offline.removePendingAction === 'function') {
+      store.offline.removePendingAction(originalAction.id);
+    }
     
     // Create new action with merged data
     const mergedAction: OfflineAction = {
@@ -543,7 +554,14 @@ class EnhancedSyncService {
     console.log('🔄 Starting enhanced sync...');
     
     const store = this.getStore();
-    const actionsToSync = store.offline.getActionsForSync();
+    if (!store || !store.offline) {
+      console.error('🔄 Store not available for sync');
+      return this.createEmptySyncResult();
+    }
+    
+    const actionsToSync = typeof store.offline.getActionsForSync === 'function' 
+      ? store.offline.getActionsForSync() 
+      : [];
     
     const result: SyncResult = {
       success: false,
@@ -569,19 +587,25 @@ class EnhancedSyncService {
         try {
           const actionResult = await this.syncActionWithConflictDetection(action);
           if (actionResult.success) {
-            store.offline.removePendingAction(action.id);
+            if (store.offline && typeof store.offline.removePendingAction === 'function') {
+              store.offline.removePendingAction(action.id);
+            }
             result.syncedActions++;
           } else if (actionResult.conflict) {
             result.conflicts.push(actionResult.conflict);
             result.metrics.conflictsDetected++;
           } else {
-            store.offline.movePendingToFailed(action.id, actionResult.error || 'Unknown error');
+            if (store.offline && typeof store.offline.markActionFailed === 'function') {
+              store.offline.markActionFailed(action.id, actionResult.error || 'Unknown error');
+            }
             result.failedActions++;
             result.errors.push(actionResult.error || 'Unknown error');
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          store.movePendingToFailed(action.id, errorMessage);
+          if (store.offline && typeof store.offline.markActionFailed === 'function') {
+            store.offline.markActionFailed(action.id, errorMessage);
+          }
           result.failedActions++;
           result.errors.push(errorMessage);
         }

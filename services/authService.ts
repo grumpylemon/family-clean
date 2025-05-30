@@ -27,11 +27,11 @@ export const authService = {
     // Use real Firebase auth
     console.log('Using real Firebase signInWithPopup');
     
-    // For web platform, use web-specific service to avoid bundling issues
+    // For web platform, use browser-specific service to avoid bundling issues
     if (Platform.OS === 'web') {
-      console.log('Using web-specific auth service');
-      const { authServiceWeb } = await import('./authServiceWeb');
-      return await authServiceWeb.signInWithGoogle(auth);
+      console.log('Using browser-specific auth service');
+      const { firebaseAuthBrowser } = await import('./firebaseAuthBrowser');
+      return await firebaseAuthBrowser.signInWithGoogle(auth);
     }
     
     // For other platforms, use dynamic import
@@ -79,11 +79,11 @@ export const authService = {
     // Use real Firebase auth
     console.log('Using real Firebase signInAnonymously');
     
-    // For web platform, use web-specific service
+    // For web platform, use browser-specific service
     if (Platform.OS === 'web') {
-      console.log('Using web-specific auth service');
-      const { authServiceWeb } = await import('./authServiceWeb');
-      return await authServiceWeb.signInAnonymously(auth);
+      console.log('Using browser-specific auth service');
+      const { firebaseAuthBrowser } = await import('./firebaseAuthBrowser');
+      return await firebaseAuthBrowser.signInAnonymously(auth);
     }
     
     // For other platforms, use dynamic import
@@ -104,11 +104,11 @@ export const authService = {
     // Use real Firebase auth
     console.log('Using real Firebase signOut');
     
-    // For web platform, use web-specific service
+    // For web platform, use browser-specific service
     if (Platform.OS === 'web') {
-      console.log('Using web-specific auth service');
-      const { authServiceWeb } = await import('./authServiceWeb');
-      return await authServiceWeb.signOut(auth);
+      console.log('Using browser-specific auth service');
+      const { firebaseAuthBrowser } = await import('./firebaseAuthBrowser');
+      return await firebaseAuthBrowser.signOut(auth);
     }
     
     // For other platforms, use dynamic import
@@ -129,12 +129,12 @@ export const authService = {
     // Use real Firebase auth
     console.log('Using real Firebase onAuthStateChanged');
     
-    // For web platform, use web-specific service
+    // For web platform, use browser-specific service
     if (Platform.OS === 'web') {
-      console.log('Using web-specific auth service');
-      // Import synchronously for web
-      const { authServiceWeb } = require('./authServiceWeb');
-      return authServiceWeb.onAuthStateChanged(auth, callback);
+      console.log('Using browser-specific auth service');
+      // For onAuthStateChanged, we need to handle the async loading differently
+      const { firebaseAuthBrowser } = require('./firebaseAuthBrowser');
+      return firebaseAuthBrowser.onAuthStateChanged(auth, callback);
     }
     
     // For other platforms, use require

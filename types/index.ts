@@ -147,6 +147,15 @@ export interface FamilyMember {
   photoURL?: string;
   joinedAt: Date | string;
   isActive: boolean;
+  // Takeover statistics
+  takeoverStats?: {
+    choresTakenOver: number;
+    totalTakeoverBonus: number;
+    lastTakeoverAt?: string;
+    takeoverStreak: number;
+    dailyTakeoverCount: number;
+    dailyTakeoverResetAt: string;
+  };
 }
 
 export interface Family {
@@ -176,6 +185,8 @@ export interface FamilySettings {
     primaryColor?: string;
     secondaryColor?: string;
   };
+  // Takeover system settings
+  takeoverSettings?: TakeoverSettings;
 }
 
 // Chore Types
@@ -224,6 +235,12 @@ export interface Chore {
   takenOverAt?: Date | string; // When the takeover happened
   takeoverReason?: string; // Optional: reason for takeover (e.g., "not_home", "unable", "helping")
   missedBy?: string[]; // Track users who missed this assignment
+  // Enhanced takeover fields
+  takeoverEligibleAt?: string; // ISO date when takeover becomes available
+  takeoverHistory?: ChoreTakeoverHistory[];
+  isTakenOver?: boolean;
+  takeoverBonusPoints?: number;
+  takeoverBonusXP?: number;
 }
 
 // Reward Types
@@ -285,7 +302,7 @@ export interface Achievement {
   criteria: {
     type: 'chores_completed' | 'streak_days' | 'points_earned' | 'level_reached' | 
           'category_streak' | 'perfect_day_streak' | 'early_bird_streak' | 'room_streak' | 
-          'streak_recovery' | 'multiple_streaks' | 'streak_milestone';
+          'streak_recovery' | 'multiple_streaks' | 'streak_milestone' | 'chores_taken_over';
     value: number;
     // Additional criteria for streak-specific achievements
     streakType?: StreakType;
@@ -831,4 +848,51 @@ export interface CollaborationNotification {
   expiresAt?: Date | string;
   // Additional data
   metadata?: Record<string, any>;
+}
+
+// ====== CHORE TAKEOVER SYSTEM ======
+
+export interface ChoreTakeoverHistory {
+  originalAssignee: string;
+  originalAssigneeName: string;
+  takenOverBy: string;
+  takenOverByName: string;
+  takenOverAt: string;
+  bonusPoints: number;
+  bonusXP: number;
+  reason?: 'overdue' | 'abandoned' | 'requested';
+  adminApproved?: boolean;
+}
+
+export interface ChoreTakeover {
+  id: string;
+  choreId: string;
+  choreTitle: string;
+  originalAssigneeId: string;
+  originalAssigneeName: string;
+  newAssigneeId: string;
+  newAssigneeName: string;
+  familyId: string;
+  takenOverAt: string;
+  reason: 'overdue' | 'abandoned' | 'requested';
+  bonusPoints: number;
+  bonusXP: number;
+  adminApproved?: boolean;
+  adminApprovedBy?: string;
+  adminApprovedAt?: string;
+  completedAt?: string;
+  // Validation data
+  overdueHours?: number;
+  requiresAdminApproval: boolean; // For high-value chores
+}
+
+export interface TakeoverSettings {
+  enabled: boolean;
+  overdueThresholdHours: number; // Default 24
+  maxDailyTakeovers: number; // Default 2
+  takeoverBonusPercentage: number; // Default 25
+  takeoverXPMultiplier: number; // Default 2.0
+  cooldownAfterTakeoverHours: number; // Default 48
+  highValueThreshold: number; // Points threshold for admin approval (default 100)
+  protectionPeriodHours: number; // New chore protection (default 12)
 }

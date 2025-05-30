@@ -62,7 +62,10 @@ export default function HomeScreen() {
 
   // Show family setup if user has no family
   if (!family) {
-    return <FamilySetup />;
+    return <FamilySetup onComplete={() => {
+      // Refresh family data after setup
+      refreshFamily();
+    }} />;
   }
 
   return (

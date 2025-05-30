@@ -1,8 +1,9 @@
-// Chore Slice - Placeholder implementation
-// Will be fully implemented when needed
+// Chore Slice - Enhanced with Takeover System
+// Implements chore management with takeover functionality
 
 import { StateCreator } from 'zustand';
 import { FamilyStore, ChoreSlice } from './types';
+import { Chore, ChoreTakeover } from '@/types';
 
 export const createChoreSlice: StateCreator<
   FamilyStore,

@@ -1,18 +1,16 @@
 // Web-specific Firebase Auth Service
 // This file imports Firebase Auth functions directly for web platform
 
-import { 
-  signInWithPopup,
-  GoogleAuthProvider,
-  signInAnonymously,
-  signOut,
-  onAuthStateChanged,
-  Auth,
-  User as FirebaseUser,
-  UserCredential
-} from 'firebase/auth';
+// Use namespace import to ensure proper bundling
+import * as firebaseAuth from 'firebase/auth';
+
+// Re-export types for convenience
+type Auth = firebaseAuth.Auth;
+type FirebaseUser = firebaseAuth.User;
+type UserCredential = firebaseAuth.UserCredential;
 
 console.log('authServiceWeb loaded - using direct Firebase imports');
+console.log('Firebase auth module loaded:', Object.keys(firebaseAuth).filter(k => typeof firebaseAuth[k] === 'function').join(', '));
 
 // Export wrapped functions for web platform
 export const authServiceWeb = {
@@ -20,12 +18,19 @@ export const authServiceWeb = {
   async signInWithGoogle(auth: Auth): Promise<UserCredential> {
     console.log('authServiceWeb.signInWithGoogle called');
     
-    const provider = new GoogleAuthProvider();
+    // Verify functions exist
+    if (!firebaseAuth.signInWithPopup || typeof firebaseAuth.signInWithPopup !== 'function') {
+      console.error('signInWithPopup not found or not a function');
+      console.error('Available auth functions:', Object.keys(firebaseAuth).filter(k => typeof firebaseAuth[k] === 'function'));
+      throw new Error('signInWithPopup is not available in firebase/auth module');
+    }
+    
+    const provider = new firebaseAuth.GoogleAuthProvider();
     provider.addScope('profile');
     provider.addScope('email');
     
     try {
-      const result = await signInWithPopup(auth, provider);
+      const result = await firebaseAuth.signInWithPopup(auth, provider);
       console.log('Sign in successful');
       return result;
     } catch (error: any) {
@@ -51,18 +56,18 @@ export const authServiceWeb = {
   // Sign in anonymously
   async signInAnonymously(auth: Auth): Promise<UserCredential> {
     console.log('authServiceWeb.signInAnonymously called');
-    return await signInAnonymously(auth);
+    return await firebaseAuth.signInAnonymously(auth);
   },
 
   // Sign out
   async signOut(auth: Auth): Promise<void> {
     console.log('authServiceWeb.signOut called');
-    return await signOut(auth);
+    return await firebaseAuth.signOut(auth);
   },
 
   // Auth state listener
   onAuthStateChanged(auth: Auth, callback: (user: FirebaseUser | null) => void) {
     console.log('authServiceWeb.onAuthStateChanged called');
-    return onAuthStateChanged(auth, callback);
+    return firebaseAuth.onAuthStateChanged(auth, callback);
   }
 };

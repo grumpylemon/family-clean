@@ -17,6 +17,7 @@ import ChoreManagement from '@/components/ChoreManagement';
 import ManageMembers from '@/components/ManageMembers';
 import RewardManagement from '@/components/RewardManagement';
 import FamilySettings from '@/components/FamilySettings';
+import { ZustandAdminPanel } from '@/components/ZustandAdminPanel';
 
 interface AdminSettingsProps {
   visible: boolean;
@@ -44,6 +45,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
   const [showMemberManagement, setShowMemberManagement] = useState(false);
   const [showRewardManagement, setShowRewardManagement] = useState(false);
   const [showFamilySettings, setShowFamilySettings] = useState(false);
+  const [showZustandAdmin, setShowZustandAdmin] = useState(false);
 
   // Admin menu items in iOS Settings style
   const adminMenuItems: AdminMenuItem[] = [
@@ -94,6 +96,16 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
       icon: 'settings',
       color: '#64748b',
       onPress: () => setShowFamilySettings(true),
+      enabled: canManageFamily,
+      hasChevron: true,
+    },
+    {
+      id: 'zustand-admin',
+      title: 'Zustand Remote Admin',
+      description: 'Advanced store management and offline controls',
+      icon: 'server',
+      color: '#7c3aed',
+      onPress: () => setShowZustandAdmin(true),
       enabled: canManageFamily,
       hasChevron: true,
     },
@@ -300,6 +312,12 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
         <FamilySettings 
           visible={showFamilySettings}
           onClose={() => setShowFamilySettings(false)}
+        />
+        
+        {/* Zustand Admin Panel */}
+        <ZustandAdminPanel 
+          visible={showZustandAdmin}
+          onClose={() => setShowZustandAdmin(false)}
         />
       </SafeAreaView>
     </Modal>

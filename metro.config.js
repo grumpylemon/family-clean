@@ -18,12 +18,39 @@ config.resolver.blockList = [
 // This forces Metro to use CommonJS versions instead of ESM versions containing import.meta
 config.resolver.unstable_conditionNames = ['browser', 'require', 'react-native'];
 
-// Ensure package exports resolution works correctly
-config.resolver.unstable_enablePackageExports = true;
+// Disable package exports for Firebase compatibility
+// Firebase SDK has issues with Metro's package.json exports field support
+config.resolver.unstable_enablePackageExports = false;
 
 // CRITICAL FIX for Firebase Auth on Web
 // Force browser version of Firebase Auth for web builds
 config.resolver.resolverMainFields = ['browser', 'module', 'main'];
+
+// Custom resolver to ensure Firebase Auth uses browser version for web
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  // Force browser version of Firebase Auth when building for web
+  if (platform === 'web' && moduleName === 'firebase/auth') {
+    console.log('[Metro] Intercepting firebase/auth for web platform');
+    
+    // Try to resolve the browser-specific entry point
+    try {
+      const firebaseAuthPackageJson = require('firebase/auth/package.json');
+      const browserEntry = firebaseAuthPackageJson.browser || firebaseAuthPackageJson.module;
+      
+      if (browserEntry) {
+        const path = require('path');
+        const resolvedPath = path.join(path.dirname(require.resolve('firebase/auth/package.json')), browserEntry);
+        console.log('[Metro] Resolved firebase/auth to browser entry:', resolvedPath);
+        return { filePath: resolvedPath };
+      }
+    } catch (e) {
+      console.warn('[Metro] Could not resolve browser entry for firebase/auth:', e.message);
+    }
+  }
+  
+  // Default resolution for everything else
+  return context.resolveRequest(context, moduleName, platform);
+};
 
 
 // Configure transformer options with ZUSTAND V5 optimized minification

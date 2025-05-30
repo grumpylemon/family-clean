@@ -12,6 +12,7 @@ import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 import { useFamily } from '@/hooks/useZustandHooks';
 import { useAuth } from '@/hooks/useZustandHooks';
+import { router } from 'expo-router';
 
 interface FamilySetupProps {
   onComplete?: () => void;
@@ -33,7 +34,13 @@ export function FamilySetup({ onComplete }: FamilySetupProps) {
     try {
       const success = await createNewFamily(familyName.trim());
       if (success) {
-        onComplete?.();
+        // If onComplete is provided, call it
+        if (onComplete) {
+          onComplete();
+        } else {
+          // Otherwise, navigate to dashboard to ensure we leave the setup screen
+          router.replace('/(tabs)/dashboard');
+        }
       }
     } finally {
       setLoading(false);
@@ -48,12 +55,22 @@ export function FamilySetup({ onComplete }: FamilySetupProps) {
     try {
       const success = await joinFamily(joinCode.trim().toUpperCase());
       if (success) {
-        onComplete?.();
+        // If onComplete is provided, call it
+        if (onComplete) {
+          onComplete();
+        } else {
+          // Otherwise, navigate to dashboard to ensure we leave the setup screen
+          router.replace('/(tabs)/dashboard');
+        }
       } else if (error?.includes('already a member')) {
         // If already a member, try to refresh family data
         const refreshed = await refreshFamily();
         if (refreshed) {
-          onComplete?.();
+          if (onComplete) {
+            onComplete();
+          } else {
+            router.replace('/(tabs)/dashboard');
+          }
         } else {
           setLocalError('Unable to load family data. Please try refreshing the page.');
         }
@@ -69,7 +86,11 @@ export function FamilySetup({ onComplete }: FamilySetupProps) {
     try {
       const refreshed = await refreshFamily();
       if (refreshed) {
-        onComplete?.();
+        if (onComplete) {
+          onComplete();
+        } else {
+          router.replace('/(tabs)/dashboard');
+        }
       } else {
         setLocalError('Unable to load family data. Please try refreshing the page.');
       }

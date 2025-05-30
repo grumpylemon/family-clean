@@ -1,6 +1,6 @@
 # Family Clean - Complete Tech Stack Documentation
 
-Last Updated: May 28, 2025
+Last Updated: May 29, 2025
 
 ## Current Technology Stack
 
@@ -28,7 +28,8 @@ Last Updated: May 28, 2025
 ### State Management
 
 #### Complete Zustand Implementation (Updated: 2025-05-29)
-- **Zustand v5.0.5** - Primary state management solution with offline-first architecture
+- **Zustand v4.5.7** - Primary state management solution with offline-first architecture
+  - Note: Using v4.x due to v5 incompatibility with Metro bundler (see zustand_v5_migration_notes.md)
   - Persistent store with cross-platform storage (localStorage/AsyncStorage)
   - Comprehensive offline action queue system with retry mechanisms
   - Network detection and automatic sync capabilities
@@ -152,7 +153,7 @@ Last Updated: May 28, 2025
 - **react-native-webview ~13.13.5** - Web content display
 
 #### State Management & Offline Libraries (Added: 2025-05-29)
-- **zustand ^5.0.5** - Modern state management with persistence
+- **zustand ^4.5.7** - Modern state management with persistence (v4.x for Metro compatibility)
 - **@react-native-community/netinfo ^11.4.1** - Network connectivity detection
 - **@react-native-async-storage/async-storage 2.1.2** - Cross-platform storage
 

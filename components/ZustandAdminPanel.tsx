@@ -16,7 +16,29 @@ interface ZustandAdminPanelProps {
 
 export function ZustandAdminPanel({ visible, onClose }: ZustandAdminPanelProps) {
   const [debugMode, setDebugMode] = useState(false);
-  const [cacheStats, setCacheStats] = useState(cacheService.getStats());
+  const [cacheStats, setCacheStats] = useState(() => {
+    try {
+      return cacheService.getStats();
+    } catch (error) {
+      console.error('Failed to get initial cache stats:', error);
+      return {
+        totalSize: 0,
+        entryCount: 0,
+        hitCount: 0,
+        missCount: 0,
+        evictionCount: 0,
+        compressionRatio: 1,
+        averageAccessTime: 0,
+        cacheEfficiency: 0,
+        priorityDistribution: {
+          critical: 0,
+          high: 0,
+          medium: 0,
+          low: 0
+        }
+      };
+    }
+  });
   
   const {
     isOnline,
@@ -59,7 +81,12 @@ export function ZustandAdminPanel({ visible, onClose }: ZustandAdminPanelProps) 
           text: 'Force Offline', 
           style: 'destructive',
           onPress: () => {
-            useFamilyStore.getState().setNetworkStatus('offline');
+            const store = useFamilyStore.getState();
+            if (store.offline && store.offline.setOnlineStatus) {
+              store.offline.setOnlineStatus(false);
+            } else {
+              console.error('setOnlineStatus method not available');
+            }
             Alert.alert('Success', 'Forced offline mode enabled');
           }
         }
@@ -68,7 +95,12 @@ export function ZustandAdminPanel({ visible, onClose }: ZustandAdminPanelProps) 
   };
 
   const handleForceOnline = () => {
-    useFamilyStore.getState().setNetworkStatus('online');
+    const store = useFamilyStore.getState();
+    if (store.offline && store.offline.setOnlineStatus) {
+      store.offline.setOnlineStatus(true);
+    } else {
+      console.error('setOnlineStatus method not available');
+    }
     Alert.alert('Success', 'Network status reset to online');
   };
 
@@ -76,18 +108,22 @@ export function ZustandAdminPanel({ visible, onClose }: ZustandAdminPanelProps) 
     try {
       Alert.alert('Enhanced Sync', 'Starting enhanced sync with conflict resolution...');
       
-      const result = await enhancedSyncService.performEnhancedSync();
-      
-      const message = `Enhanced sync completed:\n• ${result.syncedActions} actions synced\n• ${result.failedActions} actions failed\n• ${result.conflicts.length} conflicts resolved\n• Duration: ${result.metrics.duration}ms`;
-      
-      Alert.alert(
-        result.success ? 'Enhanced Sync Success' : 'Enhanced Sync Completed with Issues',
-        message,
-        [{ text: 'OK', style: 'default' }]
-      );
-      
-      if (result.conflicts.length > 0) {
-        console.log('🔄 Enhanced sync conflicts:', result.conflicts);
+      if (enhancedSyncService && typeof enhancedSyncService.performEnhancedSync === 'function') {
+        const result = await enhancedSyncService.performEnhancedSync();
+        
+        const message = `Enhanced sync completed:\n• ${result.syncedActions} actions synced\n• ${result.failedActions} actions failed\n• ${result.conflicts.length} conflicts resolved\n• Duration: ${result.metrics.duration}ms`;
+        
+        Alert.alert(
+          result.success ? 'Enhanced Sync Success' : 'Enhanced Sync Completed with Issues',
+          message,
+          [{ text: 'OK', style: 'default' }]
+        );
+        
+        if (result.conflicts.length > 0) {
+          console.log('🔄 Enhanced sync conflicts:', result.conflicts);
+        }
+      } else {
+        throw new Error('Enhanced sync service not available');
       }
     } catch (error) {
       console.error('🔄 Enhanced sync error:', error);
@@ -155,7 +191,11 @@ export function ZustandAdminPanel({ visible, onClose }: ZustandAdminPanelProps) 
       const familyId = state.family?.data.id || null;
       
       Alert.alert('Cache Warmup', 'Starting cache warmup process...');
-      await cacheIntegration.warmupCache(userId, familyId);
+      if (cacheIntegration && typeof cacheIntegration.warmupCache === 'function') {
+        await cacheIntegration.warmupCache(userId, familyId);
+      } else {
+        throw new Error('Cache warmup method not available');
+      }
       Alert.alert('Success', 'Cache warmup completed');
       
       // Refresh stats
@@ -175,7 +215,11 @@ export function ZustandAdminPanel({ visible, onClose }: ZustandAdminPanelProps) 
           text: 'Clear', 
           style: 'destructive',
           onPress: async () => {
-            await cacheService.clear({ keepPriority: ['critical', 'high'] });
+            if (cacheService && typeof cacheService.clear === 'function') {
+              await cacheService.clear({ keepPriority: ['critical', 'high'] });
+            } else {
+              throw new Error('Cache clear method not available');
+            }
             setCacheStats(cacheService.getStats());
             Alert.alert('Success', 'Low priority cache cleared');
           }
@@ -285,7 +329,7 @@ export function ZustandAdminPanel({ visible, onClose }: ZustandAdminPanelProps) 
           {/* Action Management */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🔄 Action Management</Text>
-            {pendingActions.length > 0 && (
+            {pendingActions && pendingActions.length > 0 && (
               <View style={styles.actionCard}>
                 <Text style={styles.actionTitle}>
                   📤 {pendingActions.length} Pending Actions
@@ -303,7 +347,7 @@ export function ZustandAdminPanel({ visible, onClose }: ZustandAdminPanelProps) 
               </View>
             )}
 
-            {failedActions.length > 0 && (
+            {failedActions && failedActions.length > 0 && (
               <View style={styles.actionCard}>
                 <Text style={styles.actionTitle}>
                   ❌ {failedActions.length} Failed Actions
@@ -359,7 +403,14 @@ export function ZustandAdminPanel({ visible, onClose }: ZustandAdminPanelProps) 
             <Text style={styles.sectionTitle}>📊 Advanced Cache Analytics</Text>
             <TouchableOpacity
               style={styles.refreshButton}
-              onPress={() => setCacheStats(cacheService.getStats())}
+              onPress={() => {
+                try {
+                  setCacheStats(cacheService.getStats());
+                } catch (error) {
+                  console.error('Failed to refresh cache stats:', error);
+                  Alert.alert('Error', 'Failed to refresh cache statistics');
+                }
+              }}
             >
               <Text style={styles.refreshButtonText}>Refresh Stats</Text>
             </TouchableOpacity>

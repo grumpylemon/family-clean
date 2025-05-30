@@ -58,7 +58,7 @@ const getRedemptionsCollection = () => safeCollection('redemptions');
 
 // Fixed family ID for demo purposes to ensure persistence
 // In a real app, this would be retrieved from the user's profile
-const DEFAULT_FAMILY_ID = 'demo-family-id';
+// const DEFAULT_FAMILY_ID = 'demo-family-id'; // DISABLED: No longer forcing demo family
 
 
 // Mock data for fallback
@@ -130,14 +130,10 @@ const formatForFirestore = (data: any) => {
 
 // Ensure we have a consistent family ID for the demo
 export const getDefaultFamilyId = (_userId?: string) => {
-  // For iOS, use a mock ID
-  if (Platform.OS === 'ios') {
-    return 'mock-family-id';
-  }
-  
-  // IMPORTANT: For persistence, always use the same fixed family ID
-  // Do NOT use userId to generate family ID as it changes between sessions
-  return DEFAULT_FAMILY_ID;
+  // DISABLED: No longer forcing demo family ID
+  // This function should not be used in production
+  console.warn('getDefaultFamilyId called - this should not happen in production');
+  return null;
 };
 
 
@@ -151,8 +147,8 @@ export const getChores = async (familyId: string) => {
   
   try {
     // Use default family ID for consistency
-    const effectiveFamilyId = getDefaultFamilyId(auth.currentUser?.uid);
-    console.log(`Getting chores for family ${effectiveFamilyId}, using mock: ${isMockImplementation()}, requested family: ${familyId}`);
+    // const familyId = getDefaultFamilyId(...); // DISABLED: Use actual familyId
+    console.log(`Getting chores for family ${familyId}, using mock: ${isMockImplementation()}, requested family: ${familyId}`);
     
     // If we're using mock, return mock data for better demo
     if (isMockImplementation()) {
@@ -177,7 +173,7 @@ export const getChores = async (familyId: string) => {
     }
     
     // Always use the effective family ID for consistency, regardless of what was passed in
-    console.log(`Using effective family ID: ${effectiveFamilyId} for query`);
+    console.log(`Using effective family ID: ${familyId} for query`);
     
     // Get Firestore instance
     const db = getFirestore();
@@ -190,10 +186,10 @@ export const getChores = async (familyId: string) => {
     console.log('Creating chores collection reference');
     const choresRef = collection(db, 'chores');
     console.log('Creating query for chores');
-    const q = query(choresRef, where('familyId', '==', effectiveFamilyId));
+    const q = query(choresRef, where('familyId', '==', familyId));
     console.log('Executing query');
     const querySnapshot = await getDocs(q);
-    console.log(`Found ${querySnapshot.docs.length} chores in Firestore for family ${effectiveFamilyId}`);
+    console.log(`Found ${querySnapshot.docs.length} chores in Firestore for family ${familyId}`);
     
     // Process the results
     const fetchedChores = querySnapshot.docs
@@ -215,7 +211,7 @@ export const getChores = async (familyId: string) => {
         };
       }) as Chore[];
     
-    console.log(`Returning ${fetchedChores.length} chores after filtering for family ${effectiveFamilyId}`);
+    console.log(`Returning ${fetchedChores.length} chores after filtering for family ${familyId}`);
     return fetchedChores;
   } catch (error) {
     console.error('Error getting chores:', error);
@@ -263,23 +259,23 @@ export const createChore = async (chore: Omit<Chore, 'id'>) => {
   
   try {
     // ALWAYS use default family ID for consistency, regardless of what was passed in
-    const effectiveFamilyId = getDefaultFamilyId(auth.currentUser?.uid);
+    // const familyId = getDefaultFamilyId(...); // DISABLED: Use actual familyId
     
     // Log original vs effective family ID
-    if (chore.familyId !== effectiveFamilyId) {
-      console.log(`Overriding passed family ID ${chore.familyId} with effective ID ${effectiveFamilyId} for persistence`);
+    if (chore.familyId !== familyId) {
+      console.log(`Overriding passed family ID ${chore.familyId} with effective ID ${familyId} for persistence`);
     }
     
     // Make sure to set the family ID to the effective one
     const choreWithFamilyId = {
       ...chore,
-      familyId: effectiveFamilyId,
+      familyId: familyId,
       createdAt: new Date(),
       // Explicitly set deleted flag to false to prevent filtering issues
       deleted: false
     };
     
-    console.log(`Adding chore: ${chore.title}, using mock: ${isMockImplementation()}, family: ${effectiveFamilyId}`);
+    console.log(`Adding chore: ${chore.title}, using mock: ${isMockImplementation()}, family: ${familyId}`);
     
     // If using mock, just generate a mock ID
     if (isMockImplementation()) {
@@ -1086,7 +1082,7 @@ export const getFamily = async (familyId: string) => {
   
   try {
     // Use default family ID for consistency
-    const effectiveFamilyId = getDefaultFamilyId(auth.currentUser?.uid);
+    // const familyId = getDefaultFamilyId(...); // DISABLED: Use actual familyId
     
     // Return mock family for mock implementation
     if (isMockImplementation()) {
@@ -1104,7 +1100,7 @@ export const getFamily = async (familyId: string) => {
       return mockFamily;
     }
     
-    console.log(`Checking for family with ID: ${effectiveFamilyId}`);
+    console.log(`Checking for family with ID: ${familyId}`);
     
     // Get Firestore instance
     const db = getFirestore();
@@ -1114,17 +1110,17 @@ export const getFamily = async (familyId: string) => {
     }
     
     // Check if family exists
-    const familyDocRef = doc(db, 'families', effectiveFamilyId);
+    const familyDocRef = doc(db, 'families', familyId);
     const familySnapshot = await getDoc(familyDocRef);
     
     // If family exists, return it
     if (familySnapshot.exists()) {
-      console.log(`Found existing family: ${effectiveFamilyId}`);
+      console.log(`Found existing family: ${familyId}`);
       return { id: familySnapshot.id, ...familySnapshot.data() } as Family;
     } 
     
     // Otherwise, create a default family (for demo purposes)
-    console.log(`Family not found, creating default family: ${effectiveFamilyId}`);
+    console.log(`Family not found, creating default family: ${familyId}`);
     const defaultFamily: Omit<Family, 'id'> = {
       name: auth.currentUser?.displayName ? `${auth.currentUser.displayName}'s Family` : 'Demo Family',
       adminId: auth.currentUser?.uid || 'unknown',
@@ -1158,18 +1154,18 @@ export const getFamily = async (familyId: string) => {
     const formattedFamily = formatForFirestore(defaultFamily);
     
     // Add to Firestore with the specific ID
-    console.log(`Creating new family with ID ${effectiveFamilyId}:`, formattedFamily);
-    await setDoc(doc(db, 'families', effectiveFamilyId), formattedFamily);
+    console.log(`Creating new family with ID ${familyId}:`, formattedFamily);
+    await setDoc(doc(db, 'families', familyId), formattedFamily);
     
     // Verify the family was created
-    const verifyDoc = await getDoc(doc(db, 'families', effectiveFamilyId));
+    const verifyDoc = await getDoc(doc(db, 'families', familyId));
     if (verifyDoc.exists()) {
-      console.log(`Successfully verified family in Firestore with ID: ${effectiveFamilyId}`);
+      console.log(`Successfully verified family in Firestore with ID: ${familyId}`);
     } else {
-      console.error(`Family with ID ${effectiveFamilyId} was not found after creation!`);
+      console.error(`Family with ID ${familyId} was not found after creation!`);
     }
     
-    return { id: effectiveFamilyId, ...defaultFamily } as Family;
+    return { id: familyId, ...defaultFamily } as Family;
   } catch (error) {
     console.error('Error getting/creating family:', error);
     // Return mock data for demo
@@ -1184,10 +1180,10 @@ export const getUserFamily = async (userId: string) => {
   
   try {
     // Use default family ID for the demo
-    const effectiveFamilyId = getDefaultFamilyId(userId);
+    // const familyId = getDefaultFamilyId(...); // DISABLED: Use actual familyId
     
     // For demo purposes, just get the family directly
-    return await getFamily(effectiveFamilyId);
+    return await getFamily(familyId);
   } catch (error) {
     console.error('Error getting user family:', error);
     return null;
@@ -1201,13 +1197,11 @@ export const createFamily = async (family: Omit<Family, 'id' | 'createdAt'>) => 
   }
   
   try {
-    // Use default family ID for consistency in the demo
-    const effectiveFamilyId = getDefaultFamilyId(auth.currentUser?.uid);
-    
-    // For mock implementation, just return a mock ID
+    // For mock implementation, generate a unique ID
     if (isMockImplementation()) {
-      console.log(`Creating mock family: ${family.name}`);
-      return effectiveFamilyId;
+      const mockFamilyId = `mock-family-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      console.log(`Creating mock family: ${family.name} with ID: ${mockFamilyId}`);
+      return mockFamilyId;
     }
     
     // Format data for Firestore
@@ -1216,11 +1210,12 @@ export const createFamily = async (family: Omit<Family, 'id' | 'createdAt'>) => 
       createdAt: new Date()
     });
     
-    // Create with specific ID for consistency
-    console.log(`Creating family with ID ${effectiveFamilyId}:`, formattedFamily);
-    await setDoc(doc(getFamiliesCollection(), effectiveFamilyId), formattedFamily);
+    // For real Firebase, let Firestore generate a unique ID
+    console.log(`Creating family with auto-generated ID:`, formattedFamily);
+    const docRef = await addDoc(getFamiliesCollection(), formattedFamily);
     
-    return effectiveFamilyId;
+    console.log(`Family created with unique ID: ${docRef.id}`);
+    return docRef.id;
   } catch (error) {
     console.error('Error creating family:', error);
     return 'mock-family-id';
@@ -1591,8 +1586,8 @@ export const getRewards = async (_familyId: string): Promise<Reward[]> => {
   }
   
   try {
-    const effectiveFamilyId = getDefaultFamilyId(auth.currentUser?.uid);
-    console.log(`Getting rewards for family ${effectiveFamilyId}, using mock: ${isMockImplementation()}`);
+    // const familyId = getDefaultFamilyId(...); // DISABLED: Use actual familyId
+    console.log(`Getting rewards for family ${familyId}, using mock: ${isMockImplementation()}`);
     
     if (isMockImplementation()) {
       console.log('Using mock rewards data');
@@ -1606,7 +1601,7 @@ export const getRewards = async (_familyId: string): Promise<Reward[]> => {
     }
     
     const rewardsRef = collection(db, 'rewards');
-    const q = query(rewardsRef, where('familyId', '==', effectiveFamilyId), where('isActive', '==', true));
+    const q = query(rewardsRef, where('familyId', '==', familyId), where('isActive', '==', true));
     const querySnapshot = await getDocs(q);
     
     const rewards = querySnapshot.docs.map((doc) => ({
@@ -1614,7 +1609,7 @@ export const getRewards = async (_familyId: string): Promise<Reward[]> => {
       ...doc.data()
     })) as Reward[];
     
-    console.log(`Returning ${rewards.length} rewards for family ${effectiveFamilyId}`);
+    console.log(`Returning ${rewards.length} rewards for family ${familyId}`);
     return rewards.sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999));
   } catch (error) {
     console.error('Error getting rewards:', error);
@@ -1653,11 +1648,11 @@ export const createReward = async (reward: Omit<Reward, 'id' | 'createdAt' | 'up
   }
   
   try {
-    const effectiveFamilyId = getDefaultFamilyId(auth.currentUser?.uid);
+    // const familyId = getDefaultFamilyId(...); // DISABLED: Use actual familyId
     
     const rewardWithDefaults = {
       ...reward,
-      familyId: effectiveFamilyId,
+      familyId: familyId,
       createdBy: auth.currentUser?.uid || 'unknown',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -1928,10 +1923,10 @@ export const getFamilyRedemptions = async (_familyId: string): Promise<RewardRed
   }
   
   try {
-    const effectiveFamilyId = getDefaultFamilyId(auth.currentUser?.uid);
+    // const familyId = getDefaultFamilyId(...); // DISABLED: Use actual familyId
     
     if (isMockImplementation()) {
-      console.log(`Mock get family redemptions for: ${effectiveFamilyId}`);
+      console.log(`Mock get family redemptions for: ${familyId}`);
       return [];
     }
     
@@ -1941,7 +1936,7 @@ export const getFamilyRedemptions = async (_familyId: string): Promise<RewardRed
     }
     
     const redemptionsRef = collection(db, 'redemptions');
-    const q = query(redemptionsRef, where('familyId', '==', effectiveFamilyId));
+    const q = query(redemptionsRef, where('familyId', '==', familyId));
     const querySnapshot = await getDocs(q);
     
     const redemptions = querySnapshot.docs.map(doc => ({
@@ -2424,17 +2419,17 @@ export const getChoresByRoom = async (familyId: string, roomId: string): Promise
   }
 
   try {
-    const effectiveFamilyId = getDefaultFamilyId(auth.currentUser?.uid);
+    // const familyId = getDefaultFamilyId(...); // DISABLED: Use actual familyId
     
     if (isMockImplementation()) {
       return mockChores.filter(chore => 
-        chore.familyId === effectiveFamilyId && chore.roomId === roomId
+        chore.familyId === familyId && chore.roomId === roomId
       );
     }
 
     const q = query(
       getChoresCollection(),
-      where('familyId', '==', effectiveFamilyId),
+      where('familyId', '==', familyId),
       where('roomId', '==', roomId),
       where('deleted', '!=', true)
     );
@@ -2459,17 +2454,17 @@ export const getChoresByRoomType = async (familyId: string, roomType: string): P
   }
 
   try {
-    const effectiveFamilyId = getDefaultFamilyId(auth.currentUser?.uid);
+    // const familyId = getDefaultFamilyId(...); // DISABLED: Use actual familyId
     
     if (isMockImplementation()) {
       return mockChores.filter(chore => 
-        chore.familyId === effectiveFamilyId && chore.roomType === roomType
+        chore.familyId === familyId && chore.roomType === roomType
       );
     }
 
     const q = query(
       getChoresCollection(),
-      where('familyId', '==', effectiveFamilyId),
+      where('familyId', '==', familyId),
       where('roomType', '==', roomType),
       where('deleted', '!=', true)
     );

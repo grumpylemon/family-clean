@@ -19,6 +19,15 @@ export function StoreProvider({ children }: StoreProviderProps) {
       // Initialize network monitoring
       networkService.init();
       
+      // Initialize authentication state listener
+      const store = useFamilyStore.getState();
+      if (store.auth.checkAuthState) {
+        console.log('🏪 StoreProvider: Starting auth state listener');
+        store.auth.checkAuthState().catch(error => {
+          console.error('🏪 StoreProvider: Error checking auth state:', error);
+        });
+      }
+      
       // Platform-specific initialization
       if (Platform.OS === 'web') {
         console.log('🌐 Web platform detected - using localStorage persistence');

@@ -157,6 +157,8 @@ export const createFamilySlice: StateCreator<
                 user: user ? { ...user, familyId } : null
               }
             }));
+            
+            console.log('[FamilySlice] Family creation complete. State updated with family:', family.name, 'ID:', family.id);
             return true;
           } else {
             console.error('[FamilySlice] getFamily returned null for ID:', familyId);
@@ -295,10 +297,22 @@ export const createFamilySlice: StateCreator<
     },
 
     fetchFamily: async (familyId: string) => {
-      const { auth } = get();
+      const { auth, family } = get();
       const user = auth.user;
       
       if (!user) {
+        return;
+      }
+
+      // Prevent duplicate fetches
+      if (family.isLoading) {
+        console.log('[FamilySlice] Already loading family, skipping duplicate fetch');
+        return;
+      }
+
+      // Check if we already have this family loaded
+      if (family.family?.id === familyId && !family.error) {
+        console.log('[FamilySlice] Family already loaded, skipping fetch');
         return;
       }
 

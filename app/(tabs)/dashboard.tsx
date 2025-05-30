@@ -58,11 +58,11 @@ export default function DashboardScreen() {
   }, [user, authLoading]);
 
   useEffect(() => {
-    if (family) {
+    if (family?.id) {
       loadChores();
       checkWeeklyReset();
     }
-  }, [family]);
+  }, [family?.id]);
 
   const loadChores = async () => {
     if (!family) return;
@@ -166,7 +166,10 @@ export default function DashboardScreen() {
   }
 
   if (!family) {
-    return <FamilySetup />;
+    return <FamilySetup onComplete={() => {
+      // Navigate to home after family setup
+      router.replace('/(tabs)');
+    }} />;
   }
 
   const myChores = chores.filter(chore => 

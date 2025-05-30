@@ -1,12 +1,39 @@
 import { getApps, initializeApp } from 'firebase/app';
-import {
-  connectAuthEmulator,
-  getAuth,
-  initializeAuth,
-  getReactNativePersistence,
-  GoogleAuthProvider,
-} from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+
+// Import only the types to avoid bundling issues
+import type { Auth } from 'firebase/auth';
+
+// Conditionally import Firebase auth based on platform
+let connectAuthEmulator: any;
+let getAuth: any;
+let initializeAuth: any;
+let getReactNativePersistence: any;
+let GoogleAuthProvider: any;
+
+if (Platform.OS === 'web') {
+  // For web, use standard imports
+  const webAuth = require('firebase/auth');
+  connectAuthEmulator = webAuth.connectAuthEmulator;
+  getAuth = webAuth.getAuth;
+  initializeAuth = webAuth.initializeAuth;
+  GoogleAuthProvider = webAuth.GoogleAuthProvider;
+} else {
+  // For React Native, import with persistence support
+  const rnAuth = require('firebase/auth');
+  connectAuthEmulator = rnAuth.connectAuthEmulator;
+  getAuth = rnAuth.getAuth;
+  initializeAuth = rnAuth.initializeAuth;
+  getReactNativePersistence = rnAuth.getReactNativePersistence;
+  GoogleAuthProvider = rnAuth.GoogleAuthProvider;
+}
+
+// Import AsyncStorage only for React Native
+let AsyncStorage: any;
+if (Platform.OS !== 'web') {
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+}
+
 import {
   collection,
   connectFirestoreEmulator,
@@ -14,7 +41,6 @@ import {
   persistentLocalCache,
   persistentMultipleTabManager
 } from 'firebase/firestore';
-import { Platform } from 'react-native';
 
 console.log('--- FIREBASE DEBUG ---');
 try {
@@ -461,14 +487,27 @@ export const initializeFirebase = async () => {
         
         // Configure Firestore with persistent cache and multi-tab support
         try {
-          _firestoreDb = getFirestore(app, {
+          // Use initializeFirestore with long polling for better compatibility
+          const { initializeFirestore } = await import('firebase/firestore');
+          _firestoreDb = initializeFirestore(app, {
             localCache: persistentLocalCache({
               tabManager: persistentMultipleTabManager()
-            })
+            }),
+            experimentalForceLongPolling: true,
+            useFetchStreams: false
           });
         } catch (cacheError) {
-          console.warn("Cache initialization failed, using standard Firestore:", cacheError);
-          _firestoreDb = getFirestore(app);
+          console.warn("Cache initialization failed, trying with long polling only:", cacheError);
+          try {
+            const { initializeFirestore } = await import('firebase/firestore');
+            _firestoreDb = initializeFirestore(app, {
+              experimentalForceLongPolling: true,
+              useFetchStreams: false
+            });
+          } catch (fallbackError) {
+            console.warn("Long polling initialization failed, using standard Firestore:", fallbackError);
+            _firestoreDb = getFirestore(app);
+          }
         }
         
         console.log("Successfully initialized Firestore with cache persistence");
@@ -652,6 +691,9 @@ export const auth = (() => {
     } catch {
       // If no auth instance exists, initialize with AsyncStorage persistence
       console.log("Initializing auth with AsyncStorage persistence for React Native");
+      if (!AsyncStorage || !getReactNativePersistence) {
+        throw new Error('AsyncStorage or getReactNativePersistence not available');
+      }
       return initializeAuth(app, {
         persistence: getReactNativePersistence(AsyncStorage)
       });

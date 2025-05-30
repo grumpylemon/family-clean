@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Family Compass v2.99</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fdf2f8;
+        }
+        .button {
+            background-color: #be185d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .button:hover {
+            background-color: #9f1239;
+        }
+        #status {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: #10b981;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .info {
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Manual Test for Family Compass v2.99</h1>
+    
+    <div id="status">
+        <p>Click the button below to test the deployed app</p>
+    </div>
+    
+    <button class="button" onclick="testApp()">Open Family Compass v2.99</button>
+    <button class="button" onclick="clearStatus()">Clear Status</button>
+    
+    <h2>Instructions:</h2>
+    <ol>
+        <li>Click "Open Family Compass v2.99" to open the app in a new tab</li>
+        <li>Check if the login screen loads properly</li>
+        <li>Try clicking "Continue with Google"</li>
+        <li>Check if the Google OAuth popup appears</li>
+        <li>Report back the results below</li>
+    </ol>
+    
+    <h2>Expected Results:</h2>
+    <ul>
+        <li class="success">✓ Login screen should load (not stuck on "Loading...")</li>
+        <li class="success">✓ "Continue with Google" button should be visible</li>
+        <li class="success">✓ Clicking the button should open Google OAuth popup</li>
+        <li class="success">✓ No "signInWithPopup is not a function" errors in console</li>
+    </ul>
+    
+    <h2>Common Issues:</h2>
+    <ul>
+        <li class="error">✗ If stuck on "Setting up demo mode..." - Firebase config issue</li>
+        <li class="error">✗ If stuck on loading spinner - Auth state listener issue</li>
+        <li class="error">✗ If "signInWithPopup is not a function" - Bundling issue</li>
+    </ul>
+    
+    <h2>Console Output:</h2>
+    <div id="console" style="background: #1a1a1a; color: #00ff00; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto;">
+        <p>Open browser DevTools (F12) and check the console for errors</p>
+    </div>
+    
+    <script>
+        function testApp() {
+            const status = document.getElementById('status');
+            status.innerHTML = '<p class="info">Opening Family Compass v2.99...</p>';
+            
+            // Open in new tab
+            const win = window.open('https://family-fun-app.web.app', '_blank');
+            
+            if (win) {
+                status.innerHTML += '<p class="success">✓ App opened in new tab</p>';
+                status.innerHTML += '<p class="info">Please check the new tab and report results</p>';
+            } else {
+                status.innerHTML += '<p class="error">✗ Failed to open app (popup blocked?)</p>';
+            }
+        }
+        
+        function clearStatus() {
+            document.getElementById('status').innerHTML = '<p>Status cleared. Ready for new test.</p>';
+        }
+    </script>
+</body>
+</html>
