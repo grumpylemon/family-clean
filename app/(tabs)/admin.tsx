@@ -10,6 +10,9 @@ import RewardManagement from '@/components/RewardManagement';
 import FamilySettings from '@/components/FamilySettings';
 import { ZustandAdminPanel } from '@/components/ZustandAdminPanel';
 import TakeoverAnalyticsDashboard from '@/components/TakeoverAnalyticsDashboard';
+import TakeoverApprovalQueue from '@/components/admin/TakeoverApprovalQueue';
+import CustomRulesManager from '@/components/admin/CustomRulesManager';
+import PerformanceExportPanel from '@/components/admin/PerformanceExportPanel';
 
 export default function AdminScreen() {
   const { canManageFamily, canManageChores, canManageRewards } = useAccessControl();
@@ -23,6 +26,9 @@ export default function AdminScreen() {
   const [showFamilySettings, setShowFamilySettings] = useState(false);
   const [showZustandAdmin, setShowZustandAdmin] = useState(false);
   const [showTakeoverAnalytics, setShowTakeoverAnalytics] = useState(false);
+  const [showApprovalQueue, setShowApprovalQueue] = useState(false);
+  const [showCustomRules, setShowCustomRules] = useState(false);
+  const [showExportPanel, setShowExportPanel] = useState(false);
 
   if (!canManageFamily) {
     return (
@@ -100,6 +106,33 @@ export default function AdminScreen() {
       icon: 'analytics' as const,
       color: '#ec4899',
       onPress: () => setShowTakeoverAnalytics(true),
+      enabled: canManageFamily,
+    },
+    {
+      id: 'approval-queue',
+      title: 'Takeover Approvals',
+      description: 'Manage pending takeover requests and bulk operations',
+      icon: 'list-circle' as const,
+      color: '#f97316',
+      onPress: () => setShowApprovalQueue(true),
+      enabled: canManageFamily,
+    },
+    {
+      id: 'custom-rules',
+      title: 'Custom Rules',
+      description: 'Configure takeover rules and family-specific settings',
+      icon: 'cog' as const,
+      color: '#8b5cf6',
+      onPress: () => setShowCustomRules(true),
+      enabled: canManageFamily,
+    },
+    {
+      id: 'export-panel',
+      title: 'Performance Export',
+      description: 'Generate and download family performance reports',
+      icon: 'document-text' as const,
+      color: '#059669',
+      onPress: () => setShowExportPanel(true),
       enabled: canManageFamily,
     },
   ];
@@ -260,6 +293,69 @@ export default function AdminScreen() {
             </TouchableOpacity>
           </View>
           <TakeoverAnalyticsDashboard />
+        </SafeAreaView>
+      </Modal>
+
+      {/* Takeover Approval Queue Modal */}
+      <Modal
+        visible={showApprovalQueue}
+        transparent={false}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowApprovalQueue(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fdf2f8' }}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowApprovalQueue(false)}
+            >
+              <Ionicons name="close" size={24} color="#831843" />
+            </TouchableOpacity>
+          </View>
+          <TakeoverApprovalQueue />
+        </SafeAreaView>
+      </Modal>
+
+      {/* Custom Rules Manager Modal */}
+      <Modal
+        visible={showCustomRules}
+        transparent={false}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowCustomRules(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fdf2f8' }}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowCustomRules(false)}
+            >
+              <Ionicons name="close" size={24} color="#831843" />
+            </TouchableOpacity>
+          </View>
+          <CustomRulesManager />
+        </SafeAreaView>
+      </Modal>
+
+      {/* Performance Export Panel Modal */}
+      <Modal
+        visible={showExportPanel}
+        transparent={false}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowExportPanel(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fdf2f8' }}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowExportPanel(false)}
+            >
+              <Ionicons name="close" size={24} color="#831843" />
+            </TouchableOpacity>
+          </View>
+          <PerformanceExportPanel />
         </SafeAreaView>
       </Modal>
     </SafeAreaView>

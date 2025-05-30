@@ -114,6 +114,10 @@ export interface User {
     celebrationsEnabled: boolean;
     soundEffectsEnabled: boolean;
   };
+  notificationSettings?: NotificationSettings;
+  expoPushToken?: string;
+  notificationPermission?: 'granted' | 'denied' | 'undetermined';
+  lastNotificationAt?: string;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -974,4 +978,214 @@ export interface TakeoverSummaryStats {
     choreTitle: string;
     takeoverRate: number;
   };
+}
+
+// ====== PUSH NOTIFICATIONS ======
+
+export type NotificationType = 
+  | 'chore_available' 
+  | 'achievement_unlocked' 
+  | 'admin_approval_needed' 
+  | 'takeover_completed' 
+  | 'daily_summary';
+
+export interface NotificationSettings {
+  enabled: boolean;
+  types: {
+    choreAvailable: boolean;
+    achievementUnlocked: boolean;
+    adminApprovalNeeded: boolean;
+    takeoverCompleted: boolean;
+    dailySummary: boolean;
+  };
+  quietHours: {
+    enabled: boolean;
+    startTime: string; // "21:00"
+    endTime: string;   // "07:00"
+  };
+  sound: boolean;
+  vibration: boolean;
+}
+
+export interface PushNotification {
+  id: string;
+  type: NotificationType;
+  recipientId: string;
+  familyId: string;
+  title: string;
+  body: string;
+  data: {
+    choreId?: string;
+    achievementId?: string;
+    takeoverId?: string;
+    actionUrl?: string;
+    [key: string]: any;
+  };
+  scheduledFor?: string;
+  sentAt?: string;
+  deliveredAt?: string;
+  clickedAt?: string;
+  status: 'pending' | 'sent' | 'delivered' | 'clicked' | 'failed';
+  expoTickets?: string[];
+  priority: 'low' | 'normal' | 'high';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationTemplate {
+  type: NotificationType;
+  title: string;
+  body: string;
+  priority: 'low' | 'normal' | 'high';
+  sound?: boolean;
+  vibration?: boolean;
+  actions?: NotificationAction[];
+}
+
+export interface NotificationAction {
+  id: string;
+  title: string;
+  type: 'default' | 'destructive';
+  url?: string;
+}
+
+// ====== ADMIN CONTROLS INTERFACES ======
+
+// Custom Takeover Rules System
+export interface CustomTakeoverRules {
+  byChoreType: Record<string, ChoreTypeRules>;
+  byMember: Record<string, MemberRules>;
+  timeBasedRules: TimeBasedRule[];
+  emergencyOverrides: EmergencyOverride[];
+}
+
+export interface ChoreTypeRules {
+  takeoverThresholdHours: number;
+  bonusMultiplier: number;
+  maxDailyTakeovers: number;
+  requiresApproval: boolean;
+  allowedDays: number[]; // 0-6 for Sun-Sat
+}
+
+export interface MemberRules {
+  takeoverLimit: number;
+  bonusMultiplier: number;
+  cooldownMultiplier: number;
+  canSkipApproval: boolean;
+  restrictedChoreTypes: string[];
+}
+
+export interface TimeBasedRule {
+  id: string;
+  name: string;
+  timeRange: {
+    start: string; // "HH:MM"
+    end: string;
+  };
+  daysOfWeek: number[];
+  modifications: Partial<TakeoverSettings>;
+  priority: number;
+}
+
+export interface EmergencyOverride {
+  id: string;
+  name: string;
+  description: string;
+  activatedBy: string;
+  activatedAt: string;
+  expiresAt?: string;
+  conditions: {
+    skipApprovals?: boolean;
+    bonusMultiplier?: number;
+    unlimitedTakeovers?: boolean;
+  };
+  isActive: boolean;
+}
+
+// Bulk Operations
+export interface BulkApprovalRequest {
+  takeoverIds: string[];
+  action: 'approve' | 'deny';
+  reason?: string;
+  applyToFuture?: boolean; // Apply decision to similar requests
+}
+
+export interface BulkApprovalResult {
+  successCount: number;
+  failedCount: number;
+  errors: string[];
+  processedAt: string;
+}
+
+// Performance Reports
+export interface PerformanceReport {
+  familyId: string;
+  period: {
+    start: string;
+    end: string;
+  };
+  generatedAt: string;
+  summary: {
+    totalTakeovers: number;
+    uniqueHelpers: number;
+    averageResponseTime: number;
+    collaborationScore: number;
+  };
+  memberStats: MemberPerformanceStats[];
+  choreStats: ChorePerformanceStats[];
+  trends: TrendData[];
+}
+
+export interface MemberPerformanceStats {
+  userId: string;
+  userName: string;
+  photoURL?: string;
+  stats: {
+    choresTakenOver: number;
+    choresGivenAway: number;
+    bonusPointsEarned: number;
+    averageResponseTime: number;
+    helpfulnessScore: number;
+    currentStreak: number;
+  };
+}
+
+export interface ChorePerformanceStats {
+  choreType: string;
+  stats: {
+    totalAssigned: number;
+    totalTakenOver: number;
+    takeoverRate: number;
+    averageCompletionTime: number;
+    overdueRate: number;
+  };
+}
+
+export interface TrendData {
+  date: string;
+  value: number;
+  metric: string;
+}
+
+// Admin Actions & Audit Trail
+export interface AdminAction {
+  id: string;
+  adminId: string;
+  adminName: string;
+  familyId: string;
+  action: 'bulk_approval' | 'rule_change' | 'settings_update' | 'export_generate' | 'emergency_override';
+  timestamp: string;
+  details: Record<string, any>;
+  affectedMembers: string[];
+  rollbackData?: Record<string, any>;
+}
+
+// Export Settings
+export interface ExportSettings {
+  autoGenerate: boolean;
+  frequency: 'daily' | 'weekly' | 'monthly';
+  recipients: string[];
+  includeCharts: boolean;
+  format: 'csv' | 'pdf' | 'both';
+  lastGeneratedAt?: string;
 }

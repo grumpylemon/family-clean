@@ -21,6 +21,11 @@ import {
 import { OfflineAction } from '@/stores/types';
 import { Chore, ChoreTakeover, FamilyMember } from '@/types';
 import { checkAchievementProgress } from './gamification';
+import { 
+  sendAchievementNotification,
+  sendTakeoverCompletedNotification,
+  sendAdminApprovalNotification,
+} from './notificationService';
 
 export interface TakeoverSyncResult {
   success: boolean;
@@ -228,6 +233,37 @@ export async function processTakeoverAction(
       'helper_hero',
       result.updatedMember.takeoverStats.choresTakenOver
     );
+    
+    // Send achievement notification if unlocked
+    if (helperHeroProgress?.unlocked) {
+      const familyMemberIds = family.members.map((m: FamilyMember) => m.uid);
+      await sendAchievementNotification(
+        takingOverUserId,
+        result.updatedMember.name,
+        'Helper Hero',
+        'Take over 10 chores from family members',
+        familyMemberIds,
+        familyId
+      );
+    }
+    
+    // Send admin approval notification if required
+    if (requiresAdminApproval && !action.payload.adminApproved) {
+      const adminIds = family.members
+        .filter((m: FamilyMember) => m.role === 'admin')
+        .map((m: FamilyMember) => m.uid);
+      
+      if (adminIds.length > 0) {
+        await sendAdminApprovalNotification(
+          result.chore.id!,
+          result.updatedMember.name,
+          result.chore.title,
+          result.chore.points,
+          adminIds,
+          familyId
+        );
+      }
+    }
     
     return {
       success: true,

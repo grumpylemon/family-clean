@@ -3,7 +3,7 @@ import { useAccessControl } from '@/hooks/useAccessControl';
 import { createChore, deleteChore, getChores, updateChore, createRoomChore } from '@/services/firestore';
 import { getFamilyRooms, getRoomTypeDisplayName, getRoomTypeEmoji } from '@/services/roomService';
 import { Chore, ChoreDifficulty, ChoreType, Room, RoomType } from '@/types';
-import { Ionicons } from '@expo/vector-icons';
+import { WebIcon } from './ui/WebIcon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
 import {
@@ -275,14 +275,14 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
         <SafeAreaView style={styles.container}>
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose} style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color="#be185d" />
+              <WebIcon name="chevron-back" size={24} color="#be185d" />
               <Text style={styles.backText}>Admin</Text>
             </TouchableOpacity>
             <Text style={styles.title}>Manage Chores</Text>
             <View style={styles.headerSpacer} />
           </View>
           <View style={styles.errorContainer}>
-            <Ionicons name="lock-closed-outline" size={64} color="#f9a8d4" />
+            <WebIcon name="lock-closed-outline" size={64} color="#f9a8d4" />
             <Text style={styles.errorText}>
               {getPermissionErrorMessage('admin')}
             </Text>
@@ -302,7 +302,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#be185d" />
+            <WebIcon name="chevron-back" size={24} color="#be185d" />
             <Text style={styles.backText}>Admin</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Manage Chores</Text>
@@ -576,7 +576,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 <LoadingSpinner message="Loading chores..." />
               ) : chores.length === 0 ? (
                 <View style={styles.emptyStateContainer}>
-                  <Ionicons name="list-outline" size={64} color="#f9a8d4" />
+                  <WebIcon name="list-outline" size={64} color="#f9a8d4" />
                   <Text style={styles.emptyStateTitle}>No chores yet</Text>
                   <Text style={styles.emptyStateMessage}>
                     Create your first chore to get started!
@@ -649,7 +649,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
 
                       {locked && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                          <Ionicons name="lock-closed" size={16} color="#ef4444" />
+                          <WebIcon name="lock-closed" size={16} color="#ef4444" />
                           <Text style={styles.lockedText}>
                             Locked until {new Date(chore.lockedUntil!).toLocaleString()}
                           </Text>

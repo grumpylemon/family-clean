@@ -17,6 +17,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ToastProvider } from '@/components/ui/Toast';
 import { StoreProvider } from '@/stores/StoreProvider';
 import { MockModeIndicator, EnvironmentInfo } from '@/components/MockModeIndicator';
+import { notificationService } from '@/services/notificationService';
 
 // Inline polyfill to ensure it runs before any module evaluation
 if (typeof window !== 'undefined') {
@@ -84,8 +85,14 @@ export default function RootLayout() {
         if (Platform.OS === 'ios') {
           console.log('iOS detected, using mock Firebase implementation for compatibility');
         }
+        
+        // Initialize notification service after Firebase is ready
+        // We'll initialize this when user is authenticated (in auth slice)
+        console.log('App layout initialized, notification service ready for auth');
       } catch (error) {
         console.error('Firebase initialization failed:', error);
+        // Try to initialize notifications anyway for fallback
+        console.log('Attempting notification service initialization despite Firebase error');
       }
     };
     

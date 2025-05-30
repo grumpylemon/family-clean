@@ -16,6 +16,7 @@ import { useAccessControl } from '@/hooks/useAccessControl';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Toast } from '@/components/ui/Toast';
 import AdminSettings from '@/components/AdminSettings';
+import NotificationSettings from '@/components/NotificationSettings';
 
 export default function SettingsScreen() {
   const { user } = useAuth();
@@ -25,6 +26,7 @@ export default function SettingsScreen() {
   
   const [name, setName] = useState(user?.displayName || '');
   const [showAdminSettings, setShowAdminSettings] = useState(false);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
 
   const handleUpdateProfile = () => {
@@ -176,17 +178,44 @@ export default function SettingsScreen() {
             </View>
           </View>
 
+          {/* Notifications Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Notifications</Text>
+            <View style={styles.settingsCard}>
+              <TouchableOpacity 
+                style={styles.adminItem}
+                onPress={() => setShowNotificationSettings(true)}
+              >
+                <View style={styles.adminLeft}>
+                  <View style={styles.adminIcon}>
+                    <WebIcon 
+                      name="notifications" 
+                      size={24} 
+                      color="#be185d" 
+                    />
+                  </View>
+                  <View style={styles.adminTextContainer}>
+                    <Text style={styles.adminTitle}>
+                      Notification Settings
+                    </Text>
+                    <Text style={styles.adminDescription}>
+                      Customize when and how you receive notifications
+                    </Text>
+                  </View>
+                </View>
+                <WebIcon 
+                  name="chevron-forward" 
+                  size={20} 
+                  color="#be185d" 
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* More Settings Coming Soon */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Coming Soon</Text>
             <View style={styles.settingsCard}>
-              <View style={styles.comingSoonItem}>
-                <WebIcon name="notifications-outline" size={24} color="#9f1239" />
-                <View style={styles.comingSoonText}>
-                  <Text style={styles.comingSoonTitle}>Notifications</Text>
-                  <Text style={styles.comingSoonDescription}>Customize notification preferences</Text>
-                </View>
-              </View>
               <View style={styles.comingSoonItem}>
                 <WebIcon name="language-outline" size={24} color="#9f1239" />
                 <View style={styles.comingSoonText}>
@@ -211,6 +240,23 @@ export default function SettingsScreen() {
         visible={showAdminSettings}
         onClose={() => setShowAdminSettings(false)}
       />
+
+      {/* Notification Settings Modal */}
+      {showNotificationSettings && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#fdf2f8', zIndex: 1000 }}>
+          <SafeAreaView style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', padding: 20, borderBottomWidth: 1, borderBottomColor: '#f9a8d4' }}>
+              <TouchableOpacity
+                style={{ padding: 8, borderRadius: 20, backgroundColor: '#f9a8d4' }}
+                onPress={() => setShowNotificationSettings(false)}
+              >
+                <WebIcon name="close" size={24} color="#831843" />
+              </TouchableOpacity>
+            </View>
+            <NotificationSettings />
+          </SafeAreaView>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

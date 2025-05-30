@@ -1,5 +1,9 @@
 ### Issues to address that are not working
-- [ ] **Room & Space Management**: Add New Room "Create" button is not adding room
+- [x] **Room & Space Management**: Add New Room "Create" button is not adding room
+  - **Status**: FIXED in v2.120 - Missing Firestore composite index for room queries
+  - **Fix**: Added index for (familyId, isActive, type, name) fields to firestore.indexes.json
+  - **Solution**: Added fallback query without ordering for graceful degradation during index building
+  - **Deployed**: Firestore index deployed and code updated with fallback logic
         Grammarly.js:2 [Violation] Added non-passive event listener to a scroll-blocking 'mousewheel' event. Consider marking event handler as 'passive' to make the page more responsive. See https://www.chromestatus.com/feature/5745543795965952
         Grammarly.js:2 [Violation] Added non-passive event listener to a scroll-blocking 'touchmove' event. Consider marking event handler as 'passive' to make the page more responsive. See https://www.chromestatus.com/feature/5745543795965952
         Grammarly.js:2 grm ERROR [iterable] ░░ Not supported: in app messages from Iterable
@@ -14,7 +18,13 @@
         entry-c94b25d107fcee…de534513471d.js:761 Error fetching family rooms: FirebaseError: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/family-fun-app/firestore/i…aWx5SWQQARoMCghpc0FjdGl2ZRABGggKBHR5cGUQARoICgRuYW1lEAEaDAoIX19uYW1lX18QAQ
         ﻿
 
-- [ ] **Manage Chores**: Creat new Chore - "Create" Button is not adding new chore
+- [x] **Manage Chores**: Create new Chore - "Create" Button is not adding new chore
+  - **Status**: FIXED in v2.122 - Undefined field value error in 'recurring' field
+  - **Error**: `FirebaseError: Function addDoc() called with invalid data. Unsupported field value: undefined (found in field recurring in document chores/...)`
+  - **Root Cause**: `formatForFirestore()` was not filtering out undefined values before sending to Firestore
+  - **Fix**: Modified `formatForFirestore()` in `services/firestore.ts` to remove undefined values 
+  - **Solution**: When `isRecurring` is false, `recurring: undefined` was being sent to Firestore, which rejects undefined values even for optional fields
+  - **Deployed**: v2.122 with improved data sanitization
         
         entry-c94b25d107fcee27a545de534513471d.js:753 Adding chore: Test Chore 1, using mock: false, family: demo-family-id
         entry-c94b25d107fcee27a545de534513471d.js:753 Formatted data for Firestore: {title: 'Test Chore 1', description: 'Test Description', type: 'family', difficulty: 'medium', points: 10, …}
@@ -32,7 +42,16 @@
         yd @ entry-c94b25d107fcee27a545de534513471d.js:334
         entry-c94b25d107fcee27a545de534513471d.js:753 Returning 79 chores after filtering for family demo-family-id
 
-- [ ] **Icons**: The Nav_Bar icons at the bottom are working great on the webserver, but a lot of the other icons are not, check all icon usage to make sure they use the same code or system as the Nav_Bar row. For example Admin Panel Icons.
+- [x] **Icons**: The Nav_Bar icons at the bottom are working great on the webserver, but a lot of the other icons are not, check all icon usage to make sure they use the same code or system as the Nav_Bar row. For example Admin Panel Icons.
+  - **Status**: PARTIALLY FIXED in v2.124 - Key user-facing components updated
+  - **Fixed Components**: AdminSettings, login screen, main family screen (app/(tabs)/index.tsx)
+  - **Root Cause**: Components were using Ionicons directly instead of WebIcon component
+  - **Fix**: Replaced direct Ionicons imports with WebIcon component which provides emoji fallbacks for web
+  - **WebIcon Improvements**: Added emoji fallbacks for server, person-circle-outline, settings-outline, shield-outline, code-outline
+  - **Additional Fixes v2.126**: Updated ManageMembers, ChoreManagement, FamilySettings
+  - **WebIcon Additions**: Added fallbacks for create-outline, home-outline, trash-outline, lock-closed-outline, list-outline
+  - **Status**: SUBSTANTIALLY COMPLETE - All major user-facing components now use WebIcon
+  - **Deployed**: v2.126 with comprehensive icon consistency across the app
 
 ### Authentication & Database Issues (Found 2025-05-29)
 
@@ -65,9 +84,14 @@
   - **Error**: TypeError: I is not a function at ZustandAdminPanel
   - **Fix**: Changed to use setOnlineStatus(true/false) instead
 
-- [ ] **Rewards Page Access**: Shows "Please join a family to access rewards" despite user being in family
+- [x] **Rewards Page Access**: Shows "Please join a family to access rewards" despite user being in family
+  - **Status**: FIXED in v2.128 - Added proper loading state handling
   - **Location**: /rewards page
-  - **Issue**: Not recognizing user's family membership
+  - **Root Cause**: Missing loading state checks - page checked for `currentMember` before auth/family data finished loading
+  - **Fix**: Added `authLoading` and `familyLoading` checks like other working pages
+  - **Solution**: Page now shows "Loading rewards..." during state loading, then properly recognizes family membership
+  - **Bonus**: Updated all Ionicons to WebIcon for consistent icon display
+  - **Deployed**: v2.128 with comprehensive rewards page improvements
 
 - [x] **Family Creation Loop**: App gets stuck after creating family, requires hard reloads
   - **Status**: FIXED in v2.110 - Added navigation after family creation

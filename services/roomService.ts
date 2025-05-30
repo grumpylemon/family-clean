@@ -92,6 +92,7 @@ export const deleteRoom = async (roomId: string): Promise<void> => {
 
 export const getFamilyRooms = async (familyId: string): Promise<Room[]> => {
   try {
+    // First try the optimized query with index
     const q = query(
       getRoomsCollection(),
       where('familyId', '==', familyId),
@@ -113,7 +114,38 @@ export const getFamilyRooms = async (familyId: string): Promise<Room[]> => {
     return rooms;
   } catch (error) {
     console.error('Error fetching family rooms:', error);
-    return [];
+    
+    // Fallback: Try simpler query if index is still building
+    try {
+      console.log('Attempting fallback query without ordering...');
+      const fallbackQuery = query(
+        getRoomsCollection(),
+        where('familyId', '==', familyId),
+        where('isActive', '==', true)
+      );
+      
+      const fallbackSnapshot = await getDocs(fallbackQuery);
+      const fallbackRooms: Room[] = [];
+      
+      fallbackSnapshot.forEach((doc) => {
+        fallbackRooms.push({
+          id: doc.id,
+          ...doc.data()
+        } as Room);
+      });
+      
+      // Sort client-side as fallback
+      fallbackRooms.sort((a, b) => {
+        if (a.type !== b.type) return a.type.localeCompare(b.type);
+        return a.name.localeCompare(b.name);
+      });
+      
+      console.log(`Fallback query successful, returning ${fallbackRooms.length} rooms`);
+      return fallbackRooms;
+    } catch (fallbackError) {
+      console.error('Fallback query also failed:', fallbackError);
+      return [];
+    }
   }
 };
 

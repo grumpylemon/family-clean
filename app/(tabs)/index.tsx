@@ -9,7 +9,7 @@ import { useAccessControl } from '@/hooks/useAccessControl';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, TouchableOpacity, View, ActivityIndicator, Text, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { WebIcon } from '@/components/ui/WebIcon';
 
 // Version tracking for updates
 console.log("Home Screen version: v5");
@@ -74,7 +74,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Family</Text>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color="#831843" />
+          <WebIcon name="log-out-outline" size={24} color="#831843" />
         </TouchableOpacity>
       </View>
 
@@ -94,7 +94,7 @@ export default function HomeScreen() {
         {/* User Profile Card */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="person-circle-outline" size={24} color="#be185d" />
+            <WebIcon name="person-circle-outline" size={24} color="#be185d" />
             <Text style={styles.sectionTitle}>Your Profile</Text>
           </View>
           
@@ -197,7 +197,7 @@ export default function HomeScreen() {
               style={styles.settingsButton}
               onPress={() => setShowFamilySettings(true)}
             >
-              <Ionicons name="settings-outline" size={20} color="#be185d" />
+              <WebIcon name="settings-outline" size={20} color="#be185d" />
               <Text style={styles.settingsButtonText}>View Settings</Text>
             </TouchableOpacity>
           )}
@@ -207,7 +207,7 @@ export default function HomeScreen() {
         {(canManageFamily || canManageMembers || canManageChores || canManageRewards) && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="shield-outline" size={24} color="#be185d" />
+              <WebIcon name="shield-outline" size={24} color="#be185d" />
               <Text style={styles.sectionTitle}>Admin Tools ({getAccessLevelDisplay()})</Text>
             </View>
             
@@ -217,7 +217,7 @@ export default function HomeScreen() {
                   style={styles.adminCard}
                   onPress={() => setShowManageMembers(true)}
                 >
-                  <Ionicons name="people" size={24} color="#be185d" />
+                  <WebIcon name="people" size={24} color="#be185d" />
                   <Text style={styles.adminCardText}>Manage Members</Text>
                 </TouchableOpacity>
               )}
@@ -227,7 +227,7 @@ export default function HomeScreen() {
                   style={styles.adminCard}
                   onPress={() => setShowChoreManagement(true)}
                 >
-                  <Ionicons name="list" size={24} color="#be185d" />
+                  <WebIcon name="list" size={24} color="#be185d" />
                   <Text style={styles.adminCardText}>Manage Chores</Text>
                 </TouchableOpacity>
               )}
@@ -237,7 +237,7 @@ export default function HomeScreen() {
                   style={styles.adminCard}
                   onPress={() => setShowRewardManagement(true)}
                 >
-                  <Ionicons name="gift" size={24} color="#be185d" />
+                  <WebIcon name="gift" size={24} color="#be185d" />
                   <Text style={styles.adminCardText}>Manage Rewards</Text>
                 </TouchableOpacity>
               )}
@@ -247,7 +247,7 @@ export default function HomeScreen() {
                   style={styles.adminCard}
                   onPress={() => setShowFamilySettings(true)}
                 >
-                  <Ionicons name="settings" size={24} color="#be185d" />
+                  <WebIcon name="settings" size={24} color="#be185d" />
                   <Text style={styles.adminCardText}>Family Settings</Text>
                 </TouchableOpacity>
               )}
@@ -258,7 +258,7 @@ export default function HomeScreen() {
         {/* Development Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="code-outline" size={24} color="#6b7280" />
+            <WebIcon name="code-outline" size={24} color="#6b7280" />
             <Text style={styles.sectionTitle}>Development</Text>
           </View>
           <FirestoreTest />

@@ -9,7 +9,7 @@ import {
   SafeAreaView,
   StatusBar
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { WebIcon } from './ui/WebIcon';
 import { useAccessControl } from '@/hooks/useAccessControl';
 import { useFamily } from '@/contexts/FamilyContext';
 import RoomManagement from '@/components/RoomManagement';
@@ -28,7 +28,7 @@ interface AdminMenuItem {
   id: string;
   title: string;
   description: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: string;
   color: string;
   onPress: () => void;
   enabled: boolean;
@@ -149,7 +149,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#be185d" />
+            <WebIcon name="chevron-back" size={24} color="#be185d" />
             <Text style={styles.backText}>Settings</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Admin</Text>
@@ -161,7 +161,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
           <View style={styles.section}>
             <View style={styles.adminCard}>
               <View style={styles.adminIcon}>
-                <Ionicons name="shield-checkmark" size={32} color="#be185d" />
+                <WebIcon name="shield-checkmark" size={32} color="#be185d" />
               </View>
               <View style={styles.adminInfo}>
                 <Text style={styles.adminTitle}>Administrator</Text>
@@ -184,7 +184,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
                 >
                   <View style={styles.settingLeft}>
                     <View style={[styles.settingIcon, { backgroundColor: `${item.color}20` }]}>
-                      <Ionicons name={item.icon as any} size={18} color={item.color} />
+                      <WebIcon name={item.icon} size={18} color={item.color} />
                     </View>
                     <Text style={styles.settingTitle}>{item.title}</Text>
                   </View>
@@ -211,7 +211,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
                 >
                   <View style={styles.settingLeft}>
                     <View style={[styles.settingIcon, { backgroundColor: `${item.color}20` }]}>
-                      <Ionicons 
+                      <WebIcon 
                         name={item.icon} 
                         size={18} 
                         color={item.enabled ? item.color : '#9ca3af'} 
@@ -233,7 +233,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
                     </View>
                   </View>
                   {item.hasChevron && (
-                    <Ionicons 
+                    <WebIcon 
                       name="chevron-forward" 
                       size={18} 
                       color={item.enabled ? "#be185d" : "#9ca3af"} 

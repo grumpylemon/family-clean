@@ -16,7 +16,7 @@ import {
 import { ThemedText } from './ThemedText';
 import { Avatar } from './ui/Avatar';
 import { Toast } from './ui/Toast';
-import { Ionicons } from '@expo/vector-icons';
+import { WebIcon } from './ui/WebIcon';
 import { 
   getUserRoomAssignments, 
   getFamilyRooms, 
@@ -208,7 +208,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
         {/* Search and Filter Controls */}
         <View style={styles.searchContainer}>
           <View style={styles.searchInputWrapper}>
-            <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
+            <WebIcon name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search by name or email..."
@@ -316,7 +316,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                         style={styles.addRoomButton}
                         onPress={() => handleOpenRoomAssignment(member)}
                       >
-                        <Ionicons name="add-circle" size={20} color="#be185d" />
+                        <WebIcon name="add-circle" size={20} color="#be185d" />
                         <Text style={styles.addRoomText}>Assign</Text>
                       </TouchableOpacity>
                     )}
@@ -337,7 +337,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                               onPress={() => handleUnassignRoom(assignment.roomId, member.uid)}
                               style={styles.removeRoomButton}
                             >
-                              <Ionicons name="close-circle" size={16} color="#ef4444" />
+                              <WebIcon name="close-circle" size={16} color="#ef4444" />
                             </TouchableOpacity>
                           )}
                         </View>
@@ -356,7 +356,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                       style={styles.editUserButton}
                       onPress={() => handleEditMember(member)}
                     >
-                      <Ionicons name="create-outline" size={20} color="#ffffff" />
+                      <WebIcon name="create-outline" size={20} color="#ffffff" />
                       <ThemedText style={styles.editUserButtonText}>Edit User</ThemedText>
                     </TouchableOpacity>
                   </View>
@@ -396,7 +396,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                 style={styles.modalCloseButton}
                 onPress={() => setShowRoomAssignModal(false)}
               >
-                <Ionicons name="close" size={24} color="#831843" />
+                <WebIcon name="close" size={24} color="#831843" />
               </TouchableOpacity>
             </View>
 
@@ -462,7 +462,7 @@ export function ManageMembers({ visible, onClose }: ManageMembersProps) {
                 })
               ) : (
                 <View style={styles.noRoomsAvailable}>
-                  <Ionicons name="home-outline" size={48} color="#f9a8d4" />
+                  <WebIcon name="home-outline" size={48} color="#f9a8d4" />
                   <Text style={styles.noRoomsTitle}>No rooms available</Text>
                   <Text style={styles.noRoomsSubtext}>
                     Create rooms in the Room Management section first
@@ -745,7 +745,7 @@ function EditMemberModal({
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Edit User</Text>
             <TouchableOpacity style={styles.modalCloseButton} onPress={onClose}>
-              <Ionicons name="close" size={24} color="#831843" />
+              <WebIcon name="close" size={24} color="#831843" />
             </TouchableOpacity>
           </View>
 
@@ -842,7 +842,7 @@ function EditMemberModal({
                   onPress={handleToggleExclude}
                   disabled={loading}
                 >
-                  <Ionicons 
+                  <WebIcon 
                     name={currentMemberData.isActive ? "person-remove" : "person-add"} 
                     size={16} 
                     color="#ffffff" 
@@ -858,7 +858,7 @@ function EditMemberModal({
                   onPress={handleRemoveMember}
                   disabled={loading}
                 >
-                  <Ionicons name="trash-outline" size={16} color="#ffffff" />
+                  <WebIcon name="trash-outline" size={16} color="#ffffff" />
                   <Text style={styles.compactActionButtonText}>Remove from Family</Text>
                 </TouchableOpacity>
               </View>

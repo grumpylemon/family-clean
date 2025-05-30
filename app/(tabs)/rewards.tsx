@@ -14,7 +14,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { useAuth, useFamily } from '@/hooks/useZustandHooks';
-import { Ionicons } from '@expo/vector-icons';
+import { WebIcon } from '@/components/ui/WebIcon';
 import { Reward, RewardCategory, RewardRedemption } from '@/types';
 import { 
   getRewards, 
@@ -24,8 +24,8 @@ import {
 } from '@/services/firestore';
 
 export default function RewardsScreen() {
-  const { user } = useAuth();
-  const { family, currentMember } = useFamily();
+  const { user, loading: authLoading } = useAuth();
+  const { family, currentMember, loading: familyLoading } = useFamily();
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [userRedemptions, setUserRedemptions] = useState<RewardRedemption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,12 +111,28 @@ export default function RewardsScreen() {
     }
   };
 
+  if (authLoading || familyLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar backgroundColor="#fdf2f8" barStyle="dark-content" />
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#be185d" />
+          <Text style={styles.message}>Loading rewards...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login
+  }
+
   if (!family || !currentMember) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar backgroundColor="#fdf2f8" barStyle="dark-content" />
         <View style={styles.centerContainer}>
-          <Ionicons name="gift-outline" size={64} color="#f9a8d4" style={{ marginBottom: 16 }} />
+          <WebIcon name="gift-outline" size={64} color="#f9a8d4" style={{ marginBottom: 16 }} />
           <Text style={styles.message}>Please join a family to access rewards.</Text>
         </View>
       </SafeAreaView>
@@ -166,8 +182,8 @@ export default function RewardsScreen() {
     return (
       <View key={reward.id} style={[styles.rewardCard, !affordable && styles.rewardCardDisabled]}>
         <View style={styles.rewardHeader}>
-          <Ionicons
-            name={CATEGORY_ICONS[reward.category] as any}
+          <WebIcon
+            name={CATEGORY_ICONS[reward.category]}
             size={24}
             color="#be185d"
           />
@@ -250,7 +266,7 @@ export default function RewardsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Ionicons name="storefront" size={24} color="#be185d" />
+          <WebIcon name="storefront" size={24} color="#be185d" />
           <Text style={styles.headerTitle}>Reward Store</Text>
         </View>
         <View style={styles.pointsContainer}>
@@ -274,8 +290,8 @@ export default function RewardsScreen() {
             ]}
             onPress={() => setSelectedCategory(category.value)}
           >
-            <Ionicons
-              name={category.icon as any}
+            <WebIcon
+              name={category.icon}
               size={16}
               color={selectedCategory === category.value ? '#ffffff' : '#be185d'}
             />
@@ -302,7 +318,7 @@ export default function RewardsScreen() {
           </View>
         ) : filteredRewards.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="storefront-outline" size={64} color="#f9a8d4" />
+            <WebIcon name="storefront-outline" size={64} color="#f9a8d4" />
             <Text style={styles.emptyTitle}>No rewards available</Text>
             <Text style={styles.emptySubtitle}>
               Ask your family admin to add some rewards!
@@ -314,7 +330,7 @@ export default function RewardsScreen() {
             {featuredRewards.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Ionicons name="star" size={20} color="#f59e0b" />
+                  <WebIcon name="star" size={20} color="#f59e0b" />
                   <Text style={styles.sectionTitle}>Featured Rewards</Text>
                 </View>
                 <View style={styles.rewardsGrid}>
@@ -328,7 +344,7 @@ export default function RewardsScreen() {
               <View style={styles.section}>
                 {featuredRewards.length > 0 && (
                   <View style={styles.sectionHeader}>
-                    <Ionicons name="gift" size={20} color="#be185d" />
+                    <WebIcon name="gift" size={20} color="#be185d" />
                     <Text style={styles.sectionTitle}>All Rewards</Text>
                   </View>
                 )}
@@ -351,7 +367,7 @@ export default function RewardsScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.modalIcon}>
-                <Ionicons name="gift" size={32} color="#ffffff" />
+                <WebIcon name="gift" size={32} color="#ffffff" />
               </View>
               <Text style={styles.modalTitle}>Redeem Reward</Text>
               <Text style={styles.modalRewardName}>{selectedReward?.name}</Text>

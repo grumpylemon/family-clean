@@ -42,6 +42,9 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
   'log-out': '👋',
   'edit': '✏️',
   'create': '✏️',
+  'create-outline': '✏️',
+  'home-outline': '🏠',
+  'trash-outline': '🗑️',
   'save': '💾',
   'download': '⬇️',
   'upload': '⬆️',
@@ -105,9 +108,17 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
   'trophy': '🏆',
   'medal': '🏅',
   'gift': '🎁',
+  'gift-outline': '🎁',
   'ribbon': '🎀',
   'diamond': '💎',
   'sparkles': '✨',
+  'storefront': '🏪',
+  'storefront-outline': '🏪',
+  'apps-outline': '⊞',
+  'crown-outline': '👑',
+  'happy-outline': '😊',
+  'cash-outline': '💰',
+  'phone-portrait-outline': '📱',
   
   // Technology
   'wifi': '📶',
@@ -121,6 +132,7 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
   'laptop': '💻',
   'phone-portrait': '📱',
   'tablet': '📱',
+  'server': '🖥️',
   
   // Security & Privacy
   'lock': '🔒',
@@ -144,8 +156,14 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
   'more': '⋯',
   'hand-right': '👉',
   'lock-closed': '🔒',
+  'lock-closed-outline': '🔒',
+  'list-outline': '📋',
   'information-circle-outline': 'ℹ️',
   'person-outline': '👤',
+  'person-circle-outline': '👤',
+  'settings-outline': '⚙️',
+  'shield-outline': '🛡️',
+  'code-outline': '💻',
   
   // Transportation & Location
   'location': '📍',

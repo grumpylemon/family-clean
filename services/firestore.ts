@@ -118,12 +118,17 @@ const shouldReturnMockImmediately = () => {
 // Ensures dates are properly formatted for Firestore
 const formatForFirestore = (data: any) => {
   const formattedData = { ...data };
-  // Convert Date objects to ISO strings to work better with Firestore
+  
+  // Convert Date objects to ISO strings and remove undefined values
   Object.keys(formattedData).forEach(key => {
     if (formattedData[key] instanceof Date) {
       formattedData[key] = formattedData[key].toISOString();
+    } else if (formattedData[key] === undefined) {
+      // Remove undefined values as Firestore doesn't accept them
+      delete formattedData[key];
     }
   });
+  
   console.log("Formatted data for Firestore:", formattedData);
   return formattedData;
 };

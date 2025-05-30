@@ -12,7 +12,7 @@ import {
   Image,
   Text
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { WebIcon } from '@/components/ui/WebIcon';
 
 // Version tracking for updates
 console.log("Login Screen version: v4");
@@ -89,7 +89,7 @@ export default function LoginScreen() {
         {/* Logo/Icon */}
         <View style={styles.logoContainer}>
           <View style={styles.iconBackground}>
-            <Ionicons name="home" size={50} color="#ffffff" />
+            <WebIcon name="home" size={50} color="#ffffff" />
           </View>
           <Text style={styles.appTitle}>Family Compass</Text>
           <Text style={styles.tagline}>Guide your family to success</Text>
@@ -116,7 +116,7 @@ export default function LoginScreen() {
             onPress={handleGuestSignIn}
             disabled={loading}
           >
-            <Ionicons name="person-outline" size={20} color="#6b7280" />
+            <WebIcon name="person-outline" size={20} color="#6b7280" />
             <Text style={styles.guestButtonText}>
               Continue as Guest
             </Text>

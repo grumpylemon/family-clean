@@ -13,7 +13,7 @@ import {
   SafeAreaView,
   Platform
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { WebIcon } from './ui/WebIcon';
 import { useFamily , useAuth } from '@/hooks/useZustandHooks';
 import { Toast } from '@/components/ui/Toast';
 import { DEFAULT_COLLABORATION_SETTINGS, updateCollaborationSettings } from '@/services/collaborationService';
@@ -190,7 +190,7 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
         <SafeAreaView style={styles.container}>
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose} style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color="#be185d" />
+              <WebIcon name="chevron-back" size={24} color="#be185d" />
               <Text style={styles.backText}>Admin</Text>
             </TouchableOpacity>
             <Text style={styles.title}>Family Settings</Text>
@@ -240,7 +240,7 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#be185d" />
+            <WebIcon name="chevron-back" size={24} color="#be185d" />
             <Text style={styles.backText}>Admin</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Family Settings</Text>
@@ -576,7 +576,7 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                     <Text style={styles.label}>Transfer From</Text>
                     <TouchableOpacity style={styles.pickerContainer}>
                       <Text style={styles.pickerText}>{user?.displayName || 'Select member'}</Text>
-                      <Ionicons name="chevron-down" size={20} color="#9ca3af" />
+                      <WebIcon name="chevron-down" size={20} color="#9ca3af" />
                     </TouchableOpacity>
                   </View>
 
@@ -584,7 +584,7 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                     <Text style={styles.label}>Transfer To</Text>
                     <TouchableOpacity style={styles.pickerContainer}>
                       <Text style={styles.pickerText}>Select recipient</Text>
-                      <Ionicons name="chevron-down" size={20} color="#9ca3af" />
+                      <WebIcon name="chevron-down" size={20} color="#9ca3af" />
                     </TouchableOpacity>
                   </View>
 
