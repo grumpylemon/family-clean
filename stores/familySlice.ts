@@ -15,6 +15,7 @@ import {
   createOrUpdateUserProfile,
   generateJoinCode
 } from '../services/firestore';
+import { setUserContext } from '../config/sentry';
 
 export interface FamilySlice {
   // State
@@ -207,6 +208,15 @@ function createFamilySliceFactory() {
                 user: user ? { ...user, familyId } : null
               }
             }));
+
+            // Update Sentry user context with role information
+            if (currentMember) {
+              setUserContext({
+                id: user.uid,
+                familyId: family.id,
+                role: currentMember.role
+              });
+            }
             
             console.log('[FamilySlice] Family creation complete. State updated with family:', family.name, 'ID:', family.id);
             return true;
@@ -451,6 +461,15 @@ function createFamilySliceFactory() {
               error: null
             }
           }));
+
+          // Update Sentry user context with role information
+          if (currentMember) {
+            setUserContext({
+              id: user.uid,
+              familyId: familyData.id,
+              role: currentMember.role
+            });
+          }
         } else {
           throw new Error('Family not found');
         }

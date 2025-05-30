@@ -1,7 +1,6 @@
- For this new "Integration" do the following:
+ For this new "Integration" follow the following steps and rules:
 
 ## 1 Deep Thinking & Impact Analysis (⟨no code yet⟩)
-Take
 Check @docs/Coding/development_task_list.md if a similar interation task is already listed and incorporate that in your thinking and evaluation.
 
 #Create a **concise deep-dive documement filename_plan.md with filename being the integration headline inside. Put document into @docs/Features** covering:
@@ -13,9 +12,16 @@ Check @docs/Coding/development_task_list.md if a similar interation task is alre
 - **1.4 UX & Engagement uplift** Describe how this feature will make the app stronger, more intuitive, and more engaging (gamification hooks, reduced friction, etc.).  
 - **1.5 Data-model deltas** Show updated Firestore shapes (JSON) and TypeScript interfaces.  
 - **1.6 Acceptance checklist** Bullet the conditions that must be true for us to call the feature “done.”
-- **1.7 Detailed to-do task list** List every step to complete for later checkoffafter integration.
+- **1.7 Detailed to-do task list** List every step to complete for later checkoffafter integration in this format:
+- [ ] **Integration Part A** (Name of Integration)
+  - [X] Sub Category Part 1 (name of sub-point todo)
+  - [ ] Sub Category Part 2 (name of sub-point todo)
+  ... and so on
+
+
 - **1.8 Future integration options** List of future integration and upgrade options and to-do task list
 - **1.9 Admin Panel Options** List all Admin panel options that should be included to make changes to behaviors or enable functions inside app.
+- **2.0 Potential Errors** A list of potential expected errors or incompatibilities
 
 ---
 #Create a **2nd document inside of @docs/Features filename_feature.md where filename is integration headline**, covering:
@@ -29,6 +35,7 @@ Check @docs/Coding/development_task_list.md if a similar interation task is alre
 
 
 ## 2 Implementation / Coding
+**Education** Based on potential errors or incompatabilities if using new libraries search and download documentation via context7
 
 Follow this disciplined cycle **for each logical chunk** (commit):
 

@@ -8,6 +8,7 @@ import { createOrUpdateUserProfile, getUserProfile } from '../services/firestore
 import { authService } from '../services/authService';
 import { FamilyStore } from './types';
 import { Platform } from 'react-native';
+import { setUserContext, clearUserContext } from '../config/sentry';
 
 // Import types only
 import type { 
@@ -152,6 +153,14 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
               }
             }));
 
+            // Set Sentry user context
+            if (user) {
+              setUserContext({
+                id: user.uid,
+                familyId: user.familyId || undefined
+              });
+            }
+
             // If user has a familyId, load family data
             if (user.familyId) {
               console.log('[AuthSlice] User has familyId, loading family data:', user.familyId);
@@ -240,6 +249,14 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
               }
             }));
 
+            // Set Sentry user context
+            if (user) {
+              setUserContext({
+                id: user.uid,
+                familyId: user.familyId || undefined
+              });
+            }
+
             // Create/update user profile
             await createOrUpdateUserProfile(user.uid, user);
           } catch (error) {
@@ -264,6 +281,9 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
           try {
             // Use centralized auth service
             await authService.signOut(auth);
+
+            // Clear Sentry user context
+            clearUserContext();
 
             // Clear all user data
             set((state) => ({
@@ -360,6 +380,14 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
                   }
                 }));
                 
+                // Set Sentry user context
+                if (user) {
+                  setUserContext({
+                    id: user.uid,
+                    familyId: user.familyId || undefined
+                  });
+                }
+                
                 // Load family data if user has a familyId
                 if (user.familyId) {
                   const familySlice = safeGet().family;
@@ -396,6 +424,12 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
                       isLoading: false
                     }
                   }));
+
+                  // Set Sentry user context
+                  setUserContext({
+                    id: profile.uid,
+                    familyId: profile.familyId || undefined
+                  });
 
                   // If user has a familyId, load family data
                   if (profile.familyId) {
@@ -450,9 +484,18 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
                       isLoading: false
                     }
                   }));
+
+                  // Set Sentry user context
+                  setUserContext({
+                    id: user.uid,
+                    familyId: user.familyId || undefined
+                  });
                 }
               } catch (error) {
                 console.error('Error loading user profile in mock mode:', error);
+                // Clear Sentry user context on error
+                clearUserContext();
+                
                 set((state) => ({
                   auth: {
                     ...state.auth,
@@ -463,6 +506,9 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
                 }));
               }
             } else {
+              // Clear Sentry user context
+              clearUserContext();
+              
               set((state) => ({
                 auth: {
                   ...state.auth,
@@ -499,6 +545,12 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
                         isLoading: false
                       }
                     }));
+
+                    // Set Sentry user context
+                    setUserContext({
+                      id: profile.uid,
+                      familyId: profile.familyId || undefined
+                    });
 
                     // If user has a familyId, load family data
                     if (profile.familyId) {
@@ -555,6 +607,12 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
                         isLoading: false
                       }
                     }));
+
+                    // Set Sentry user context
+                    setUserContext({
+                      id: user.uid,
+                      familyId: user.familyId || undefined
+                    });
                   }
                 } catch (error) {
                   console.error('Error loading user profile:', error);
@@ -567,6 +625,9 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
                   }));
                 }
               } else {
+                // Clear Sentry user context
+                clearUserContext();
+                
                 set((state) => ({
                   auth: {
                     ...state.auth,

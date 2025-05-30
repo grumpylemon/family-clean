@@ -43,6 +43,8 @@ config.resolver.resolverMainFields = ['browser', 'module', 'main'];
 // Configure transformer options with ZUSTAND V5 optimized minification
 config.transformer = {
   ...config.transformer,
+  // Enable source map generation for Sentry
+  minifierPath: require.resolve('metro-minify-terser'),
   // Ultra-conservative minification specifically tuned for Zustand v5
   minifierConfig: {
     ecma: 8,

@@ -18,6 +18,7 @@ import ManageMembers from './ManageMembers';
 import RewardManagement from './RewardManagement';
 import FamilySettings from './FamilySettings';
 import { ZustandAdminPanel } from './ZustandAdminPanel';
+import { ErrorMonitoringPanel } from './admin/ErrorMonitoringPanel';
 
 interface AdminSettingsProps {
   visible: boolean;
@@ -46,6 +47,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
   const [showRewardManagement, setShowRewardManagement] = useState(false);
   const [showFamilySettings, setShowFamilySettings] = useState(false);
   const [showZustandAdmin, setShowZustandAdmin] = useState(false);
+  const [showErrorMonitoring, setShowErrorMonitoring] = useState(false);
 
   // Admin menu items in iOS Settings style
   const adminMenuItems: AdminMenuItem[] = [
@@ -106,6 +108,16 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
       icon: 'server',
       color: '#7c3aed',
       onPress: () => setShowZustandAdmin(true),
+      enabled: canManageFamily,
+      hasChevron: true,
+    },
+    {
+      id: 'error-monitoring',
+      title: 'Error Monitoring',
+      description: 'Track app errors and stability metrics',
+      icon: 'bug',
+      color: '#ef4444',
+      onPress: () => setShowErrorMonitoring(true),
       enabled: canManageFamily,
       hasChevron: true,
     },
@@ -319,6 +331,27 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
           visible={showZustandAdmin}
           onClose={() => setShowZustandAdmin(false)}
         />
+        
+        {/* Error Monitoring Panel */}
+        <Modal
+          visible={showErrorMonitoring}
+          transparent={false}
+          animationType="slide"
+          onRequestClose={() => setShowErrorMonitoring(false)}
+        >
+          <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
+              <TouchableOpacity 
+                onPress={() => setShowErrorMonitoring(false)}
+                style={styles.backButton}
+              >
+                <WebIcon name="arrow-back" size={24} color="#831843" />
+                <Text style={styles.backButtonText}>Admin Panel</Text>
+              </TouchableOpacity>
+            </View>
+            <ErrorMonitoringPanel />
+          </SafeAreaView>
+        </Modal>
       </SafeAreaView>
     </Modal>
   );

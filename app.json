@@ -55,6 +55,13 @@
             "deploymentTarget": "15.1"
           }
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "family-compass",
+          "project": "family-compass-app"
+        }
       ]
     ],
     "experiments": {

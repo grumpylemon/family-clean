@@ -19,6 +19,7 @@ import { ToastProvider } from '../components/ui/Toast';
 import { StoreProvider } from '../stores/StoreProvider';
 import { MockModeIndicator, EnvironmentInfo } from '../components/MockModeIndicator';
 import { notificationService } from '../services/notificationService';
+import { initializeSentry } from '../config/sentry';
 
 // Inline polyfill to ensure it runs before any module evaluation
 if (typeof window !== 'undefined') {
@@ -65,6 +66,11 @@ export default function RootLayout() {
   // Initialize client-side state to prevent hydration mismatch
   useEffect(() => {
     setIsClient(true);
+    
+    // Initialize Sentry first (if in production)
+    initializeSentry().catch(error => {
+      console.warn('Failed to initialize Sentry:', error);
+    });
     
     // Set up global error handlers for unhandled promises
     if (typeof window !== 'undefined') {

@@ -1,6 +1,8 @@
 import React, { Component, ReactNode, ErrorInfo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Sentry from '@sentry/react-native';
+import * as SentryReact from '@sentry/react';
 
 interface Props {
   children: ReactNode;
@@ -12,6 +14,7 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  errorId: string | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -20,7 +23,8 @@ export class ErrorBoundary extends Component<Props, State> {
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
+      errorId: null
     };
   }
 
@@ -29,7 +33,8 @@ export class ErrorBoundary extends Component<Props, State> {
     return {
       hasError: true,
       error,
-      errorInfo: null
+      errorInfo: null,
+      errorId: null
     };
   }
 
@@ -40,9 +45,38 @@ export class ErrorBoundary extends Component<Props, State> {
       console.error('Error info:', errorInfo);
     }
 
-    // Update state with error details
+    // Capture error in Sentry with context
+    let errorId: string | null = null;
+    
+    try {
+      // Use platform-specific Sentry
+      const SentryLib = Platform.OS === 'web' ? SentryReact : Sentry;
+      
+      // Capture the error and get the event ID
+      errorId = SentryLib.captureException(error, {
+        contexts: {
+          react: {
+            componentStack: errorInfo.componentStack
+          },
+          errorBoundary: {
+            props: Object.keys(this.props).filter(key => key !== 'children')
+          }
+        },
+        tags: {
+          errorBoundary: 'true',
+          platform: Platform.OS
+        }
+      });
+      
+      console.log('Error captured in Sentry with ID:', errorId);
+    } catch (sentryError) {
+      console.error('Failed to send error to Sentry:', sentryError);
+    }
+
+    // Update state with error details and ID
     this.setState({
-      errorInfo
+      errorInfo,
+      errorId
     });
 
     // Call optional error handler
@@ -55,7 +89,8 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
+      errorId: null
     });
   };
 
@@ -76,6 +111,13 @@ export class ErrorBoundary extends Component<Props, State> {
             <Text style={styles.message}>
               We&apos;re sorry for the inconvenience. The error has been logged and we&apos;ll look into it.
             </Text>
+
+            {this.state.errorId && (
+              <View style={styles.errorIdContainer}>
+                <Text style={styles.errorIdLabel}>Error ID:</Text>
+                <Text style={styles.errorId}>{this.state.errorId}</Text>
+              </View>
+            )}
 
             {__DEV__ && this.state.error && (
               <ScrollView style={styles.errorDetails}>
@@ -178,6 +220,26 @@ const styles = StyleSheet.create({
   },
   stackTrace: {
     fontSize: 10,
+    color: '#991b1b',
+    fontFamily: 'monospace',
+  },
+  errorIdContainer: {
+    backgroundColor: '#fef2f2',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorIdLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#7f1d1d',
+    marginRight: 8,
+  },
+  errorId: {
+    fontSize: 14,
     color: '#991b1b',
     fontFamily: 'monospace',
   },
