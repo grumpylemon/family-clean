@@ -110,12 +110,12 @@ const styles = StyleSheet.create({
 
 // Group Avatar Component for displaying multiple avatars
 interface AvatarGroupProps {
-  users: Array<{
+  users: {
     uid: string;
     name: string;
     photoURL?: string | null;
     isActive?: boolean;
-  }>;
+  }[];
   maxDisplay?: number;
   size?: number;
   spacing?: number;

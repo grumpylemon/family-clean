@@ -1,6 +1,23 @@
 // Import version logging first thing
 import '../constants/Version';
 
+import { initializeFirebase, isMockImplementation } from '@/config/firebase';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { FamilyProvider } from '@/contexts/FamilyContext';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import React, { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
+import 'react-native-reanimated';
+
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { ToastProvider } from '@/components/ui/Toast';
+import { StoreProvider } from '@/stores/StoreProvider';
+import { MockModeIndicator, EnvironmentInfo } from '@/components/MockModeIndicator';
+
 // Inline polyfill to ensure it runs before any module evaluation
 if (typeof window !== 'undefined') {
   (function() {
@@ -27,22 +44,6 @@ if (typeof window !== 'undefined') {
     }
   })();
 }
-
-import { initializeFirebase, isMockImplementation } from '@/config/firebase';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { FamilyProvider } from '@/contexts/FamilyContext';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { ToastProvider } from '@/components/ui/Toast';
-import { StoreProvider } from '@/stores/StoreProvider';
 // We've moved the Firebase import into the explicit initialization
 
 // Version tracking for updates
@@ -106,6 +107,10 @@ export default function RootLayout() {
     <ToastProvider>
       <RootLayoutNav firebaseStatus={firebaseInitialized} />
       <StatusBar style="auto" />
+      {/* Mock Mode Indicator - appears when using mock Firebase */}
+      <MockModeIndicator position="top" />
+      {/* Environment Debug Info - development only */}
+      {__DEV__ && <EnvironmentInfo />}
     </ToastProvider>
   );
 

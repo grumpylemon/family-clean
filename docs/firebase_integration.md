@@ -556,9 +556,20 @@ const mockAuth = {
 **Issue**: Previous versions showed warnings: `[Metro] Could not resolve browser entry for firebase/auth: Package subpath './auth/package.json' is not defined by "exports"`  
 **Solution**: Removed custom resolver in `metro.config.js`. Firebase v11+ handles platform-specific builds automatically. The `resolverMainFields` configuration is sufficient.
 
-### 3. Mock Mode Detection
+### 3. Mock Mode Detection (Improved in v2.119)
 **Issue**: Sometimes the app uses mock mode when it should use real Firebase.  
-**Solution**: Check `EXPO_PUBLIC_USE_MOCK` environment variable and ensure it's set to `false` for production builds.
+**Solution**: Completely rewritten mock detection with clear priority order:
+1. **Production Domain Detection**: `family-fun-app.web.app` always uses real Firebase
+2. **Environment Variables**: `EXPO_PUBLIC_USE_MOCK=false` forces real Firebase
+3. **Build Environment**: `NODE_ENV=production` uses real Firebase  
+4. **iOS Expo Go**: Uses mock due to native module limitations
+5. **Complete Config**: Uses real Firebase when all config variables present
+
+**New Features**:
+- Visual mock mode indicator (orange banner) when in mock mode
+- Environment debug panel for development  
+- `getMockModeReason()` function for debugging
+- Comprehensive test suite (`scripts/test-mock-detection-v2119.js`)
 
 ## Conclusion
 

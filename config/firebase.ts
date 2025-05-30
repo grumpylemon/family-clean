@@ -268,68 +268,71 @@ let _isUsingMock = false;
 let _firestoreDb: any = null;
 
 // Initialize _isUsingMock immediately based on current environment
+// Using simplified detection logic to match shouldUseMock()
 _isUsingMock = (() => {
-  console.log('🔍 EARLY DETECTION: Determining Firebase mode...');
+  console.log('🔍 EARLY MOCK DETECTION v2.119: Determining Firebase mode...');
   console.log('process.env.EXPO_PUBLIC_FORCE_PRODUCTION:', process.env.EXPO_PUBLIC_FORCE_PRODUCTION);
   console.log('process.env.NODE_ENV:', process.env.NODE_ENV);
   console.log('__DEV__:', __DEV__);
   console.log('process.env.EXPO_PUBLIC_USE_MOCK:', process.env.EXPO_PUBLIC_USE_MOCK);
   
-  // CRITICAL DEBUG: Check all environment variables
-  console.log('🧪 ENVIRONMENT VARIABLE DEBUG:');
-  console.log('  typeof process.env.EXPO_PUBLIC_FORCE_PRODUCTION:', typeof process.env.EXPO_PUBLIC_FORCE_PRODUCTION);
-  console.log('  typeof process.env.NODE_ENV:', typeof process.env.NODE_ENV);
-  console.log('  typeof __DEV__:', typeof __DEV__);
-  console.log('  typeof process.env.EXPO_PUBLIC_USE_MOCK:', typeof process.env.EXPO_PUBLIC_USE_MOCK);
-  
-  // Also check Constants.expoConfig as fallback for environment variables
-  let constantsForceProduction = false;
-  let constantsUseMock = false;
-  try {
-    const Constants = require('expo-constants').default;
-    constantsForceProduction = Constants.expoConfig?.extra?.EXPO_PUBLIC_FORCE_PRODUCTION === true;
-    constantsUseMock = Constants.expoConfig?.extra?.EXPO_PUBLIC_USE_MOCK === true;
-    console.log('Constants.expoConfig.extra.EXPO_PUBLIC_FORCE_PRODUCTION:', constantsForceProduction);
-    console.log('Constants.expoConfig.extra.EXPO_PUBLIC_USE_MOCK:', constantsUseMock);
-  } catch (e) {
-    console.log('Could not access Constants.expoConfig:', e);
-  }
-  
-  // Early determination - same logic as shouldUseMock but synchronous
-  if (process.env.EXPO_PUBLIC_FORCE_PRODUCTION === 'true' || constantsForceProduction) {
+  // 🚨 PRIORITY 1: Explicit Environment Variables (early detection can't check hostname)
+  if (process.env.EXPO_PUBLIC_FORCE_PRODUCTION === 'true') {
     console.log('🚀 EARLY: Production forced via EXPO_PUBLIC_FORCE_PRODUCTION');
     return false;
   }
-  if (process.env.NODE_ENV === 'production') {
-    console.log('🚀 EARLY: Production detected via NODE_ENV');
-    return false;
-  }
-  if (__DEV__ === false) {
-    console.log('🚀 EARLY: Production build via __DEV__ === false');
-    return false;
-  }
+  
   if (process.env.EXPO_PUBLIC_USE_MOCK === 'false') {
-    console.log('🚀 EARLY: Real Firebase forced via EXPO_PUBLIC_USE_MOCK === false');
+    console.log('🚀 EARLY: Real Firebase forced via EXPO_PUBLIC_USE_MOCK=false');
     return false;
   }
-  if (process.env.EXPO_PUBLIC_USE_MOCK === 'true' || constantsUseMock) {
-    console.log('⚠️ EARLY: Mock mode enabled via environment variable');
+  
+  if (process.env.EXPO_PUBLIC_USE_MOCK === 'true') {
+    console.log('🧪 EARLY: Mock Firebase forced via EXPO_PUBLIC_USE_MOCK=true');
     return true;
   }
   
-  // BACKUP STRATEGY: Check if this looks like an iOS production build
-  try {
-    const Constants = require('expo-constants').default;
-    const isProductionBuild = Constants.appOwnership !== 'expo' && Constants.isDevice;
-    if (isProductionBuild) {
-      console.log('🚀 EARLY: iOS production build detected via Constants - forcing real Firebase');
-      return false;
-    }
-  } catch (e) {
-    console.log('Could not check Constants for backup detection:', e);
+  // 🚨 PRIORITY 2: Build Environment Detection
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🚀 EARLY: Production build (NODE_ENV) - Real Firebase');
+    return false;
   }
   
-  // Default to mock in development if unclear
+  if (typeof __DEV__ !== 'undefined' && __DEV__ === false) {
+    console.log('🚀 EARLY: Production build (__DEV__=false) - Real Firebase');
+    return false;
+  }
+  
+  // 🚨 PRIORITY 3: iOS Expo Go Detection
+  try {
+    if (Platform.OS === 'ios') {
+      const Constants = require('expo-constants').default;
+      const isExpoGo = Constants.appOwnership === 'expo';
+      if (isExpoGo) {
+        console.log('📱 EARLY: iOS Expo Go detected - Mock Firebase');
+        return true;
+      } else {
+        console.log('📱 EARLY: iOS standalone build - Real Firebase');
+        return false;
+      }
+    }
+  } catch (e) {
+    console.log('Could not check iOS Constants early:', e);
+  }
+  
+  // 🚨 PRIORITY 4: Complete Firebase Config Check
+  const hasCompleteConfig = !!(
+    process.env.EXPO_PUBLIC_FIREBASE_API_KEY &&
+    process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID &&
+    process.env.EXPO_PUBLIC_FIREBASE_APP_ID
+  );
+  
+  if (hasCompleteConfig) {
+    console.log('✅ EARLY: Complete Firebase config - Real Firebase');
+    return false;
+  }
+  
+  // 🚨 FALLBACK: Development with incomplete config
   console.log('⚠️ EARLY: Defaulting to mock for development');
   return true;
 })();
@@ -337,91 +340,97 @@ _isUsingMock = (() => {
 console.log('🎯 FINAL DECISION: _isUsingMock =', _isUsingMock);
 
 // Function to determine if we should use mock implementation
-// We use mock when:
-// 1. On iOS in Expo Go (due to Expo Go limitations with Firebase native modules)
-// 2. During development/testing if explicitly requested
+// SIMPLIFIED LOGIC (v2.119): Clear priority order to prevent production mock mode issues
 export const shouldUseMock = (): boolean => {
-  console.log('=== FIREBASE DEBUG: shouldUseMock() ===');
+  console.log('=== FIREBASE MOCK DETECTION v2.119 ===');
   console.log('Platform.OS:', Platform.OS);
   console.log('__DEV__:', __DEV__);
-  console.log('typeof __DEV__:', typeof __DEV__);
   console.log('NODE_ENV:', process.env.NODE_ENV);
   console.log('EXPO_PUBLIC_USE_MOCK:', process.env.EXPO_PUBLIC_USE_MOCK);
   console.log('EXPO_PUBLIC_FORCE_PRODUCTION:', process.env.EXPO_PUBLIC_FORCE_PRODUCTION);
   
-  // CRITICAL: Multiple production detection methods - ANY of these should force real Firebase
+  // 🚨 PRIORITY 1: Production Domain Detection (Web)
+  if (Platform.OS === 'web') {
+    try {
+      const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+      const isProductionDomain = hostname === 'family-fun-app.web.app' || hostname === 'family-fun-app.firebaseapp.com';
+      if (isProductionDomain) {
+        console.log('🌐 PRODUCTION DOMAIN DETECTED:', hostname, '- FORCING REAL FIREBASE');
+        return false;
+      }
+      console.log('Web hostname:', hostname);
+    } catch (e) {
+      console.log('Could not check hostname:', e);
+    }
+  }
   
-  // 1. Explicit production override
+  // 🚨 PRIORITY 2: Explicit Environment Variables
   if (process.env.EXPO_PUBLIC_FORCE_PRODUCTION === 'true') {
-    console.log('🚀 PRODUCTION MODE FORCED via EXPO_PUBLIC_FORCE_PRODUCTION');
+    console.log('🚀 PRODUCTION FORCED via EXPO_PUBLIC_FORCE_PRODUCTION - REAL FIREBASE');
     return false;
   }
   
-  // 2. NODE_ENV production
-  if (process.env.NODE_ENV === 'production') {
-    console.log('🚀 PRODUCTION MODE DETECTED via NODE_ENV');
-    return false;
-  }
-  
-  // 3. __DEV__ false (production build)
-  if (__DEV__ === false) {
-    console.log('🚀 PRODUCTION BUILD DETECTED via __DEV__ === false');
-    return false;
-  }
-  
-  // 4. EXPLICIT CHECK: If EXPO_PUBLIC_USE_MOCK is explicitly set to false, use real Firebase
   if (process.env.EXPO_PUBLIC_USE_MOCK === 'false') {
-    console.log('🚀 REAL FIREBASE FORCED via EXPO_PUBLIC_USE_MOCK === false');
+    console.log('🚀 REAL FIREBASE FORCED via EXPO_PUBLIC_USE_MOCK=false');
     return false;
   }
   
-  // 5. Check if explicitly set to use mock
   if (process.env.EXPO_PUBLIC_USE_MOCK === 'true') {
-    console.log('⚠️ Mock mode enabled via environment variable');
+    console.log('🧪 MOCK FIREBASE FORCED via EXPO_PUBLIC_USE_MOCK=true');
     return true;
   }
   
-  // 6. Check for complete Firebase config - if present, prefer real Firebase
+  // 🚨 PRIORITY 3: Build Environment Detection
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🚀 PRODUCTION BUILD (NODE_ENV) - REAL FIREBASE');
+    return false;
+  }
+  
+  if (typeof __DEV__ !== 'undefined' && __DEV__ === false) {
+    console.log('🚀 PRODUCTION BUILD (__DEV__=false) - REAL FIREBASE');
+    return false;
+  }
+  
+  // 🚨 PRIORITY 4: Expo Go vs Standalone Detection (iOS only)
+  if (Platform.OS === 'ios') {
+    try {
+      const Constants = require('expo-constants').default;
+      const isExpoGo = Constants.appOwnership === 'expo';
+      
+      console.log('=== iOS EXPO GO DETECTION ===');
+      console.log('Constants.appOwnership:', Constants.appOwnership);
+      console.log('isExpoGo:', isExpoGo);
+      console.log('isDevice:', Constants.isDevice);
+      
+      if (isExpoGo) {
+        console.log('📱 iOS EXPO GO DETECTED - USING MOCK (Firebase native modules not available)');
+        return true;
+      } else {
+        console.log('📱 iOS STANDALONE BUILD - USING REAL FIREBASE');
+        return false;
+      }
+    } catch (error) {
+      console.log('❌ Error checking iOS Constants:', error);
+      // If Constants check fails, assume standalone and use real Firebase
+      console.log('📱 Constants check failed - ASSUMING STANDALONE, USING REAL FIREBASE');
+      return false;
+    }
+  }
+  
+  // 🚨 PRIORITY 5: Complete Firebase Config Check
   const hasCompleteConfig = !!(
     process.env.EXPO_PUBLIC_FIREBASE_API_KEY &&
     process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID &&
     process.env.EXPO_PUBLIC_FIREBASE_APP_ID
   );
   
-  console.log('Firebase config complete:', hasCompleteConfig);
-  
   if (hasCompleteConfig) {
-    console.log('✅ Complete Firebase config detected - preferring real Firebase');
-    
-    // Only check Expo Go for iOS in development with complete config
-    try {
-      const Constants = require('expo-constants').default;
-      const isExpoGo = Constants.appOwnership === 'expo';
-      
-      console.log('=== EXPO GO DETECTION ===');
-      console.log('Constants.appOwnership:', Constants.appOwnership);
-      console.log('isExpoGo:', isExpoGo);
-      console.log('========================');
-      
-      // ONLY use mock if we're in Expo Go on iOS AND in development
-      if (Platform.OS === 'ios' && isExpoGo && __DEV__ === true) {
-        console.log('📱 iOS Expo Go detected in development - using mock');
-        return true;
-      }
-    } catch (error) {
-      console.log('❌ Error checking Constants:', error);
-      // If Constants fails, assume standalone build and use real Firebase
-      console.log('✅ Constants unavailable - assuming standalone build, using real Firebase');
-      return false;
-    }
-    
-    // If we have complete config and we're not in Expo Go, use real Firebase
-    console.log('✅ Using real Firebase (complete config + not Expo Go)');
+    console.log('✅ COMPLETE FIREBASE CONFIG - USING REAL FIREBASE');
     return false;
   }
   
-  // If no complete config, fall back to mock
-  console.log('⚠️ No complete Firebase config - falling back to mock');
+  // 🚨 FALLBACK: Development with incomplete config
+  console.log('⚠️  FALLBACK: Development with incomplete config - USING MOCK');
   return true;
 };
 
@@ -553,6 +562,49 @@ initializeFirebase()
 // Helper function to check if we're using mock implementation
 export const isMockImplementation = (): boolean => {
   return _isUsingMock;
+};
+
+// Get reason for mock mode - helpful for debugging
+export const getMockModeReason = (): string => {
+  if (!_isUsingMock) {
+    return 'Real Firebase in use';
+  }
+  
+  // Check reasons in priority order
+  if (Platform.OS === 'web') {
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+    if (hostname === 'family-fun-app.web.app' || hostname === 'family-fun-app.firebaseapp.com') {
+      return 'Production domain detected - should use Real Firebase';
+    }
+  }
+  
+  if (process.env.EXPO_PUBLIC_USE_MOCK === 'true') {
+    return 'EXPO_PUBLIC_USE_MOCK=true environment variable';
+  }
+  
+  if (Platform.OS === 'ios') {
+    try {
+      const Constants = require('expo-constants').default;
+      const isExpoGo = Constants.appOwnership === 'expo';
+      if (isExpoGo) {
+        return 'iOS Expo Go detected (Firebase native modules unavailable)';
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }
+  
+  const hasCompleteConfig = !!(
+    process.env.EXPO_PUBLIC_FIREBASE_API_KEY &&
+    process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID &&
+    process.env.EXPO_PUBLIC_FIREBASE_APP_ID
+  );
+  
+  if (!hasCompleteConfig) {
+    return 'Incomplete Firebase configuration';
+  }
+  
+  return 'Development environment fallback';
 };
 
 // Get Firestore instance

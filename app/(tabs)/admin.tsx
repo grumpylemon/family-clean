@@ -9,6 +9,7 @@ import ManageMembers from '@/components/ManageMembers';
 import RewardManagement from '@/components/RewardManagement';
 import FamilySettings from '@/components/FamilySettings';
 import { ZustandAdminPanel } from '@/components/ZustandAdminPanel';
+import TakeoverAnalyticsDashboard from '@/components/TakeoverAnalyticsDashboard';
 
 export default function AdminScreen() {
   const { canManageFamily, canManageChores, canManageRewards } = useAccessControl();
@@ -21,6 +22,7 @@ export default function AdminScreen() {
   const [showRewardManagement, setShowRewardManagement] = useState(false);
   const [showFamilySettings, setShowFamilySettings] = useState(false);
   const [showZustandAdmin, setShowZustandAdmin] = useState(false);
+  const [showTakeoverAnalytics, setShowTakeoverAnalytics] = useState(false);
 
   if (!canManageFamily) {
     return (
@@ -89,6 +91,15 @@ export default function AdminScreen() {
       icon: 'server' as const,
       color: '#7c3aed',
       onPress: () => setShowZustandAdmin(true),
+      enabled: canManageFamily,
+    },
+    {
+      id: 'takeover-analytics',
+      title: 'Takeover Analytics',
+      description: 'View chore takeover insights and collaboration metrics',
+      icon: 'analytics' as const,
+      color: '#ec4899',
+      onPress: () => setShowTakeoverAnalytics(true),
       enabled: canManageFamily,
     },
   ];
@@ -230,6 +241,27 @@ export default function AdminScreen() {
         visible={showZustandAdmin}
         onClose={() => setShowZustandAdmin(false)}
       />
+
+      {/* Takeover Analytics Modal */}
+      <Modal
+        visible={showTakeoverAnalytics}
+        transparent={false}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowTakeoverAnalytics(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fdf2f8' }}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowTakeoverAnalytics(false)}
+            >
+              <Ionicons name="close" size={24} color="#831843" />
+            </TouchableOpacity>
+          </View>
+          <TakeoverAnalyticsDashboard />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }

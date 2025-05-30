@@ -10,8 +10,7 @@ import {
 } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
-import { useFamily } from '@/hooks/useZustandHooks';
-import { useAuth } from '@/hooks/useZustandHooks';
+import { useFamily , useAuth } from '@/hooks/useZustandHooks';
 import { router } from 'expo-router';
 
 interface FamilySetupProps {

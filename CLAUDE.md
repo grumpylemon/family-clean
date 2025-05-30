@@ -411,3 +411,10 @@ The app now includes a comprehensive set of reusable UI components for professio
 7. **Firebase Auth Metro Warnings**: Fixed in v2.118
    - Removed custom resolver in metro.config.js that was causing package.json access errors
    - Firebase v11+ handles platform-specific builds automatically
+
+8. **Mock Mode Detection**: Improved in v2.119
+   - Simplified detection logic with clear priority order
+   - Production domains (`family-fun-app.web.app`) always use real Firebase
+   - Visual indicators: orange banner when in mock mode, debug panel in development
+   - New `getMockModeReason()` function for debugging
+   - Test script: `node scripts/test-mock-detection-v2119.js`

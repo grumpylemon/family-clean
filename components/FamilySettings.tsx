@@ -14,8 +14,7 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFamily } from '@/hooks/useZustandHooks';
-import { useAuth } from '@/hooks/useZustandHooks';
+import { useFamily , useAuth } from '@/hooks/useZustandHooks';
 import { Toast } from '@/components/ui/Toast';
 import { DEFAULT_COLLABORATION_SETTINGS, updateCollaborationSettings } from '@/services/collaborationService';
 import { CollaborationSettings } from '@/types';
