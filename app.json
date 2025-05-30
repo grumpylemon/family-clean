@@ -8,11 +8,11 @@
     "icon": "./assets/images/icon.png",
     "scheme": "familyclean",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.grumpylemon.familyfun",
-      "buildNumber": "16",
+      "buildNumber": "17",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to scan QR codes for family invites.",
@@ -45,6 +45,15 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "newArchEnabled": false,
+            "deploymentTarget": "13.4"
+          }
         }
       ]
     ],

@@ -70,6 +70,7 @@ If the above solution doesn't work:
 
 2. **Disable New Architecture** (temporary):
    - In `app.json`, set `"newArchEnabled": false`
+   - Also update expo-build-properties plugin config
 
 3. **Use patch-package**:
    ```bash
@@ -77,6 +78,18 @@ If the above solution doesn't work:
    # Apply manual fixes
    npx patch-package react-native-safe-area-context
    ```
+
+### Update: Temporary Fix Applied (v2.161)
+
+Due to persistent issues with react-native-safe-area-context and React Native's new architecture:
+- Disabled new architecture in `app.json`
+- Updated expo-build-properties plugin configuration
+- This is a temporary fix until react-native-safe-area-context is fully compatible
+
+To re-enable new architecture later:
+1. Update `app.json`: `"newArchEnabled": true`
+2. Update expo-build-properties plugin: `"newArchEnabled": true`
+3. Test iOS build again
 
 ### Prevention
 
