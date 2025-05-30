@@ -29,14 +29,24 @@ import {
   View,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Colors } from '@/constants/Colors';
 
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
 
 export default function DashboardScreen() {
-  const { user, loading: authLoading, logout } = useAuth();
-  const { family, loading: familyLoading, isAdmin, currentMember } = useFamily();
-  const { colors, theme, isLoading: themeLoading } = useTheme();
+  // Initialize hooks with safe defaults
+  const authData = useAuth();
+  const familyData = useFamily();
+  const themeData = useTheme();
+  
+  // Destructure with defaults to prevent undefined errors
+  const { user, loading: authLoading = true, logout } = authData || { loading: true };
+  const { family, loading: familyLoading = true, isAdmin, currentMember } = familyData || { loading: true };
+  const { colors, theme, isLoading: themeLoading = true } = themeData || { isLoading: true };
+  
+  // Ensure we have theme colors, fall back to light theme if needed
+  const safeColors = colors || Colors.light;
   const [showManageMembers, setShowManageMembers] = useState(false);
   const [showChoreManagement, setShowChoreManagement] = useState(false);
   const [showFamilySettings, setShowFamilySettings] = useState(false);
@@ -61,8 +71,18 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     if (family?.id) {
-      loadChores();
-      checkWeeklyReset();
+      // Wrap in try-catch to prevent unhandled promise rejections
+      const initialize = async () => {
+        try {
+          await Promise.all([
+            loadChores(),
+            checkWeeklyReset()
+          ]);
+        } catch (error) {
+          console.error('Error initializing dashboard:', error);
+        }
+      };
+      initialize();
     }
   }, [family?.id]);
 
@@ -75,6 +95,8 @@ export default function DashboardScreen() {
       setChores(familyChores);
     } catch (error) {
       console.error('Error loading chores:', error);
+      // Don't let the error bubble up, just set empty chores
+      setChores([]);
     } finally {
       setLoadingChores(false);
     }
@@ -92,6 +114,7 @@ export default function DashboardScreen() {
       }
     } catch (error) {
       console.error('Error checking weekly reset:', error);
+      // Don't let the error bubble up
     }
   };
 
@@ -154,11 +177,11 @@ export default function DashboardScreen() {
     setChoreComment('');
   };
 
-  if (authLoading || familyLoading) {
+  if (authLoading || familyLoading || themeLoading || !safeColors) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading...</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fdf2f8' }}>
+        <ActivityIndicator size="large" color="#be185d" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: '#6b7280', textAlign: 'center' }}>Loading...</Text>
       </View>
     );
   }
@@ -183,21 +206,22 @@ export default function DashboardScreen() {
   );
 
   // Show loading while theme is initializing
-  if (themeLoading) {
+  if (themeLoading || !safeColors) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fdf2f8' }}>
         <ActivityIndicator size="large" color="#be185d" />
       </View>
     );
   }
 
+  // Create styles using safe colors
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: safeColors.background,
     },
     header: {
-      backgroundColor: colors.background,
+      backgroundColor: safeColors.background,
       paddingTop: Platform.OS === 'ios' ? 50 : 30,
       paddingBottom: 20,
       paddingHorizontal: 20,
@@ -209,13 +233,13 @@ export default function DashboardScreen() {
     },
     greeting: {
       fontSize: 18,
-      color: colors.primary,
+      color: safeColors.primary,
       fontWeight: '500',
     },
     userName: {
       fontSize: 32,
       fontWeight: '700',
-      color: colors.text,
+      color: safeColors.text,
       marginTop: 4,
     },
     logoutButton: {
@@ -223,9 +247,9 @@ export default function DashboardScreen() {
       alignItems: 'center',
       padding: Platform.OS === 'web' ? 16 : 12,
       paddingHorizontal: Platform.OS === 'web' ? 20 : 12,
-      backgroundColor: colors.primaryLight,
+      backgroundColor: safeColors.primaryLight,
       borderRadius: Platform.OS === 'web' ? 25 : 20,
-      shadowColor: colors.primary,
+      shadowColor: safeColors.primary,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.2,
       shadowRadius: 6,
@@ -235,7 +259,7 @@ export default function DashboardScreen() {
       marginLeft: 8,
       fontSize: 16,
       fontWeight: '600',
-      color: colors.text,
+      color: safeColors.text,
     },
     scrollView: {
       flex: 1,
@@ -246,7 +270,7 @@ export default function DashboardScreen() {
     loadingText: {
       marginTop: 16,
       fontSize: 16,
-      color: colors.textMuted,
+      color: safeColors.textMuted,
       textAlign: 'center',
     },
     statsContainer: {
@@ -256,19 +280,19 @@ export default function DashboardScreen() {
       justifyContent: 'space-between',
     },
     statCard: {
-      backgroundColor: colors.cardBackground,
+      backgroundColor: safeColors.cardBackground,
       padding: 20,
       borderRadius: 16,
       alignItems: 'center',
       minWidth: 100,
       maxWidth: 120,
-      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowColor: theme === 'dark' ? '#000' : safeColors.cardShadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
       shadowRadius: 8,
       elevation: 2,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: safeColors.border,
       position: 'relative',
     },
     statIcon: {
@@ -280,11 +304,11 @@ export default function DashboardScreen() {
     statValue: {
       fontSize: 32,
       fontWeight: '800',
-      color: colors.text,
+      color: safeColors.text,
     },
     statLabel: {
       fontSize: 14,
-      color: colors.textMuted,
+      color: safeColors.textMuted,
       marginTop: 6,
       fontWeight: '600',
     },
@@ -296,25 +320,25 @@ export default function DashboardScreen() {
       justifyContent: 'space-between',
     },
     actionCard: {
-      backgroundColor: colors.cardBackground,
+      backgroundColor: safeColors.cardBackground,
       padding: 24,
       borderRadius: 16,
       alignItems: 'center',
       gap: 10,
       minWidth: 140,
       maxWidth: 160,
-      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowColor: theme === 'dark' ? '#000' : safeColors.cardShadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
       shadowRadius: 8,
       elevation: 2,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: safeColors.border,
     },
     actionCardText: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.text,
+      color: safeColors.text,
       textAlign: 'center',
     },
     progressSection: {
@@ -322,10 +346,10 @@ export default function DashboardScreen() {
       marginBottom: 20,
     },
     sectionCard: {
-      backgroundColor: colors.cardBackground,
+      backgroundColor: safeColors.cardBackground,
       padding: 20,
       borderRadius: 20,
-      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowColor: theme === 'dark' ? '#000' : safeColors.cardShadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
       shadowRadius: 8,
@@ -334,7 +358,7 @@ export default function DashboardScreen() {
     sectionTitle: {
       fontSize: 20,
       fontWeight: '700',
-      color: colors.text,
+      color: safeColors.text,
       marginBottom: 16,
     },
     choresSection: {
@@ -351,19 +375,19 @@ export default function DashboardScreen() {
       gap: 12,
     },
     choreCard: {
-      backgroundColor: colors.cardBackground,
+      backgroundColor: safeColors.cardBackground,
       padding: 16,
       borderRadius: 16,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowColor: theme === 'dark' ? '#000' : safeColors.cardShadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
       shadowRadius: 4,
       elevation: 2,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: safeColors.border,
     },
     choreInfo: {
       flex: 1,
@@ -372,7 +396,7 @@ export default function DashboardScreen() {
     choreTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.text,
+      color: safeColors.text,
     },
     choreDetails: {
       flexDirection: 'row',
@@ -386,7 +410,7 @@ export default function DashboardScreen() {
     },
     choreDetailText: {
       fontSize: 14,
-      color: colors.textMuted,
+      color: safeColors.textMuted,
     },
     choreStatus: {
       flexDirection: 'row',
@@ -394,7 +418,7 @@ export default function DashboardScreen() {
       gap: 8,
     },
     pointsBadge: {
-      backgroundColor: colors.accent,
+      backgroundColor: safeColors.accent,
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 20,
@@ -402,7 +426,7 @@ export default function DashboardScreen() {
     pointsText: {
       fontSize: 14,
       fontWeight: '700',
-      color: colors.primary,
+      color: safeColors.primary,
     },
     emptyState: {
       padding: 40,
@@ -410,7 +434,7 @@ export default function DashboardScreen() {
     },
     emptyStateText: {
       fontSize: 16,
-      color: colors.textMuted,
+      color: safeColors.textMuted,
       textAlign: 'center',
       marginTop: 12,
     },
@@ -425,7 +449,7 @@ export default function DashboardScreen() {
       marginTop: 16,
     },
     infoItem: {
-      backgroundColor: colors.accent,
+      backgroundColor: safeColors.accent,
       paddingHorizontal: 16,
       paddingVertical: 8,
       borderRadius: 20,
@@ -435,17 +459,17 @@ export default function DashboardScreen() {
     },
     infoLabel: {
       fontSize: 14,
-      color: colors.textSecondary,
+      color: safeColors.textSecondary,
       fontWeight: '500',
     },
     infoValue: {
       fontSize: 14,
-      color: colors.text,
+      color: safeColors.text,
       fontWeight: '700',
     },
     choreModalContainer: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: safeColors.background,
     },
     choreModalHeader: {
       flexDirection: 'row',
@@ -454,7 +478,7 @@ export default function DashboardScreen() {
       padding: 20,
       paddingTop: Platform.OS === 'ios' ? 60 : 20,
       borderBottomWidth: 1,
-      borderBottomColor: colors.divider,
+      borderBottomColor: safeColors.divider,
     },
     closeButton: {
       padding: 8,
@@ -465,7 +489,7 @@ export default function DashboardScreen() {
     choreModalTitle: {
       fontSize: 20,
       fontWeight: '700',
-      color: colors.text,
+      color: safeColors.text,
       textAlign: 'center',
       flex: 1,
     },
@@ -474,10 +498,10 @@ export default function DashboardScreen() {
       padding: 20,
     },
     choreModalCard: {
-      backgroundColor: colors.cardBackground,
+      backgroundColor: safeColors.cardBackground,
       borderRadius: 20,
       padding: 24,
-      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowColor: theme === 'dark' ? '#000' : safeColors.cardShadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
       shadowRadius: 8,
@@ -486,7 +510,7 @@ export default function DashboardScreen() {
     choreModalChoreTitle: {
       fontSize: 24,
       fontWeight: '700',
-      color: colors.text,
+      color: safeColors.text,
       marginBottom: 20,
     },
     choreModalSection: {
@@ -495,14 +519,14 @@ export default function DashboardScreen() {
     choreModalSectionTitle: {
       fontSize: 14,
       fontWeight: '600',
-      color: colors.textSecondary,
+      color: safeColors.textSecondary,
       marginBottom: 8,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
     choreModalDescription: {
       fontSize: 16,
-      color: colors.text,
+      color: safeColors.text,
       lineHeight: 24,
     },
     choreModalDetailsRow: {
@@ -516,11 +540,11 @@ export default function DashboardScreen() {
     choreModalDetailLabel: {
       fontSize: 14,
       fontWeight: '600',
-      color: colors.textSecondary,
+      color: safeColors.textSecondary,
       marginBottom: 8,
     },
     choreModalPointsBadge: {
-      backgroundColor: colors.primary,
+      backgroundColor: safeColors.primary,
       paddingHorizontal: 16,
       paddingVertical: 8,
       borderRadius: 20,
@@ -546,14 +570,14 @@ export default function DashboardScreen() {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      backgroundColor: colors.accent,
+      backgroundColor: safeColors.accent,
       padding: 12,
       borderRadius: 12,
       marginBottom: 20,
     },
     choreModalDueDateText: {
       fontSize: 16,
-      color: colors.text,
+      color: safeColors.text,
       fontWeight: '600',
     },
     choreModalOverdueDate: {
@@ -568,7 +592,7 @@ export default function DashboardScreen() {
     choreModalAssignedCard: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.surface,
+      backgroundColor: safeColors.surface,
       padding: 16,
       borderRadius: 12,
       gap: 12,
@@ -577,7 +601,7 @@ export default function DashboardScreen() {
       width: 48,
       height: 48,
       borderRadius: 24,
-      backgroundColor: colors.primary,
+      backgroundColor: safeColors.primary,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -589,50 +613,50 @@ export default function DashboardScreen() {
     choreModalAssignedName: {
       fontSize: 18,
       fontWeight: '600',
-      color: colors.text,
+      color: safeColors.text,
     },
     choreModalCommentSection: {
       marginBottom: 24,
     },
     choreModalCommentInput: {
-      backgroundColor: colors.surface,
+      backgroundColor: safeColors.surface,
       borderRadius: 12,
       padding: 16,
       fontSize: 16,
-      color: colors.text,
+      color: safeColors.text,
       minHeight: 100,
       textAlignVertical: 'top',
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: safeColors.border,
     },
     choreModalActions: {
       flexDirection: 'row',
       padding: 20,
       gap: 12,
-      backgroundColor: colors.cardBackground,
+      backgroundColor: safeColors.cardBackground,
       borderTopWidth: 1,
-      borderTopColor: colors.divider,
+      borderTopColor: safeColors.divider,
     },
     choreModalCancelButton: {
       flex: 1,
       padding: 16,
       borderRadius: 12,
       borderWidth: 2,
-      borderColor: colors.border,
+      borderColor: safeColors.border,
       alignItems: 'center',
     },
     choreModalCancelText: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.textMuted,
+      color: safeColors.textMuted,
     },
     choreModalCompleteButton: {
       flex: 2,
       padding: 16,
       borderRadius: 12,
-      backgroundColor: colors.success,
+      backgroundColor: safeColors.success,
       alignItems: 'center',
-      shadowColor: colors.success,
+      shadowColor: safeColors.success,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.2,
       shadowRadius: 6,
@@ -655,7 +679,7 @@ export default function DashboardScreen() {
     },
     versionText: {
       fontSize: 10,
-      color: colors.textMuted,
+      color: safeColors.textMuted,
       fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     },
     centerContent: {
@@ -665,13 +689,13 @@ export default function DashboardScreen() {
       padding: 20,
     },
     setupCard: {
-      backgroundColor: colors.cardBackground,
+      backgroundColor: safeColors.cardBackground,
       padding: 32,
       borderRadius: 24,
       alignItems: 'center',
       maxWidth: 400,
       width: '100%',
-      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowColor: theme === 'dark' ? '#000' : safeColors.cardShadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: theme === 'dark' ? 0.3 : 0.08,
       shadowRadius: 12,
@@ -683,23 +707,23 @@ export default function DashboardScreen() {
     setupTitle: {
       fontSize: 24,
       fontWeight: '700',
-      color: colors.text,
+      color: safeColors.text,
       marginBottom: 12,
       textAlign: 'center',
     },
     setupDescription: {
       fontSize: 16,
-      color: colors.textMuted,
+      color: safeColors.textMuted,
       textAlign: 'center',
       marginBottom: 24,
       lineHeight: 24,
     },
     setupButton: {
-      backgroundColor: colors.primary,
+      backgroundColor: safeColors.primary,
       paddingHorizontal: 32,
       paddingVertical: 16,
       borderRadius: 24,
-      shadowColor: colors.primary,
+      shadowColor: safeColors.primary,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.2,
       shadowRadius: 6,
@@ -713,11 +737,11 @@ export default function DashboardScreen() {
     sectionHeader: {
       fontSize: 24,
       fontWeight: '700',
-      color: colors.text,
+      color: safeColors.text,
       marginBottom: 16,
     },
     viewAllButton: {
-      backgroundColor: colors.primaryLight,
+      backgroundColor: safeColors.primaryLight,
       paddingHorizontal: 16,
       paddingVertical: 8,
       borderRadius: 20,
@@ -725,7 +749,7 @@ export default function DashboardScreen() {
     viewAllText: {
       fontSize: 14,
       fontWeight: '600',
-      color: colors.text,
+      color: safeColors.text,
     },
     choreArrow: {
       opacity: 0.6,
@@ -742,11 +766,11 @@ export default function DashboardScreen() {
     },
     choreDate: {
       fontSize: 13,
-      color: colors.textMuted,
+      color: safeColors.textMuted,
     },
     choreDescription: {
       fontSize: 14,
-      color: colors.textSecondary,
+      color: safeColors.textSecondary,
       marginTop: 4,
     },
     choreModalButtonDisabled: {
@@ -754,8 +778,55 @@ export default function DashboardScreen() {
     },
     choreModalCommentHint: {
       fontSize: 13,
-      color: colors.textMuted,
+      color: safeColors.textMuted,
       marginTop: 8,
+    },
+    // Missing style definitions
+    section: {
+      paddingHorizontal: 20,
+      marginBottom: 20,
+    },
+    xpCard: {
+      backgroundColor: safeColors.cardBackground,
+      padding: 20,
+      borderRadius: 20,
+      shadowColor: theme === 'dark' ? '#000' : safeColors.cardShadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    seeAllText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: safeColors.primary,
+    },
+    emptyText: {
+      fontSize: 16,
+      color: safeColors.textMuted,
+      textAlign: 'center',
+      padding: 20,
+    },
+    chorePoints: {
+      backgroundColor: safeColors.accent,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+    },
+    chorePointsText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: safeColors.primary,
+    },
+    choreModalDetailValue: {
+      fontSize: 16,
+      color: safeColors.text,
+      fontWeight: '600',
+    },
+    choreModalDetailTime: {
+      fontSize: 14,
+      color: safeColors.textMuted,
+      marginTop: 4,
     },
   });
 
@@ -773,7 +844,7 @@ export default function DashboardScreen() {
             <Text style={styles.userName}>{currentMember?.name || user.displayName}</Text>
           </View>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <UniversalIcon name="log-out-outline" size={20} color={colors.text} />
+            <UniversalIcon name="log-out-outline" size={20} color={safeColors.text} />
             {Platform.OS === 'web' && (
               <Text style={styles.logoutButtonText}>Logout</Text>
             )}
@@ -826,7 +897,7 @@ export default function DashboardScreen() {
           </View>
           
           {loadingChores ? (
-            <ActivityIndicator size="small" color={colors.primary} />
+            <ActivityIndicator size="small" color={safeColors.primary} />
           ) : myChores.length === 0 ? (
             <Text style={styles.emptyText}>No chores assigned to you</Text>
           ) : (
@@ -856,7 +927,7 @@ export default function DashboardScreen() {
                     <View style={styles.chorePoints}>
                       <Text style={styles.chorePointsText}>{chore.points} pts</Text>
                     </View>
-                    <UniversalIcon name="chevron-forward" size={20} color={colors.primary} style={styles.choreArrow} />
+                    <UniversalIcon name="chevron-forward" size={20} color={safeColors.primary} style={styles.choreArrow} />
                   </View>
                 </TouchableOpacity>
               ))
@@ -951,7 +1022,7 @@ export default function DashboardScreen() {
         <View style={styles.choreModalContainer}>
           <View style={styles.choreModalHeader}>
             <TouchableOpacity onPress={closeChoreModal} style={styles.closeButton}>
-              <UniversalIcon name="close" size={24} color={colors.primary} />
+              <UniversalIcon name="close" size={24} color={safeColors.primary} />
             </TouchableOpacity>
             <Text style={styles.choreModalTitle}>Chore Details</Text>
             <View style={styles.headerSpacer} />

@@ -223,27 +223,58 @@ function checkIoniconsAvailable(): Promise<boolean> {
       return;
     }
 
-    // Check if font is loaded by creating a test element
-    const testElement = document.createElement('div');
-    testElement.style.fontFamily = 'Ionicons';
-    testElement.style.fontSize = '24px';
-    testElement.style.position = 'absolute';
-    testElement.style.left = '-9999px';
-    testElement.innerHTML = '&#xf11c;'; // test character
-    
-    document.body.appendChild(testElement);
-    
-    // Check if font loaded by measuring width
-    const fallbackWidth = testElement.offsetWidth;
-    
-    // Wait for fonts to potentially load
-    setTimeout(() => {
-      const loadedWidth = testElement.offsetWidth;
-      document.body.removeChild(testElement);
-      
-      // If width changed, font is likely loaded
-      resolve(loadedWidth !== fallbackWidth);
-    }, 100);
+    try {
+      // First check if Ionicons is even available
+      if (typeof Ionicons === 'undefined') {
+        console.warn('Ionicons not available, using emoji fallbacks');
+        resolve(false);
+        return;
+      }
+
+      // Use the Font Loading API if available
+      if ('fonts' in document) {
+        document.fonts.ready.then(() => {
+          // Check if Ionicons font is loaded
+          const isLoaded = document.fonts.check('24px Ionicons');
+          if (!isLoaded) {
+            console.warn('Ionicons font not loaded, using emoji fallbacks');
+          }
+          resolve(isLoaded);
+        }).catch((error) => {
+          console.error('Font loading check failed:', error);
+          resolve(false);
+        });
+      } else {
+        // Fallback method: Check if font is loaded by creating a test element
+        const testElement = document.createElement('div');
+        testElement.style.fontFamily = 'Ionicons';
+        testElement.style.fontSize = '24px';
+        testElement.style.position = 'absolute';
+        testElement.style.left = '-9999px';
+        testElement.innerHTML = '&#xf11c;'; // test character
+        
+        document.body.appendChild(testElement);
+        
+        // Check if font loaded by measuring width
+        const fallbackWidth = testElement.offsetWidth;
+        
+        // Wait for fonts to potentially load
+        setTimeout(() => {
+          const loadedWidth = testElement.offsetWidth;
+          document.body.removeChild(testElement);
+          
+          // If width changed, font is likely loaded
+          const isLoaded = loadedWidth !== fallbackWidth && loadedWidth > 0;
+          if (!isLoaded) {
+            console.warn('Ionicons font check failed, using emoji fallbacks');
+          }
+          resolve(isLoaded);
+        }, 200);
+      }
+    } catch (error) {
+      console.error('Error checking Ionicons availability:', error);
+      resolve(false);
+    }
   });
 }
 
@@ -259,23 +290,38 @@ export const UniversalIcon: React.FC<UniversalIconProps> = ({
 }) => {
   const [useEmoji, setUseEmoji] = useState(false);
   const [isChecking, setIsChecking] = useState(Platform.OS === 'web');
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     if (Platform.OS === 'web') {
       checkIoniconsAvailable().then((available) => {
         setUseEmoji(!available);
         setIsChecking(false);
+      }).catch(() => {
+        setUseEmoji(true);
+        setIsChecking(false);
       });
     }
   }, []);
 
+  // Error handler for icon rendering failures
+  const handleIconError = () => {
+    console.warn(`Icon "${name}" failed to render, switching to emoji fallback`);
+    setHasError(true);
+    setUseEmoji(true);
+  };
+
   // On native platforms, always use Ionicons
-  if (Platform.OS !== 'web') {
-    return <Ionicons name={name as any} size={size} color={color} style={style} />;
+  if (Platform.OS !== 'web' && !hasError) {
+    try {
+      return <Ionicons name={name as any} size={size} color={color} style={style} />;
+    } catch (error) {
+      handleIconError();
+    }
   }
 
   // On web, while checking or if should use emoji
-  if (isChecking || useEmoji) {
+  if (isChecking || useEmoji || hasError) {
     const emoji = EMOJI_FALLBACKS[name] || EMOJI_FALLBACKS['default'];
     return (
       <Text 
@@ -299,8 +345,33 @@ export const UniversalIcon: React.FC<UniversalIconProps> = ({
     );
   }
 
-  // On web with fonts available, use Ionicons
-  return <Ionicons name={name as any} size={size} color={color} style={style} />;
+  // On web with fonts available, use Ionicons with error boundary
+  try {
+    return <Ionicons name={name as any} size={size} color={color} style={style} />;
+  } catch (error) {
+    handleIconError();
+    const emoji = EMOJI_FALLBACKS[name] || EMOJI_FALLBACKS['default'];
+    return (
+      <Text 
+        style={[
+          {
+            fontSize: size * 0.8,
+            color: color,
+            textAlign: 'center',
+            lineHeight: size,
+            width: size,
+            height: size,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+          style
+        ]}
+      >
+        {emoji}
+      </Text>
+    );
+  }
 };
 
 export default UniversalIcon;

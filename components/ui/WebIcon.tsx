@@ -234,6 +234,19 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
   'scissors': '✂️',
   'magnet': '🧲',
   
+  // Admin Panel Icons  
+  'list-circle': '📋',
+  
+  // Additional icons for admin components
+  'document-text': '📄',
+  'volume-high': '🔊',
+  'volume-mute': '🔇',
+  'notifications-off': '🔕',
+  'moon-outline': '🌙',
+  'sunny-outline': '☀️',
+  'contrast': '⚫',
+  'vibration': '📳',
+  
   // Default fallback
   'default': '⚫'
 };
@@ -274,6 +287,7 @@ function checkIoniconsAvailable(): Promise<boolean> {
 
 /**
  * Web-optimized icon component that reliably falls back to emoji when vector icons fail
+ * Due to font loading issues, we always use emoji on web for maximum reliability
  */
 export const WebIcon: React.FC<WebIconProps> = ({ 
   name, 
@@ -281,50 +295,39 @@ export const WebIcon: React.FC<WebIconProps> = ({
   color = '#000', 
   style 
 }) => {
-  const [useEmoji, setUseEmoji] = useState(false);
-  const [isChecking, setIsChecking] = useState(Platform.OS === 'web');
-
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      checkIoniconsAvailable().then((available) => {
-        setUseEmoji(!available);
-        setIsChecking(false);
-      });
-    }
-  }, []);
-
-  // On native platforms, always use Ionicons
+  // Always use emoji on web to avoid font loading issues
+  const emoji = EMOJI_FALLBACKS[name] || EMOJI_FALLBACKS['default'];
+  
+  // On native platforms, try to use Ionicons first
   if (Platform.OS !== 'web') {
-    return <Ionicons name={name as any} size={size} color={color} style={style} />;
+    try {
+      return <Ionicons name={name as any} size={size} color={color} style={style} />;
+    } catch (error) {
+      console.warn(`Icon "${name}" failed to render, using emoji fallback`);
+    }
   }
 
-  // On web, while checking or if should use emoji
-  if (isChecking || useEmoji) {
-    const emoji = EMOJI_FALLBACKS[name] || EMOJI_FALLBACKS['default'];
-    return (
-      <Text 
-        style={[
-          {
-            fontSize: size * 0.8,
-            color: color,
-            textAlign: 'center',
-            lineHeight: size,
-            width: size,
-            height: size,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          },
-          style
-        ]}
-      >
-        {emoji}
-      </Text>
-    );
-  }
-
-  // On web with fonts available, use Ionicons
-  return <Ionicons name={name as any} size={size} color={color} style={style} />;
+  // Use emoji fallback
+  return (
+    <Text 
+      style={[
+        {
+          fontSize: size * 0.8,
+          color: color,
+          textAlign: 'center',
+          lineHeight: size,
+          width: size,
+          height: size,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        style
+      ]}
+    >
+      {emoji}
+    </Text>
+  );
 };
 
 export default WebIcon;

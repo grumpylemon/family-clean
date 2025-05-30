@@ -32,8 +32,7 @@
       },
       "env": {
         "EXPO_PUBLIC_FORCE_PRODUCTION": "true",
-        "EXPO_PUBLIC_USE_MOCK": "false",
-        "NODE_ENV": "production"
+        "EXPO_PUBLIC_USE_MOCK": "false"
       }
     }
   },
