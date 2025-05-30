@@ -119,6 +119,7 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
   'happy-outline': '😊',
   'cash-outline': '💰',
   'phone-portrait-outline': '📱',
+  'language-outline': '🌐',
   
   // Technology
   'wifi': '📶',
