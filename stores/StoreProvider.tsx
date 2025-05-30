@@ -16,16 +16,40 @@ export function StoreProvider({ children }: StoreProviderProps) {
     const timeoutId = setTimeout(() => {
       console.log('🏪 StoreProvider: Initializing Zustand store');
       
-      // Initialize network monitoring
-      networkService.init();
-      
-      // Initialize authentication state listener
-      const store = useFamilyStore.getState();
-      if (store.auth.checkAuthState) {
-        console.log('🏪 StoreProvider: Starting auth state listener');
-        store.auth.checkAuthState().catch(error => {
-          console.error('🏪 StoreProvider: Error checking auth state:', error);
-        });
+      // Verify store is properly initialized
+      try {
+        const store = useFamilyStore.getState();
+        console.log('🏪 StoreProvider: Store initialized with slices:', Object.keys(store));
+        
+        // Verify auth slice
+        if (!store.auth) {
+          console.error('🏪 StoreProvider: Auth slice missing!');
+          console.log('🏪 StoreProvider: Available keys:', Object.keys(store));
+        } else {
+          console.log('🏪 StoreProvider: Auth slice found with methods:', Object.keys(store.auth));
+        }
+        
+        // Verify family slice
+        if (!store.family) {
+          console.error('🏪 StoreProvider: Family slice missing!');
+        } else {
+          console.log('🏪 StoreProvider: Family slice found with methods:', Object.keys(store.family));
+        }
+        
+        // Initialize network monitoring
+        networkService.init();
+        
+        // Initialize authentication state listener
+        if (store.auth && store.auth.checkAuthState) {
+          console.log('🏪 StoreProvider: Starting auth state listener');
+          store.auth.checkAuthState().catch(error => {
+            console.error('🏪 StoreProvider: Error checking auth state:', error);
+          });
+        } else {
+          console.error('🏪 StoreProvider: checkAuthState not found');
+        }
+      } catch (error) {
+        console.error('🏪 StoreProvider: Failed to initialize store:', error);
       }
       
       // Platform-specific initialization

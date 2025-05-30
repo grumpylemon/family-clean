@@ -11,16 +11,59 @@ export function useAuth() {
   // Use a single selector with shallow comparison to prevent unnecessary re-renders
   // and ensure function references are stable
   const authData = useFamilyStore(
-    (state) => ({
-      user: state.auth.user,
-      isAuthenticated: state.auth.isAuthenticated,
-      isLoading: state.auth.isLoading,
-      error: state.auth.error,
-      signInWithGoogle: state.auth.signInWithGoogle,
-      signInAsGuest: state.auth.signInAsGuest,
-      logout: state.auth.logout,
-      clearError: state.auth.clearError,
-    }),
+    (state) => {
+      // Defensive check for state existence
+      if (!state) {
+        console.error('[useAuth] Store state is undefined');
+        return {
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+          error: null,
+          signInWithGoogle: () => Promise.resolve(),
+          signInAsGuest: () => Promise.resolve(),
+          logout: () => Promise.resolve(),
+          clearError: () => {},
+        };
+      }
+      
+      // Defensive check for auth slice
+      if (!state.auth) {
+        console.error('[useAuth] Auth slice not found in store:', Object.keys(state));
+        return {
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+          error: null,
+          signInWithGoogle: () => Promise.resolve(),
+          signInAsGuest: () => Promise.resolve(),
+          logout: () => Promise.resolve(),
+          clearError: () => {},
+        };
+      }
+      
+      return {
+        user: state.auth.user,
+        isAuthenticated: state.auth.isAuthenticated,
+        isLoading: state.auth.isLoading,
+        error: state.auth.error,
+        signInWithGoogle: state.auth.signInWithGoogle || (() => {
+          console.error('[useAuth] signInWithGoogle is undefined');
+          return Promise.resolve();
+        }),
+        signInAsGuest: state.auth.signInAsGuest || (() => {
+          console.error('[useAuth] signInAsGuest is undefined');
+          return Promise.resolve();
+        }),
+        logout: state.auth.logout || (() => {
+          console.error('[useAuth] logout is undefined');
+          return Promise.resolve();
+        }),
+        clearError: state.auth.clearError || (() => {
+          console.error('[useAuth] clearError is undefined');
+        }),
+      };
+    },
     shallow
   );
 

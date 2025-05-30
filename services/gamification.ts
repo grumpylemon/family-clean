@@ -107,6 +107,14 @@ const ACHIEVEMENTS: Achievement[] = [
     icon: '🎊',
     xpReward: 1000,
     criteria: { type: 'level_reached', value: 10 }
+  },
+  {
+    id: 'helper_hero',
+    name: 'Helper Hero',
+    description: 'Take over 10 chores from family members',
+    icon: '🦸',
+    xpReward: 150,
+    criteria: { type: 'chores_taken_over', value: 10 }
   }
 ];
 

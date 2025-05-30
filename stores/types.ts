@@ -98,6 +98,7 @@ export interface ChoreSlice {
     chores: CachedData<Chore[]> | null;
     filter: ChoreFilter;
     pendingCompletions: string[];
+    pendingTakeovers: string[]; // Chore IDs with pending takeovers
     isLoading: boolean;
     error: string | null;
     
@@ -111,6 +112,14 @@ export interface ChoreSlice {
     updateChoreOffline: (choreId: string, updates: Partial<Chore>) => Promise<void>;
     deleteChoreOffline: (choreId: string) => Promise<void>;
     clearError: () => void;
+    
+    // Takeover actions
+    canTakeoverChore: (choreId: string) => boolean;
+    takeoverChore: (choreId: string, reason?: string) => Promise<void>;
+    addPendingTakeover: (choreId: string) => void;
+    removePendingTakeover: (choreId: string) => void;
+    checkTakeoverEligibility: (chore: Chore) => { eligible: boolean; reason?: string };
+    getTakeoverStats: () => { dailyCount: number; canTakeoverMore: boolean };
   };
 }
 
@@ -135,7 +144,11 @@ export interface RewardSlice {
 
 // Combined store interface
 export interface FamilyStore extends AuthSlice, FamilySlice, OfflineSlice, ChoreSlice, RewardSlice {
-  // Any additional global actions
+  // Additional global actions
   refreshCache: () => Promise<void>;
   clearCache: () => void;
+  calculateCacheSize: () => number;
+  cleanupCache: () => void;
+  invalidateCache: () => void;
+  reset: () => void;
 }

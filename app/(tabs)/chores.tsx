@@ -2,8 +2,10 @@ import { useAuth, useFamily } from '@/hooks/useZustandHooks';
 import { completeChore, getChores, claimChore, takeoverChore } from '@/services/firestore';
 import { Chore, ChoreStatus, CompletionReward } from '@/types';
 import { CompletionRewardModal } from '@/components/CompletionRewardModal';
+import ChoreTakeoverModal from '@/components/ChoreTakeoverModal';
 import { UniversalIcon } from '@/components/ui/UniversalIcon';
 import { createHelpRequest, createTradeProposal } from '@/services/collaborationService';
+import { useFamilyStore } from '@/stores/hooks';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -33,6 +35,10 @@ export default function ChoresScreen() {
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [completionReward, setCompletionReward] = useState<CompletionReward | null>(null);
   const [completedChoreTitle, setCompletedChoreTitle] = useState('');
+  const [showTakeoverModal, setShowTakeoverModal] = useState(false);
+  const [selectedChoreForTakeover, setSelectedChoreForTakeover] = useState<Chore | null>(null);
+  
+  const { checkTakeoverEligibility } = useFamilyStore((state) => state.chores);
 
   useEffect(() => {
     if (family) {
@@ -134,54 +140,28 @@ export default function ChoresScreen() {
   };
 
   const handleTakeoverChore = async (choreId: string) => {
-    if (!user || !currentFamily) return;
+    if (!user || !family) return;
 
     // Find the chore to get assignee info
     const chore = chores.find(c => c.id === choreId);
     if (!chore || !chore.assignedTo) return;
 
-    const assignedMember = currentFamily.members.find(m => m.uid === chore.assignedTo);
-    const assignedName = assignedMember?.name || 'someone';
+    // Check if takeover is eligible
+    const { eligible, reason } = checkTakeoverEligibility(chore);
+    
+    if (!eligible) {
+      Alert.alert('Cannot Take Over', reason || 'This chore cannot be taken over at this time.');
+      return;
+    }
 
-    // Show confirmation dialog
-    Alert.alert(
-      'Take Over Chore?',
-      `This chore is assigned to ${assignedName}. Do you want to take it over and help them out?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Take Over',
-          style: 'default',
-          onPress: async () => {
-            try {
-              const displayName = user.displayName || user.email || 'User';
-              await takeoverChore(choreId, user.uid, displayName, 'helping');
-              
-              // Refresh chores list
-              await loadChores();
-              
-              const successMessage = `You've taken over the chore from ${assignedName}!`;
-              if (Platform.OS === 'android') {
-                ToastAndroid.show(successMessage, ToastAndroid.SHORT);
-              } else {
-                Alert.alert('Success', successMessage);
-              }
-            } catch (error) {
-              console.error('Error taking over chore:', error);
-              const errorMessage = error instanceof Error ? error.message : 'Failed to take over chore. Please try again.';
-              if (Platform.OS === 'android') {
-                ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
-              } else {
-                Alert.alert('Error', errorMessage);
-              }
-            }
-          },
-        },
-      ],
-    );
+    // Show takeover modal
+    setSelectedChoreForTakeover(chore);
+    setShowTakeoverModal(true);
+  };
+
+  const handleTakeoverComplete = async () => {
+    // Refresh chores after takeover
+    await loadChores();
   };
 
   const handleRequestHelp = (chore: Chore) => {
@@ -610,6 +590,17 @@ export default function ChoresScreen() {
           setCompletionReward(null);
           setCompletedChoreTitle('');
         }}
+      />
+      
+      {/* Chore Takeover Modal */}
+      <ChoreTakeoverModal
+        visible={showTakeoverModal}
+        chore={selectedChoreForTakeover}
+        onClose={() => {
+          setShowTakeoverModal(false);
+          setSelectedChoreForTakeover(null);
+        }}
+        onTakeover={handleTakeoverComplete}
       />
     </SafeAreaView>
   );

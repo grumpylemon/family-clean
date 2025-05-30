@@ -38,8 +38,14 @@ export const createAuthSlice: StateCreator<
   [],
   AuthSlice
 > = (set, get) => {
+  // Validate that set and get are functions
+  if (typeof set !== 'function' || typeof get !== 'function') {
+    console.error('[AuthSlice] Invalid slice creator parameters:', { set: typeof set, get: typeof get });
+    throw new Error('Invalid slice creator parameters');
+  }
+
   // Log slice creation for debugging
-  console.log('[AuthSlice] Creating auth slice');
+  console.log('[AuthSlice] Creating auth slice with valid parameters');
   
   return {
     auth: {
@@ -124,17 +130,33 @@ export const createAuthSlice: StateCreator<
         // If user has a familyId, load family data
         if (user.familyId) {
           console.log('[AuthSlice] User has familyId, loading family data:', user.familyId);
-          const familySlice = get().family;
-          if (familySlice.fetchFamily) {
-            try {
-              await familySlice.fetchFamily(user.familyId);
-              console.log('[AuthSlice] Family data loaded successfully');
-            } catch (familyError) {
-              console.error('[AuthSlice] Error loading family data:', familyError);
-              // Don't fail the whole auth process if family loading fails
+          
+          // Defensive get() call
+          try {
+            const store = get();
+            if (!store) {
+              console.error('[AuthSlice] get() returned undefined');
+              return;
             }
-          } else {
-            console.error('[AuthSlice] fetchFamily function not available');
+            
+            const familySlice = store.family;
+            if (familySlice && typeof familySlice.fetchFamily === 'function') {
+              try {
+                await familySlice.fetchFamily(user.familyId);
+                console.log('[AuthSlice] Family data loaded successfully');
+              } catch (familyError) {
+                console.error('[AuthSlice] Error loading family data:', familyError);
+                // Don't fail the whole auth process if family loading fails
+              }
+            } else {
+              console.error('[AuthSlice] fetchFamily function not available:', {
+                hasFamilySlice: !!familySlice,
+                familySliceType: typeof familySlice,
+                storeKeys: Object.keys(store)
+              });
+            }
+          } catch (getError) {
+            console.error('[AuthSlice] Error calling get() in signInWithGoogle:', getError);
           }
         } else {
           console.log('[AuthSlice] User has no familyId, will show family setup');
@@ -324,7 +346,7 @@ export const createAuthSlice: StateCreator<
             
             // Load family data if user has a familyId
             if (user.familyId) {
-              const familySlice = get().family;
+              const familySlice = safeGet().family;
               if (familySlice.fetchFamily) {
                 try {
                   await familySlice.fetchFamily(user.familyId);
@@ -362,7 +384,7 @@ export const createAuthSlice: StateCreator<
               // If user has a familyId, load family data
               if (profile.familyId) {
                 console.log('[AuthSlice] Mock auth - User has familyId, loading family data:', profile.familyId);
-                const familySlice = get().family;
+                const familySlice = safeGet().family;
                 if (familySlice.fetchFamily) {
                   try {
                     await familySlice.fetchFamily(profile.familyId);
@@ -455,7 +477,7 @@ export const createAuthSlice: StateCreator<
                 // If user has a familyId, load family data
                 if (profile.familyId) {
                   console.log('[AuthSlice] Auth state change - User has familyId, loading family data:', profile.familyId);
-                  const familySlice = get().family;
+                  const familySlice = safeGet().family;
                   if (familySlice.fetchFamily) {
                     try {
                       await familySlice.fetchFamily(profile.familyId);
@@ -542,4 +564,11 @@ export const createAuthSlice: StateCreator<
     }
   }
   };
-};
+}
+
+export const createAuthSlice: StateCreator<
+  FamilyStore,
+  [],
+  [],
+  AuthSlice
+> = createAuthSliceFactory();

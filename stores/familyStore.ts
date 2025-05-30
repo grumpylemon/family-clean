@@ -20,21 +20,50 @@ const storage = Platform.OS === 'web'
   ? createJSONStorage(() => localStorage)
   : createJSONStorage(() => AsyncStorage);
 
-// Create the combined store
-export const useFamilyStore = create<FamilyStore>()(
-  persist(
-    (...args) => ({
-      // Combine all slices
-      ...createAuthSlice(...args),
-      ...createFamilySlice(...args),
-      ...createOfflineSlice(...args),
-      ...createChoreSlice(...args),
-      ...createRewardSlice(...args),
+// Factory function to create the store with explicit parameters
+function createStoreCombiner() {
+  return (set: any, get: any, api: any) => {
+    console.log('[FamilyStore] Creating store with parameters');
+    
+    // Validate parameters
+    if (typeof set !== 'function' || typeof get !== 'function') {
+      console.error('[FamilyStore] Invalid store creator functions:', {
+        set: typeof set,
+        get: typeof get,
+        argsCount: arguments.length
+      });
+      throw new Error('Invalid store creator functions');
+    }
+    
+    console.log('[FamilyStore] Creating slices...');
+    
+    // Create a safe getter
+    const safeGet = () => {
+      try {
+        const state = get();
+        if (!state) {
+          console.error('[FamilyStore] get() returned undefined');
+          return {};
+        }
+        return state;
+      } catch (error) {
+        console.error('[FamilyStore] Error in get():', error);
+        return {};
+      }
+    };
+    
+    return {
+      // Combine all slices - slices will receive the same parameters
+      ...createAuthSlice(set, get, api),
+      ...createFamilySlice(set, get, api),
+      ...createOfflineSlice(set, get, api),
+      ...createChoreSlice(set, get, api),
+      ...createRewardSlice(set, get, api),
       
       // Additional methods for cache management
       calculateCacheSize: () => {
         try {
-          const state = JSON.stringify(args[0]());
+          const state = JSON.stringify(safeGet());
           return new TextEncoder().encode(state).length;
         } catch (error) {
           console.error('Failed to calculate cache size:', error);
@@ -53,15 +82,22 @@ export const useFamilyStore = create<FamilyStore>()(
       },
       
       reset: () => {
-        args[1](() => ({
-          ...createAuthSlice(...args),
-          ...createFamilySlice(...args),
-          ...createOfflineSlice(...args),
-          ...createChoreSlice(...args),
-          ...createRewardSlice(...args),
+        set(() => ({
+          ...createAuthSlice(set, get, api),
+          ...createFamilySlice(set, get, api),
+          ...createOfflineSlice(set, get, api),
+          ...createChoreSlice(set, get, api),
+          ...createRewardSlice(set, get, api),
         }));
       },
-    }),
+    };
+  };
+}
+
+// Create the combined store
+export const useFamilyStore = create<FamilyStore>()(
+  persist(
+    createStoreCombiner(),
     {
       name: 'family-store',
       storage,

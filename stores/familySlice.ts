@@ -38,12 +38,51 @@ export interface FamilySlice {
   };
 }
 
-export const createFamilySlice: StateCreator<
-  FamilyStore,
-  [],
-  [],
-  FamilySlice
-> = (set, get) => ({
+// Use a factory function to ensure proper parameter handling with minification
+function createFamilySliceFactory() {
+  return (set: any, get: any, api: any) => {
+    // Validate parameters
+    if (typeof set !== 'function' || typeof get !== 'function') {
+      console.error('[FamilySlice] Invalid slice creator parameters:', { 
+        set: typeof set, 
+        get: typeof get,
+        argsCount: arguments.length 
+      });
+      throw new Error('Invalid slice creator parameters');
+    }
+
+    console.log('[FamilySlice] Creating family slice with valid parameters');
+
+    // Create a safe getter that handles errors
+    const safeGet = () => {
+      try {
+        const state = get();
+        if (!state) {
+          console.error('[FamilySlice] get() returned undefined');
+          // Return a minimal valid state structure
+          return {
+            auth: { user: null, isAuthenticated: false },
+            family: { family: null, members: [], isAdmin: false, currentMember: null },
+            offline: { isOnline: true },
+            chores: { chores: [] },
+            rewards: { rewards: [] }
+          };
+        }
+        return state;
+      } catch (error) {
+        console.error('[FamilySlice] Error in safeGet:', error);
+        // Return a minimal valid state structure
+        return {
+          auth: { user: null, isAuthenticated: false },
+          family: { family: null, members: [], isAdmin: false, currentMember: null },
+          offline: { isOnline: true },
+          chores: { chores: [] },
+          rewards: { rewards: [] }
+        };
+      }
+    };
+
+    return {
   family: {
     family: null,
     members: [],
@@ -53,7 +92,18 @@ export const createFamilySlice: StateCreator<
     error: null,
 
     createFamily: async (name: string) => {
-      const { auth } = get();
+      // Defensive get() call with validation
+      const store = safeGet();
+      const { auth } = store;
+      
+      if (!auth || !auth.user) {
+        console.error('[FamilySlice] Auth not ready:', { hasAuth: !!auth, hasUser: !!(auth?.user) });
+        set((state) => ({
+          family: { ...state.family, error: 'User not authenticated' }
+        }));
+        return false;
+      }
+
       const user = auth.user;
       
       if (!user) {
@@ -184,7 +234,18 @@ export const createFamilySlice: StateCreator<
     },
 
     joinFamily: async (joinCode: string) => {
-      const { auth } = get();
+      // Defensive get() call with validation
+      const store = safeGet();
+      const { auth } = store;
+      
+      if (!auth || !auth.user) {
+        console.error('[FamilySlice] Auth not ready in joinFamily');
+        set((state) => ({
+          family: { ...state.family, error: 'User not authenticated' }
+        }));
+        return false;
+      }
+
       const user = auth.user;
       
       if (!user) {
@@ -254,7 +315,14 @@ export const createFamilySlice: StateCreator<
           }));
 
           // Fetch the updated family data
-          await get().family.fetchFamily(family.id!);
+          try {
+            const store = safeGet();
+            if (store && store.family && store.family.fetchFamily) {
+              await store.family.fetchFamily(family.id!);
+            }
+          } catch (error) {
+            console.error('[FamilySlice] Error fetching family after join:', error);
+          }
           return true;
         }
         
@@ -274,11 +342,29 @@ export const createFamilySlice: StateCreator<
 
     // Alias for createFamily to match component expectations
     createNewFamily: async (name: string) => {
-      return await get().family.createFamily(name);
+      try {
+        const store = safeGet();
+        if (!store || !store.family || !store.family.createFamily) {
+          console.error('[FamilySlice] Store or createFamily not available');
+          return false;
+        }
+        return await store.family.createFamily(name);
+      } catch (error) {
+        console.error('[FamilySlice] Error in createNewFamily:', error);
+        return false;
+      }
     },
 
     refreshFamily: async () => {
-      const { auth } = get();
+      // Defensive get() call with validation
+      const store = safeGet();
+      const { auth } = store;
+      
+      if (!auth || !auth.user) {
+        console.log('[FamilySlice] No user to refresh family for');
+        return false;
+      }
+
       const user = auth.user;
       
       if (!user?.familyId) {
@@ -288,8 +374,19 @@ export const createFamilySlice: StateCreator<
       
       try {
         console.log('[FamilySlice] Refreshing family:', user.familyId);
-        await get().family.fetchFamily(user.familyId);
-        return true;
+        try {
+          const store = safeGet();
+          if (store && store.family && store.family.fetchFamily) {
+            await store.family.fetchFamily(user.familyId);
+            return true;
+          } else {
+            console.error('[FamilySlice] fetchFamily not available in refreshFamily');
+            return false;
+          }
+        } catch (error) {
+          console.error('[FamilySlice] Error in refreshFamily:', error);
+          return false;
+        }
       } catch (error) {
         console.error('[FamilySlice] Error refreshing family:', error);
         return false;
@@ -297,7 +394,15 @@ export const createFamilySlice: StateCreator<
     },
 
     fetchFamily: async (familyId: string) => {
-      const { auth, family } = get();
+      // Defensive get() call with validation
+      const store = safeGet();
+      const { auth, family } = store;
+      
+      if (!auth || !family) {
+        console.error('[FamilySlice] Required slices not found in fetchFamily');
+        return;
+      }
+
       const user = auth.user;
       
       if (!user) {
@@ -360,7 +465,9 @@ export const createFamilySlice: StateCreator<
     },
 
     updateFamilySettings: async (settings: Partial<Family['settings']>, name?: string) => {
-      const { family } = get().family;
+      // Defensive get() call
+      const store = safeGet();
+      const { family } = store.family;
       
       if (!family) {
         set((state) => ({
@@ -402,7 +509,14 @@ export const createFamilySlice: StateCreator<
           }));
           
           // Refresh family data
-          await get().family.fetchFamily(family.id);
+          try {
+            const store = safeGet();
+            if (store && store.family && store.family.fetchFamily) {
+              await store.family.fetchFamily(family.id);
+            }
+          } catch (error) {
+            console.error('[FamilySlice] Error refreshing family after settings update:', error);
+          }
           return true;
         }
         
@@ -444,7 +558,14 @@ export const createFamilySlice: StateCreator<
           }));
           
           // Refresh family data
-          await get().family.fetchFamily(familyId);
+          try {
+            const store = safeGet();
+            if (store && store.family && store.family.fetchFamily) {
+              await store.family.fetchFamily(familyId);
+            }
+          } catch (error) {
+            console.error('[FamilySlice] Error refreshing family after member update:', error);
+          }
           return true;
         }
         
@@ -463,7 +584,14 @@ export const createFamilySlice: StateCreator<
     },
 
     removeMember: async (familyId: string, userId: string) => {
-      const { auth } = get();
+      // Defensive get() call
+      const store = safeGet();
+      const { auth } = store;
+      
+      if (!auth) {
+        console.error('[FamilySlice] Auth slice not found');
+        return false;
+      }
       
       // Don't allow removing yourself
       if (auth.user?.uid === userId) {
@@ -479,9 +607,9 @@ export const createFamilySlice: StateCreator<
 
       try {
         // Remove member by updating the family with filtered members
-        const { family } = get().family;
-        if (family) {
-          const filteredMembers = Array.isArray(family.members) ? family.members.filter(member => member.uid !== userId) : [];
+        const familyData = store.family?.family;
+        if (familyData) {
+          const filteredMembers = Array.isArray(familyData.members) ? familyData.members.filter(member => member.uid !== userId) : [];
           const success = await updateFamily(familyId, { members: filteredMembers });
           
           if (success) {
@@ -496,7 +624,14 @@ export const createFamilySlice: StateCreator<
             }));
             
             // Refresh family data
-            await get().family.fetchFamily(familyId);
+            try {
+              const refreshStore = safeGet();
+              if (refreshStore && refreshStore.family && refreshStore.family.fetchFamily) {
+                await refreshStore.family.fetchFamily(familyId);
+              }
+            } catch (error) {
+              console.error('[FamilySlice] Error refreshing family after member removal:', error);
+            }
             return true;
           }
         }
@@ -520,5 +655,14 @@ export const createFamilySlice: StateCreator<
         family: { ...state.family, error: null }
       }));
     }
-  }
-});
+    }
+    };
+  };
+}
+
+export const createFamilySlice: StateCreator<
+  FamilyStore,
+  [],
+  [],
+  FamilySlice
+> = createFamilySliceFactory();
