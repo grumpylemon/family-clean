@@ -896,3 +896,82 @@ export interface TakeoverSettings {
   highValueThreshold: number; // Points threshold for admin approval (default 100)
   protectionPeriodHours: number; // New chore protection (default 12)
 }
+
+// ====== TAKEOVER ANALYTICS ======
+
+export type AnalyticsPeriod = 'daily' | 'weekly' | 'monthly' | 'all-time';
+
+export interface TakeoverAnalytics {
+  familyId: string;
+  period: AnalyticsPeriod;
+  lastUpdated: string;
+  leaderboard: TakeoverLeaderboardEntry[];
+  choreHealthMetrics: ChoreHealthMetric[];
+  collaborationScore: number;
+  insights: TakeoverInsight[];
+}
+
+export interface TakeoverLeaderboardEntry {
+  userId: string;
+  userName: string;
+  photoURL?: string;
+  totalTakeovers: number;
+  bonusPointsEarned: number;
+  averageResponseTime: number; // hours
+  currentStreak: number;
+  rank: number;
+  trend: 'up' | 'down' | 'stable';
+  completionRate: number; // percentage of takeovers completed
+}
+
+export interface ChoreHealthMetric {
+  choreId?: string;
+  choreTitle?: string;
+  choreType?: ChoreType;
+  takeoverRate: number; // percentage
+  averageOverdueHours: number;
+  mostFrequentHelper?: string;
+  mostFrequentHelperName?: string;
+  originalAssigneePattern?: {
+    userId: string;
+    userName: string;
+    missRate: number;
+  };
+  healthScore: number; // 0-100, where 100 is perfectly healthy
+}
+
+export interface TakeoverInsight {
+  id: string;
+  type: 'pattern' | 'suggestion' | 'achievement' | 'warning';
+  priority: 'low' | 'medium' | 'high';
+  message: string;
+  actionable: boolean;
+  createdAt: string;
+  action?: {
+    type: 'reassign' | 'adjust_points' | 'change_schedule' | 'celebrate';
+    choreId?: string;
+    userId?: string;
+    suggestedAssignee?: string;
+    suggestedPoints?: number;
+    suggestedSchedule?: string;
+  };
+}
+
+// Analytics summary for family
+export interface TakeoverSummaryStats {
+  totalTakeovers: number;
+  uniqueHelpers: number;
+  averageResponseTime: number;
+  collaborationScore: number;
+  topHelper?: {
+    userId: string;
+    userName: string;
+    photoURL?: string;
+    takeoverCount: number;
+  };
+  mostProblematicChore?: {
+    choreId: string;
+    choreTitle: string;
+    takeoverRate: number;
+  };
+}

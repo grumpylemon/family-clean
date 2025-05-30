@@ -399,6 +399,64 @@ export const useOfflineStatus = () => {
   };
 };
 
+// Analytics hook - for takeover insights and leaderboards
+export const useAnalytics = () => {
+  const {
+    analytics: {
+      takeoverLeaderboard,
+      choreHealthMetrics,
+      familyInsights,
+      selectedPeriod,
+      isLoading,
+      error,
+      lastUpdated,
+      setSelectedPeriod,
+      calculateTakeoverLeaderboard,
+      calculateChoreHealthMetrics,
+      calculateFamilyInsights,
+      refreshAnalytics,
+      clearAnalytics,
+      clearError,
+      getTakeoverTrend,
+      getChoreCompletionRate,
+      getAverageResponseTime,
+      getPeakProductivityHours
+    }
+  } = useFamilyStore();
+
+  // Auto-refresh analytics when period changes
+  useEffect(() => {
+    if (selectedPeriod) {
+      refreshAnalytics();
+    }
+  }, [selectedPeriod, refreshAnalytics]);
+
+  return {
+    // State
+    takeoverLeaderboard,
+    choreHealthMetrics,
+    familyInsights,
+    selectedPeriod,
+    isLoading,
+    error,
+    lastUpdated,
+    // Actions
+    setSelectedPeriod,
+    refreshAnalytics,
+    clearAnalytics,
+    clearError,
+    // Helpers
+    getTakeoverTrend,
+    getChoreCompletionRate,
+    getAverageResponseTime,
+    getPeakProductivityHours,
+    // Specific calculations
+    calculateTakeoverLeaderboard,
+    calculateChoreHealthMetrics,
+    calculateFamilyInsights
+  };
+};
+
 // Store initialization hook
 export const useStoreInitialization = () => {
   const { user } = useFamilyStore();

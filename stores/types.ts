@@ -142,8 +142,11 @@ export interface RewardSlice {
   };
 }
 
+// Import analytics slice
+import { AnalyticsSlice } from './analyticsSlice';
+
 // Combined store interface
-export interface FamilyStore extends AuthSlice, FamilySlice, OfflineSlice, ChoreSlice, RewardSlice {
+export interface FamilyStore extends AuthSlice, FamilySlice, OfflineSlice, ChoreSlice, RewardSlice, AnalyticsSlice {
   // Additional global actions
   refreshCache: () => Promise<void>;
   clearCache: () => void;

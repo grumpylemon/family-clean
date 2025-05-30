@@ -546,6 +546,20 @@ const mockAuth = {
 - Implement mock implementations for testing
 - Use Firebase Local Emulator Suite for local development
 
+## Known Issues and Solutions
+
+### 1. Expo Go Limitations
+**Issue**: Real Firebase doesn't work in Expo Go on iOS due to native module requirements.  
+**Solution**: The app automatically uses mock implementations in this case. Production builds via EAS work correctly with real Firebase.
+
+### 2. Firebase Auth Metro Bundler Warnings (Fixed in v2.118)
+**Issue**: Previous versions showed warnings: `[Metro] Could not resolve browser entry for firebase/auth: Package subpath './auth/package.json' is not defined by "exports"`  
+**Solution**: Removed custom resolver in `metro.config.js`. Firebase v11+ handles platform-specific builds automatically. The `resolverMainFields` configuration is sufficient.
+
+### 3. Mock Mode Detection
+**Issue**: Sometimes the app uses mock mode when it should use real Firebase.  
+**Solution**: Check `EXPO_PUBLIC_USE_MOCK` environment variable and ensure it's set to `false` for production builds.
+
 ## Conclusion
 
 Firebase provides powerful tools for building authenticated, data-driven applications across web and mobile platforms. By following these best practices and understanding platform-specific considerations, you can create robust applications with seamless online/offline experiences.

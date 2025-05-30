@@ -24,33 +24,11 @@ config.resolver.unstable_enablePackageExports = false;
 
 // CRITICAL FIX for Firebase Auth on Web
 // Force browser version of Firebase Auth for web builds
+// Firebase v11+ handles platform-specific builds automatically, so we only need to set the resolver fields
 config.resolver.resolverMainFields = ['browser', 'module', 'main'];
 
-// Custom resolver to ensure Firebase Auth uses browser version for web
-config.resolver.resolveRequest = (context, moduleName, platform) => {
-  // Force browser version of Firebase Auth when building for web
-  if (platform === 'web' && moduleName === 'firebase/auth') {
-    console.log('[Metro] Intercepting firebase/auth for web platform');
-    
-    // Try to resolve the browser-specific entry point
-    try {
-      const firebaseAuthPackageJson = require('firebase/auth/package.json');
-      const browserEntry = firebaseAuthPackageJson.browser || firebaseAuthPackageJson.module;
-      
-      if (browserEntry) {
-        const path = require('path');
-        const resolvedPath = path.join(path.dirname(require.resolve('firebase/auth/package.json')), browserEntry);
-        console.log('[Metro] Resolved firebase/auth to browser entry:', resolvedPath);
-        return { filePath: resolvedPath };
-      }
-    } catch (e) {
-      console.warn('[Metro] Could not resolve browser entry for firebase/auth:', e.message);
-    }
-  }
-  
-  // Default resolution for everything else
-  return context.resolveRequest(context, moduleName, platform);
-};
+// Note: Custom resolver removed as it's not needed with Firebase v11+
+// The resolverMainFields configuration above is sufficient for proper web builds
 
 
 // Configure transformer options with ZUSTAND V5 optimized minification

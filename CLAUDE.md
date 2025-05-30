@@ -407,3 +407,7 @@ The app now includes a comprehensive set of reusable UI components for professio
    - Settings → Admin Panel → Zustand Remote Admin
    - Or direct from Admin tab (if you have admin tab enabled)
    - Provides offline queue management, cache control, and store debugging
+
+7. **Firebase Auth Metro Warnings**: Fixed in v2.118
+   - Removed custom resolver in metro.config.js that was causing package.json access errors
+   - Firebase v11+ handles platform-specific builds automatically

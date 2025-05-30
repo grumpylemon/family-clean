@@ -14,6 +14,7 @@ import { createFamilySlice } from './familySlice';
 import { createOfflineSlice } from './offlineSlice';
 import { createChoreSlice } from './choreSlice';
 import { createRewardSlice } from './rewardSlice';
+import { createAnalyticsSlice } from './analyticsSlice';
 
 // Platform-specific storage
 const storage = Platform.OS === 'web' 
@@ -59,6 +60,7 @@ function createStoreCombiner() {
       ...createOfflineSlice(set, get, api),
       ...createChoreSlice(set, get, api),
       ...createRewardSlice(set, get, api),
+      ...createAnalyticsSlice(set, get, api),
       
       // Additional methods for cache management
       calculateCacheSize: () => {
@@ -88,6 +90,7 @@ function createStoreCombiner() {
           ...createOfflineSlice(set, get, api),
           ...createChoreSlice(set, get, api),
           ...createRewardSlice(set, get, api),
+          ...createAnalyticsSlice(set, get, api),
         }));
       },
     };
