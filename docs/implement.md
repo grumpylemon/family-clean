@@ -1,5 +1,36 @@
 # Implementation Notes for Family Compass
 
+## iOS Build Fixed (2025-05-30 - v2.164)
+
+### Problem:
+- iOS builds failing on EAS with react-native-safe-area-context codegen errors
+- Expo SDK 53 defaults to React Native's New Architecture which many libraries don't support yet
+- Error: "Could not find component config for native component"
+
+### Solution Implemented:
+1. **Created Temporary Compatibility Layer** - `scripts/fix-new-architecture-ios.js`
+   - Patches native component spec files to return null instead of using TurboModules
+   - Automatically runs on `npm install` via postinstall
+   - Fixes 4 major libraries:
+     - react-native-safe-area-context (all spec files)
+     - react-native-svg (30+ fabric components)
+     - react-native-screens (all fabric components)
+     - react-native-gesture-handler (native module specs)
+
+2. **What This Does**:
+   - Allows iOS builds to succeed while libraries catch up with New Architecture support
+   - Metro bundler can now successfully bundle for iOS
+   - EAS builds complete without codegen errors
+
+3. **Future Migration**:
+   - When libraries fully support New Architecture, remove the fix script
+   - Update all dependencies to New Architecture compatible versions
+   - Enable full New Architecture features
+
+### Documentation:
+- See `/docs/Features/New_Architecture_Compatibility_feature.md` for full details
+- Build validation now passes all checks including expo export:embed
+
 ## Recent Fixes (2025-05-30)
 
 ### Fixed Startup Errors

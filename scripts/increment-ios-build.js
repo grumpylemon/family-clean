@@ -23,9 +23,24 @@ fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2) + '\n');
 
 console.log(`✅ iOS build number updated: ${currentBuildNumber} → ${newBuildNumber}`);
 
-// Skip pre-build validation for now - EAS Build will handle bundling
-console.log('\n⚠️  Skipping pre-build validation (bundler issue with path aliases)');
-console.log('EAS Build will handle the bundling correctly.\n');
+// Run pre-build validation before sending to EAS
+console.log('\n🔍 Running pre-build validation...\n');
+try {
+  execSync('node scripts/pre-eas-build-check.js', { 
+    stdio: 'inherit',
+    cwd: path.join(__dirname, '..')
+  });
+} catch (error) {
+  console.error('\n❌ Pre-build validation failed!');
+  console.error('Fix the issues above before building to save time and money.');
+  
+  // Revert the build number since we're not proceeding
+  appJson.expo.ios.buildNumber = currentBuildNumber.toString();
+  fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2) + '\n');
+  console.log(`\n↩️  Reverted build number back to ${currentBuildNumber}`);
+  
+  process.exit(1);
+}
 
 // If a command was passed as argument, run it
 if (process.argv[2]) {

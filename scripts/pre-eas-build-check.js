@@ -245,8 +245,14 @@ checkStep('Checking environment variables', () => {
 checkStep('Testing expo export:embed', () => {
   console.log('\n  🏗️  Simulating EAS build process...');
   
+  // Create temporary directory for output
+  const tmpDir = '/tmp/expo-embed-test-' + Date.now();
+  try {
+    fs.mkdirSync(tmpDir, { recursive: true });
+  } catch {}
+  
   const exportResult = runCommand(
-    'npx expo export:embed --platform ios --dev false --output /tmp/expo-embed-test',
+    `npx expo export:embed --platform ios --dev false --bundle-output ${tmpDir}/main.jsbundle --assets-dest ${tmpDir} --reset-cache`,
     { silent: true }
   );
   
@@ -258,13 +264,25 @@ checkStep('Testing expo export:embed', () => {
       return false;
     }
     
+    if (error.includes('Could not find component config')) {
+      issues.push('New Architecture codegen error - run: node scripts/fix-new-architecture-ios.js');
+      return false;
+    }
+    
     issues.push('Expo export:embed failed - check error above');
+    console.log('\n  ❌ Error details:', error.split('\n').slice(0, 5).join('\n'));
+    return false;
+  }
+  
+  // Check if bundle was created
+  if (!fs.existsSync(`${tmpDir}/main.jsbundle`)) {
+    issues.push('Bundle file not created during export:embed');
     return false;
   }
   
   // Clean up
   try {
-    execSync('rm -rf /tmp/expo-embed-test', { stdio: 'pipe' });
+    execSync(`rm -rf ${tmpDir}`, { stdio: 'pipe' });
   } catch {}
   
   return true;
