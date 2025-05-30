@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { WebIcon } from './ui/WebIcon';
 import { useAccessControl } from '@/hooks/useAccessControl';
-import { useFamily } from '@/contexts/FamilyContext';
+import { useFamily } from '@/hooks/useZustandHooks';
 import RoomManagement from '@/components/RoomManagement';
 import ChoreManagement from '@/components/ChoreManagement';
 import ManageMembers from '@/components/ManageMembers';
@@ -249,7 +249,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
             <Text style={styles.sectionHeader}>Access Levels</Text>
             <View style={styles.settingsGroup}>
               <View style={styles.accessItem}>
-                <Ionicons 
+                <WebIcon 
                   name={canManageFamily ? "checkmark-circle" : "close-circle"} 
                   size={20} 
                   color={canManageFamily ? "#10b981" : "#ef4444"} 
@@ -257,7 +257,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
                 <Text style={styles.accessText}>Family Management</Text>
               </View>
               <View style={styles.accessItem}>
-                <Ionicons 
+                <WebIcon 
                   name={canManageChores ? "checkmark-circle" : "close-circle"} 
                   size={20} 
                   color={canManageChores ? "#10b981" : "#ef4444"} 
@@ -265,7 +265,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
                 <Text style={styles.accessText}>Chore Management</Text>
               </View>
               <View style={styles.accessItem}>
-                <Ionicons 
+                <WebIcon 
                   name={canManageRewards ? "checkmark-circle" : "close-circle"} 
                   size={20} 
                   color={canManageRewards ? "#10b981" : "#ef4444"} 
@@ -289,7 +289,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
               onPress={() => setShowRoomManagement(false)}
               style={styles.modalCloseButton}
             >
-              <Ionicons name="close" size={24} color="#831843" />
+              <WebIcon name="close" size={24} color="#831843" />
             </TouchableOpacity>
           </View>
         </Modal>

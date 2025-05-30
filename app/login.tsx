@@ -13,6 +13,7 @@ import {
   Text
 } from 'react-native';
 import { WebIcon } from '@/components/ui/WebIcon';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // Version tracking for updates
 console.log("Login Screen version: v4");
@@ -21,6 +22,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const { user, loading, error, signInWithGoogle, signInAsGuest } = useAuth();
+  const { colors, theme } = useTheme();
   const [isIOS, setIsIOS] = useState(false);
   // Get mock status immediately and synchronously
   const [isMock, setIsMock] = useState(isMockImplementation());
@@ -70,11 +72,151 @@ export default function LoginScreen() {
     }
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    loadingContainer: {
+      alignItems: 'center',
+      gap: 16,
+    },
+    loadingText: {
+      fontSize: 16,
+      color: colors.textMuted,
+      marginTop: 12,
+    },
+    content: {
+      flex: 1,
+      width: '100%',
+      maxWidth: 400,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 32,
+    },
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    logo: {
+      width: width * 0.4,
+      height: width * 0.4,
+      maxWidth: 160,
+      maxHeight: 160,
+      marginBottom: 24,
+    },
+    appTitle: {
+      fontSize: 36,
+      fontWeight: '800',
+      color: colors.primary,
+      marginBottom: 8,
+    },
+    tagline: {
+      fontSize: 18,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    buttonsContainer: {
+      width: '100%',
+      gap: 16,
+    },
+    button: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.cardBackground,
+      paddingVertical: 16,
+      paddingHorizontal: 24,
+      borderRadius: 28,
+      gap: 12,
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.08,
+      shadowRadius: 8,
+      elevation: 4,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    googleButton: {
+      backgroundColor: colors.primary,
+    },
+    buttonText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    googleButtonText: {
+      color: '#ffffff',
+    },
+    divider: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: '100%',
+      marginVertical: 8,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: colors.divider,
+    },
+    dividerText: {
+      fontSize: 14,
+      color: colors.textMuted,
+      marginHorizontal: 16,
+    },
+    guestButton: {
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderColor: colors.primaryLight,
+    },
+    guestButtonText: {
+      color: colors.primary,
+    },
+    errorContainer: {
+      backgroundColor: '#fee2e2',
+      padding: 12,
+      borderRadius: 8,
+      marginTop: 16,
+      width: '100%',
+    },
+    errorText: {
+      color: '#dc2626',
+      fontSize: 14,
+      textAlign: 'center',
+    },
+    mockBadge: {
+      position: 'absolute',
+      top: Platform.OS === 'ios' ? 60 : 40,
+      right: 20,
+      backgroundColor: colors.warning,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    mockBadgeText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: '#ffffff',
+    },
+    versionText: {
+      position: 'absolute',
+      bottom: 20,
+      fontSize: 12,
+      color: colors.textMuted,
+    },
+  });
+
   if (loading) {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#be185d" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>
             {isMock ? "Setting up demo mode..." : "Connecting to Family Compass..."}
           </Text>
@@ -153,141 +295,3 @@ export default function LoginScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fdf2f8',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    gap: 16,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#be185d',
-    fontWeight: '500',
-  },
-  content: {
-    width: '100%',
-    maxWidth: 400,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 60,
-  },
-  iconBackground: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#f9a8d4',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-    shadowColor: '#ec4899',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  appTitle: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#831843',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  tagline: {
-    fontSize: 18,
-    color: '#be185d',
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  buttonsContainer: {
-    width: '100%',
-    gap: 16,
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#ffffff',
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    borderRadius: 28,
-    shadowColor: '#ec4899',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
-    gap: 12,
-  },
-  googleIcon: {
-    width: 20,
-    height: 20,
-  },
-  googleButtonText: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#831843',
-  },
-  guestButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fce7f3',
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    borderRadius: 28,
-    gap: 12,
-    shadowColor: '#ec4899',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  guestButtonText: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#be185d',
-  },
-  platformNote: {
-    textAlign: 'center',
-    color: '#9ca3af',
-    fontSize: 14,
-    marginTop: 20,
-    fontWeight: '500',
-  },
-  errorContainer: {
-    backgroundColor: '#fef2f2',
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 20,
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#fecaca',
-  },
-  errorText: {
-    color: '#dc2626',
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  refreshButton: {
-    backgroundColor: '#be185d',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginTop: 12,
-  },
-  refreshButtonText: {
-    color: '#ffffff',
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});

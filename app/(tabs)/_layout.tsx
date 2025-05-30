@@ -3,29 +3,31 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { WebIcon } from '@/components/ui/WebIcon';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // Version tracking for updates
-console.log("Tabs Layout version: v3");
+console.log("Tabs Layout version: v3.1 - Dark Mode Support");
 
 export default function TabLayout() {
   const { user } = useAuth();
+  const { colors, theme } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#be185d',
-        tabBarInactiveTintColor: '#9ca3af',
+        tabBarActiveTintColor: colors.tabIconSelected,
+        tabBarInactiveTintColor: colors.tabIconDefault,
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#ffffff',
-          borderTopColor: '#f1f5f9',
+          backgroundColor: colors.tabBarBackground,
+          borderTopColor: colors.divider,
           borderTopWidth: 0.5,
           paddingBottom: Platform.OS === 'ios' ? 20 : 10,
           paddingTop: 8,
           height: Platform.OS === 'ios' ? 80 : 60,
-          shadowColor: '#000',
+          shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
           shadowOffset: { width: 0, height: -1 },
-          shadowOpacity: 0.04,
+          shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
           shadowRadius: 8,
           elevation: 8,
         },

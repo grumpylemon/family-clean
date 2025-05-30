@@ -4,6 +4,7 @@ import '../constants/Version';
 import { initializeFirebase, isMockImplementation } from '@/config/firebase';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { FamilyProvider } from '@/contexts/FamilyContext';
+import { ThemeProvider as CustomThemeProvider } from '@/contexts/ThemeContext';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -139,9 +140,11 @@ export default function RootLayout() {
       console.error('Component stack:', errorInfo.componentStack);
     }}>
       <StoreProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          {wrappedContent}
-        </ThemeProvider>
+        <CustomThemeProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            {wrappedContent}
+          </ThemeProvider>
+        </CustomThemeProvider>
       </StoreProvider>
     </ErrorBoundary>
   );

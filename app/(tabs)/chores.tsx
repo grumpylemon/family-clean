@@ -89,10 +89,13 @@ export default function ChoresScreen() {
         setShowRewardModal(true);
 
         // Reload chores and refresh family data to update points
-        setTimeout(() => {
-          loadChores();
-          refreshFamily(); // Refresh family data to update points display
-        }, 1000);
+        // Give Firebase time to update before refreshing
+        setTimeout(async () => {
+          await loadChores();
+          // Force refresh family data to update currentMember points
+          await refreshFamily();
+          console.log('[ChoresScreen] Refreshed family data after chore completion');
+        }, 2000); // Increased delay to ensure Firebase has updated
       } else if (!result.success && result.error) {
         // Show error message
         if (Platform.OS === 'android') {

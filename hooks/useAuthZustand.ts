@@ -68,19 +68,25 @@ export function useAuth() {
   );
 
   // Debug logging only in development to prevent infinite renders
+  // Removed dependency on signInWithGoogle to prevent loops
   useEffect(() => {
     if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-      console.log('[useAuth] authData:', authData);
-      console.log('[useAuth] signInWithGoogle type:', typeof authData.signInWithGoogle);
-      
-      // Additional debugging for production
-      if (typeof authData.signInWithGoogle === 'undefined') {
-        console.error('[useAuth] ERROR: signInWithGoogle is undefined!');
-        console.log('[useAuth] Full store state:', useFamilyStore.getState());
-        console.log('[useAuth] Auth slice:', useFamilyStore.getState().auth);
+      // Only log once on mount to prevent console spam
+      const hasLogged = (window as any).__authLogged;
+      if (!hasLogged) {
+        console.log('[useAuth] Initial mount - authData:', authData);
+        console.log('[useAuth] signInWithGoogle type:', typeof authData.signInWithGoogle);
+        (window as any).__authLogged = true;
+        
+        // Additional debugging for production
+        if (typeof authData.signInWithGoogle === 'undefined') {
+          console.error('[useAuth] ERROR: signInWithGoogle is undefined!');
+          console.log('[useAuth] Full store state:', useFamilyStore.getState());
+          console.log('[useAuth] Auth slice:', useFamilyStore.getState().auth);
+        }
       }
     }
-  }, [authData.signInWithGoogle]); // Only log when the function reference changes
+  }, []); // Empty dependency array - only run once on mount
 
   // Note: checkAuthState is handled by AuthContext, not here
   // This prevents circular updates between context and store

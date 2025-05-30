@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WebIcon } from '@/components/ui/WebIcon';
 import { useAuth, useFamily } from '@/hooks/useZustandHooks';
 import { useAccessControl } from '@/hooks/useAccessControl';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Toast } from '@/components/ui/Toast';
 import AdminSettings from '@/components/AdminSettings';
 import NotificationSettings from '@/components/NotificationSettings';
@@ -25,35 +25,11 @@ export default function SettingsScreen() {
   const { user } = useAuth();
   const { family } = useFamily();
   const { canManageFamily } = useAccessControl();
-  const colorScheme = useColorScheme();
+  const { colors, theme, themeMode, setThemeMode } = useTheme();
   
   const [name, setName] = useState(user?.displayName || '');
   const [showAdminSettings, setShowAdminSettings] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [themeLoading, setThemeLoading] = useState(true);
-
-  // Load saved theme preference on component mount
-  useEffect(() => {
-    loadThemePreference();
-  }, []);
-
-  const loadThemePreference = async () => {
-    try {
-      const savedTheme = await AsyncStorage.getItem('themePreference');
-      if (savedTheme !== null) {
-        setIsDarkMode(savedTheme === 'dark');
-      } else {
-        // Default to system preference if no saved preference
-        setIsDarkMode(colorScheme === 'dark');
-      }
-    } catch (error) {
-      console.error('Error loading theme preference:', error);
-      setIsDarkMode(colorScheme === 'dark');
-    } finally {
-      setThemeLoading(false);
-    }
-  };
 
   const handleChangeAvatar = async () => {
     try {
@@ -140,25 +116,20 @@ export default function SettingsScreen() {
     Toast.show('Profile update coming soon!', 'info');
   };
 
-  const handleToggleDarkMode = async (value: boolean) => {
+  const handleToggleDarkMode = async (mode: 'light' | 'dark' | 'system') => {
     try {
-      setIsDarkMode(value);
-      
-      // Save theme preference to AsyncStorage
-      await AsyncStorage.setItem('themePreference', value ? 'dark' : 'light');
+      await setThemeMode(mode);
       
       // Show feedback to user
       Toast.show(
-        `${value ? 'Dark' : 'Light'} mode preference saved! Full dark mode implementation coming soon.`,
+        `Theme set to ${mode === 'system' ? 'follow system' : mode} mode`,
         'success'
       );
       
-      console.log(`Theme preference saved: ${value ? 'dark' : 'light'}`);
+      console.log(`Theme preference saved: ${mode}`);
     } catch (error) {
       console.error('Error saving theme preference:', error);
       Toast.show('Failed to save theme preference. Please try again.', 'error');
-      // Revert the state if saving failed
-      setIsDarkMode(!value);
     }
   };
 
@@ -171,12 +142,285 @@ export default function SettingsScreen() {
       .slice(0, 2);
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    headerTitle: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: colors.text,
+      marginLeft: 12,
+    },
+    profileSection: {
+      alignItems: 'center',
+      paddingVertical: 24,
+      backgroundColor: colors.cardBackground,
+      marginBottom: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    avatarContainer: {
+      marginBottom: 16,
+    },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarText: {
+      fontSize: 32,
+      fontWeight: '700',
+      color: '#ffffff',
+    },
+    profileName: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    profileEmail: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      marginBottom: 16,
+    },
+    changeAvatarButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.primaryLight,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 20,
+      gap: 8,
+    },
+    changeAvatarText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    section: {
+      marginBottom: 24,
+      paddingHorizontal: 20,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    settingsCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 16,
+      padding: 16,
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    settingItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+    },
+    settingSection: {
+      paddingVertical: 12,
+    },
+    settingLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    settingIconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+    settingLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    settingDescription: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    themeOptions: {
+      flexDirection: 'row',
+      gap: 12,
+      paddingHorizontal: 4,
+      paddingBottom: 8,
+    },
+    themeOption: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      backgroundColor: colors.surface,
+      borderWidth: 2,
+      borderColor: colors.border,
+    },
+    themeOptionActive: {
+      backgroundColor: colors.accent,
+      borderColor: colors.primary,
+    },
+    themeOptionText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textMuted,
+    },
+    themeOptionTextActive: {
+      color: colors.primary,
+    },
+    adminItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    adminLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    adminIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 16,
+    },
+    adminTextContainer: {
+      flex: 1,
+    },
+    adminTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    adminSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    adminArrow: {
+      marginLeft: 8,
+    },
+    joinButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 24,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+    joinButtonText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: '#ffffff',
+    },
+    noFamilySection: {
+      padding: 40,
+      alignItems: 'center',
+    },
+    noFamilyTitle: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 12,
+      textAlign: 'center',
+    },
+    noFamilyText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: 24,
+      lineHeight: 24,
+    },
+    content: {
+      flex: 1,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    adminDescription: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    adminDescriptionDisabled: {
+      color: colors.textMuted,
+    },
+    adminItemDisabled: {
+      opacity: 0.5,
+    },
+    adminTitleDisabled: {
+      color: colors.textMuted,
+    },
+    comingSoonSection: {
+      opacity: 0.6,
+    },
+    comingSoonItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 16,
+      paddingVertical: 12,
+      opacity: 0.6,
+    },
+    comingSoonText: {
+      flex: 1,
+    },
+    comingSoonTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    comingSoonDescription: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+  });
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#fdf2f8" barStyle="dark-content" />
+      <StatusBar backgroundColor={colors.background} barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} />
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
+          <Text style={styles.headerTitle}>Settings</Text>
         </View>
 
         <View style={styles.content}>
@@ -201,7 +445,7 @@ export default function SettingsScreen() {
                   )}
                 </View>
                 <TouchableOpacity style={styles.changeAvatarButton} onPress={handleChangeAvatar}>
-                  <WebIcon name="camera" size={16} color="#be185d" />
+                  <WebIcon name="camera" size={16} color={colors.primary} />
                   <Text style={styles.changeAvatarText}>Change Avatar</Text>
                 </TouchableOpacity>
               </View>
@@ -277,26 +521,43 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>App Preferences</Text>
             <View style={styles.settingsCard}>
-              <View style={styles.settingItem}>
+              <View style={styles.settingSection}>
                 <View style={styles.settingLeft}>
                   <View style={styles.settingIconContainer}>
                     <WebIcon 
-                      name={isDarkMode ? "moon" : "sunny"} 
+                      name={theme === 'dark' ? "moon" : "sunny"} 
                       size={20} 
-                      color="#be185d" 
+                      color={colors.primary}
                     />
                   </View>
                   <View>
-                    <Text style={styles.settingLabel}>Dark Mode</Text>
-                    <Text style={styles.settingDescription}>Switch between light and dark themes</Text>
+                    <Text style={styles.settingLabel}>Theme</Text>
+                    <Text style={styles.settingDescription}>Choose your preferred appearance</Text>
                   </View>
                 </View>
-                <Switch
-                  value={isDarkMode}
-                  onValueChange={handleToggleDarkMode}
-                  trackColor={{ false: '#f1f5f9', true: '#f9a8d4' }}
-                  thumbColor={isDarkMode ? '#be185d' : '#9ca3af'}
-                />
+              </View>
+              <View style={styles.themeOptions}>
+                <TouchableOpacity 
+                  style={[styles.themeOption, themeMode === 'light' && styles.themeOptionActive]}
+                  onPress={() => handleToggleDarkMode('light')}
+                >
+                  <WebIcon name="sunny" size={20} color={themeMode === 'light' ? colors.primary : colors.textMuted} />
+                  <Text style={[styles.themeOptionText, themeMode === 'light' && styles.themeOptionTextActive]}>Light</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.themeOption, themeMode === 'dark' && styles.themeOptionActive]}
+                  onPress={() => handleToggleDarkMode('dark')}
+                >
+                  <WebIcon name="moon" size={20} color={themeMode === 'dark' ? colors.primary : colors.textMuted} />
+                  <Text style={[styles.themeOptionText, themeMode === 'dark' && styles.themeOptionTextActive]}>Dark</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.themeOption, themeMode === 'system' && styles.themeOptionActive]}
+                  onPress={() => handleToggleDarkMode('system')}
+                >
+                  <WebIcon name="phone-portrait" size={20} color={themeMode === 'system' ? colors.primary : colors.textMuted} />
+                  <Text style={[styles.themeOptionText, themeMode === 'system' && styles.themeOptionTextActive]}>System</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -314,7 +575,7 @@ export default function SettingsScreen() {
                     <WebIcon 
                       name="notifications" 
                       size={24} 
-                      color="#be185d" 
+                      color={colors.primary} 
                     />
                   </View>
                   <View style={styles.adminTextContainer}>
@@ -329,7 +590,7 @@ export default function SettingsScreen() {
                 <WebIcon 
                   name="chevron-forward" 
                   size={20} 
-                  color="#be185d" 
+                  color={colors.primary} 
                 />
               </TouchableOpacity>
             </View>
@@ -340,14 +601,14 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Coming Soon</Text>
             <View style={styles.settingsCard}>
               <View style={styles.comingSoonItem}>
-                <WebIcon name="language-outline" size={24} color="#9f1239" />
+                <WebIcon name="language-outline" size={24} color={colors.textSecondary} />
                 <View style={styles.comingSoonText}>
                   <Text style={styles.comingSoonTitle}>Language</Text>
                   <Text style={styles.comingSoonDescription}>Choose your preferred language</Text>
                 </View>
               </View>
               <View style={styles.comingSoonItem}>
-                <WebIcon name="lock-closed-outline" size={24} color="#9f1239" />
+                <WebIcon name="lock-closed-outline" size={24} color={colors.textSecondary} />
                 <View style={styles.comingSoonText}>
                   <Text style={styles.comingSoonTitle}>Privacy</Text>
                   <Text style={styles.comingSoonDescription}>Manage privacy settings</Text>
@@ -373,7 +634,7 @@ export default function SettingsScreen() {
                 style={{ padding: 8, borderRadius: 20, backgroundColor: '#f9a8d4' }}
                 onPress={() => setShowNotificationSettings(false)}
               >
-                <WebIcon name="close" size={24} color="#831843" />
+                <WebIcon name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <NotificationSettings />
@@ -383,288 +644,3 @@ export default function SettingsScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fdf2f8',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#831843',
-  },
-  content: {
-    paddingHorizontal: 20,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#831843',
-    marginBottom: 12,
-  },
-  profileCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
-    shadowColor: '#be185d',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  avatarContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    marginBottom: 12,
-  },
-  avatarCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#f9a8d4',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#831843',
-  },
-  changeAvatarButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  changeAvatarText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#be185d',
-  },
-  profileForm: {
-    gap: 16,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#831843',
-    marginBottom: 8,
-  },
-  textInput: {
-    backgroundColor: '#fdf2f8',
-    borderWidth: 1,
-    borderColor: '#f9a8d4',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#831843',
-  },
-  updateButton: {
-    backgroundColor: '#be185d',
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  updateButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  settingsCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
-    shadowColor: '#be185d',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-    gap: 20,
-  },
-  settingItem: {
-    gap: 8,
-  },
-  settingLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#831843',
-  },
-  settingSubtext: {
-    fontSize: 12,
-    color: '#9f1239',
-    fontStyle: 'italic',
-  },
-  settingInput: {
-    backgroundColor: '#fdf2f8',
-    borderWidth: 1,
-    borderColor: '#f9a8d4',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-    color: '#831843',
-  },
-  pickerContainer: {
-    backgroundColor: '#fdf2f8',
-    borderWidth: 1,
-    borderColor: '#f9a8d4',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  pickerText: {
-    fontSize: 16,
-    color: '#831843',
-    flex: 1,
-  },
-  saveButton: {
-    backgroundColor: '#be185d',
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  saveButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  transferCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
-    shadowColor: '#be185d',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-    gap: 16,
-  },
-  transferRow: {
-    gap: 8,
-  },
-  transferLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#831843',
-  },
-  transferInput: {
-    backgroundColor: '#fdf2f8',
-    borderWidth: 1,
-    borderColor: '#f9a8d4',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-    color: '#831843',
-  },
-  transferButton: {
-    backgroundColor: '#10b981',
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  transferButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  adminItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  adminItemDisabled: {
-    opacity: 0.5,
-  },
-  adminLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  adminIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  adminTextContainer: {
-    flex: 1,
-  },
-  adminTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#831843',
-    marginBottom: 4,
-  },
-  adminTitleDisabled: {
-    color: '#9ca3af',
-  },
-  adminDescription: {
-    fontSize: 14,
-    color: '#9f1239',
-  },
-  adminDescriptionDisabled: {
-    color: '#d1d5db',
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 12,
-  },
-  settingIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#fdf2f8',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  settingDescription: {
-    fontSize: 12,
-    color: '#9f1239',
-    marginTop: 2,
-  },
-  comingSoonItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    paddingVertical: 12,
-    opacity: 0.6,
-  },
-  comingSoonText: {
-    flex: 1,
-  },
-  comingSoonTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#831843',
-    marginBottom: 2,
-  },
-  comingSoonDescription: {
-    fontSize: 14,
-    color: '#9f1239',
-  },
-});

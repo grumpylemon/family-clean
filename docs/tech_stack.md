@@ -1,6 +1,6 @@
 # Family Clean - Complete Tech Stack Documentation
 
-Last Updated: May 29, 2025
+Last Updated: May 30, 2025
 
 ## Current Technology Stack
 
@@ -23,7 +23,9 @@ Last Updated: May 29, 2025
 - **expo-blur** - Blur effects for overlays
 - **expo-haptics** - Haptic feedback for better UX
 - **expo-image** - Optimized image loading and caching
+- **expo-image-picker** - Native image selection for avatar changes (Added: 2025-05-30)
 - **Custom Pink Theme System** - Centralized color constants and themed components
+- **WebIcon Component** - Cross-platform icon solution with emoji fallbacks (Enhanced: 2025-05-30)
 
 ### State Management
 
@@ -75,6 +77,8 @@ Last Updated: May 29, 2025
 ### Data Persistence
 
 - **AsyncStorage** - Local key-value storage for React Native
+  - Used for theme preferences (dark mode toggle) (Added: 2025-05-30)
+  - User settings persistence
 - **Firebase Persistence**
   - IndexedDB for web platform
   - In-memory for mock mode
@@ -115,7 +119,7 @@ Last Updated: May 29, 2025
 
 #### Platform Configurations
 - **iOS**
-  - Bundle Identifier: `com.grumpylemon.familyclean`
+  - Bundle Identifier: `com.grumpylemon.familyfun`
   - Apple Team ID: `87699862N5`
   - App Store Connect ID: `6746467670`
 - **Android**
@@ -124,6 +128,7 @@ Last Updated: May 29, 2025
 - **Web**
   - Static export capability
   - PWA-ready configuration
+  - Auto-version increment on deployment (v2.132 as of May 30, 2025)
 
 ### Development Environment
 
@@ -159,12 +164,20 @@ Last Updated: May 29, 2025
 
 #### UI Enhancement Libraries
 - **@react-native-community/datetimepicker ~8.2.0** - Native date/time pickers
+- **expo-image-picker ~15.2.0** - Native image selection (Added: 2025-05-30)
 - **Custom UI Components**
   - LoadingSpinner - Themed loading states
   - Toast - Cross-platform notifications
   - ConfirmDialog - Confirmation modals
   - ValidatedInput - Form validation
   - Avatar - User profile images
+  - WebIcon - Cross-platform icon component with 100+ emoji fallbacks (Enhanced: 2025-05-30)
+  - ThemeContext - Complete dark mode system (Added: v2.137)
+- **Theme System**
+  - useTheme hook for accessing theme colors
+  - useThemedStyles hook for dynamic styling
+  - Light/Dark/System mode support
+  - Pink-themed color palettes for both modes
 
 ### Architecture Patterns
 
@@ -177,11 +190,13 @@ Last Updated: May 29, 2025
    - Centralized database operations (firestore.ts)
    - Business logic separation (gamification.ts)
    - Clear separation of concerns
+   - Platform-specific service implementations
 
 3. **Component-Based Architecture**
    - Reusable UI components
    - Feature-specific modules
    - Composition over inheritance
+   - Cross-platform compatibility with WebIcon system
 
 4. **Zustand-Based State Management** (Migrated: 2025-05-29)
    - Centralized store with slices for modularity
@@ -189,6 +204,11 @@ Last Updated: May 29, 2025
    - No prop drilling
    - Type-safe with full TypeScript support
    - Persistent state across app restarts
+
+5. **Progressive Enhancement Pattern** (Added: 2025-05-30)
+   - Web-first approach with native enhancements
+   - Graceful fallbacks (e.g., emoji icons for web)
+   - Platform-specific features (e.g., image picker on mobile only)
 
 ## Recommendations for Future Enhancements
 
@@ -257,7 +277,7 @@ Last Updated: May 29, 2025
    - Collaborative chore planning
 
 2. **Media Storage**
-   - Firebase Storage for profile photos
+   - Firebase Storage for profile photos (foundation ready with expo-image-picker)
    - Chore completion photos
    - Family photo sharing
 
@@ -265,6 +285,15 @@ Last Updated: May 29, 2025
    - Leaderboards with Firebase
    - Custom achievement badges
    - Family competitions
+
+4. **Dark Mode Implementation** (Completed: v2.137)
+   - ✅ Complete theme system with ThemeContext
+   - ✅ Pink-themed dark color palette
+   - ✅ Light/Dark/System mode support
+   - ✅ Theme preference persistence with AsyncStorage
+   - ✅ All screens and components support dark mode
+   - ✅ Dynamic theme switching without app restart
+   - ✅ Platform-aware status bar styling
 
 ### Security Enhancements
 1. **Firebase Security Rules**
@@ -344,12 +373,15 @@ Key strengths:
 - **Advanced caching system with compression** (NEW)
 - **Complete state management migration** (NEW)
 
-Recent achievements (2025-05-29):
-- ✅ Full migration from React Context to Zustand
-- ✅ Offline-first capabilities with action queuing
-- ✅ Advanced multi-tier caching with LZ compression
-- ✅ Enhanced sync logic with conflict resolution
-- ✅ Maintained backward compatibility throughout
+Recent achievements:
+- ✅ Full migration from React Context to Zustand (2025-05-29)
+- ✅ Offline-first capabilities with action queuing (2025-05-29)
+- ✅ Advanced multi-tier caching with LZ compression (2025-05-29)
+- ✅ Enhanced sync logic with conflict resolution (2025-05-29)
+- ✅ Maintained backward compatibility throughout (2025-05-29)
+- ✅ Complete icon consistency with WebIcon component (2025-05-30)
+- ✅ Avatar change functionality with expo-image-picker (2025-05-30)
+- ✅ Theme preference persistence with AsyncStorage (2025-05-30)
 
 Areas for improvement:
 - Testing coverage

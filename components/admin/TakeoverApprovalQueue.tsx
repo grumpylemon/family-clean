@@ -9,7 +9,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { WebIcon } from '../ui/WebIcon';
 import { useFamilyStore } from '@/stores/hooks';
 import { ChoreTakeover } from '@/types';
 
@@ -207,7 +207,7 @@ export default function TakeoverApprovalQueue() {
 
       {pendingTakeovers.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="checkmark-done-circle" size={64} color="#10b981" />
+          <WebIcon name="checkmark-done-circle" size={64} color="#10b981" />
           <Text style={styles.emptyTitle}>All Caught Up!</Text>
           <Text style={styles.emptySubtitle}>
             No takeover requests require approval right now.
@@ -221,7 +221,7 @@ export default function TakeoverApprovalQueue() {
               style={styles.selectAllButton}
               onPress={toggleSelectAll}
             >
-              <Ionicons 
+              <WebIcon 
                 name={selectAll ? "checkbox" : "square-outline"} 
                 size={20} 
                 color="#be185d" 
@@ -245,7 +245,7 @@ export default function TakeoverApprovalQueue() {
                   <ActivityIndicator size="small" color="white" />
                 ) : (
                   <>
-                    <Ionicons name="checkmark" size={20} color="white" />
+                    <WebIcon name="checkmark" size={20} color="white" />
                     <Text style={styles.buttonText}>
                       Approve ({getSelectedTakeovers().length})
                     </Text>
@@ -262,7 +262,7 @@ export default function TakeoverApprovalQueue() {
                 onPress={() => handleBulkAction('deny')}
                 disabled={getSelectedTakeovers().length === 0 || isProcessing}
               >
-                <Ionicons name="close" size={20} color="white" />
+                <WebIcon name="close" size={20} color="white" />
                 <Text style={styles.buttonText}>
                   Deny ({getSelectedTakeovers().length})
                 </Text>
@@ -284,7 +284,7 @@ export default function TakeoverApprovalQueue() {
               >
                 <View style={styles.cardHeader}>
                   <View style={styles.cardLeft}>
-                    <Ionicons 
+                    <WebIcon 
                       name={takeover.selected ? "checkbox" : "square-outline"} 
                       size={24} 
                       color={takeover.selected ? "#be185d" : "#9ca3af"} 
@@ -320,21 +320,21 @@ export default function TakeoverApprovalQueue() {
 
                 <View style={styles.cardDetails}>
                   <View style={styles.detailRow}>
-                    <Ionicons name="time" size={16} color="#9f1239" />
+                    <WebIcon name="time" size={16} color="#9f1239" />
                     <Text style={styles.detailText}>
                       Requested {getTimeAgo(takeover.takenOverAt)}
                     </Text>
                   </View>
                   
                   <View style={styles.detailRow}>
-                    <Ionicons name="help-circle" size={16} color="#9f1239" />
+                    <WebIcon name="help-circle" size={16} color="#9f1239" />
                     <Text style={styles.detailText}>
                       Reason: {takeover.reason.replace('_', ' ')}
                     </Text>
                   </View>
                   
                   <View style={styles.detailRow}>
-                    <Ionicons name="star" size={16} color="#f59e0b" />
+                    <WebIcon name="star" size={16} color="#f59e0b" />
                     <Text style={styles.detailText}>
                       Bonus: {takeover.bonusPoints} pts, {takeover.bonusXP} XP
                     </Text>

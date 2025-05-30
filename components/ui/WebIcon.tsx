@@ -57,6 +57,7 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
   // People & Social
   'person': '👤',
   'people': '👥',
+  'people-outline': '👥',
   'person-add': '👤➕',
   'person-remove': '👤➖',
   'contact': '👤',
@@ -120,6 +121,12 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
   'cash-outline': '💰',
   'phone-portrait-outline': '📱',
   'language-outline': '🌐',
+  'rocket': '🚀',
+  'flask': '🧪',
+  'square-outline': '⬜',
+  'document-text': '📄',
+  'volume-high': '🔊',
+  'checkmark-done-circle': '✅',
   
   // Technology
   'wifi': '📶',
@@ -195,7 +202,6 @@ const EMOJI_FALLBACKS: { [key: string]: string } = {
   
   // Business & Finance
   'business': '🏢',
-  'storefront': '🏪',
   'card': '💳',
   'wallet': '👛',
   'cash': '💰',

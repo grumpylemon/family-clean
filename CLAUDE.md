@@ -206,11 +206,11 @@ The app now uses Zustand for offline-first state management with React Context c
 - `firebase.json` - Firebase Hosting configuration
 - `.firebaserc` - Firebase project configuration (family-fun-app)
 
-## Pink Theme Design System (Updated: May 28, 2025)
+## Pink Theme Design System (Dark Mode Added: v2.137)
 
-The app features a beautiful pink/pastel theme inspired by self-care app aesthetics:
+The app features a beautiful pink/pastel theme inspired by self-care app aesthetics with full dark mode support:
 
-1. **Color Palette**:
+1. **Color Palette** (Light Mode):
    - Background: `#fdf2f8` (Soft pink tint)
    - Cards/Surfaces: `#ffffff` (Pure white)
    - Primary Pink: `#be185d` (Rich pink)
@@ -224,7 +224,17 @@ The app features a beautiful pink/pastel theme inspired by self-care app aesthet
    - Active/Online: `#10b981` (Green)
    - Inactive/Offline: `#ef4444` (Red)
 
-2. **Typography Hierarchy**:
+2. **Dark Mode Palette**:
+   - Background: `#1a0a0f` (Very dark with pink tint)
+   - Cards/Surfaces: `#2d1520` (Dark surface with pink undertone)
+   - Primary Pink: `#f9a8d4` (Lighter pink for dark mode)
+   - Text Primary: `#fbcfe8` (Light pink text)
+   - Text Secondary: `#f9a8d4` (Medium pink text)
+   - Text Muted: `#9f7086` (Muted pink-gray)
+   - Borders: `#4a1f35` (Dark pink borders)
+   - Enhanced shadows for depth in dark mode
+
+3. **Typography Hierarchy**:
    - Headers: 32px, weight 700 (bold)
    - Section Titles: 24px, weight 700
    - Body Text: 16px, weight 600
@@ -232,7 +242,7 @@ The app features a beautiful pink/pastel theme inspired by self-care app aesthet
    - Labels: 12-14px, weight 600
    - Family: System default with fallback to sans-serif
 
-3. **Component Design**:
+4. **Component Design**:
    - **Border Radius**: 24px for cards and major components (soft, rounded)
    - **Shadows**: Subtle pink-tinted shadows with 0.04-0.08 opacity
    - **Spacing**: 20-24px padding for cards, consistent gaps
@@ -242,19 +252,20 @@ The app features a beautiful pink/pastel theme inspired by self-care app aesthet
    - **Member Avatars**: 40x40 circular images with status indicators
    - **Status Dots**: 12x12 absolute positioned indicators
 
-4. **Navigation & Layout**:
+5. **Navigation & Layout**:
    - Clean white headers with pink accents
    - Tab bar with pink active states (#be185d)
    - Card-based layouts with generous border radius
    - Consistent visual hierarchy with pink color coding
    - Toast notifications for user feedback
 
-5. **Key Design Principles**:
+6. **Key Design Principles**:
    - **Native Components**: Uses React Native Text/View/Image components
    - **Consistent Theming**: Pink palette applied systematically across all screens
    - **Self-Care Aesthetics**: Soft, calming, and supportive visual language
    - **Visual Feedback**: Celebration modals, toast notifications, and status indicators
    - **Platform Optimization**: Cross-platform toast implementation (ToastAndroid/Alert)
+   - **Dark Mode Support**: Complete theme system with light/dark/system modes
 
 ## Gamification System
 

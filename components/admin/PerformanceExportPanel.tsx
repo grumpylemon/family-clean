@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   TextInput,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { WebIcon } from '../ui/WebIcon';
 import { useFamilyStore } from '@/stores/hooks';
 import { PerformanceReport, ExportSettings } from '@/types';
 
@@ -231,7 +231,7 @@ export default function PerformanceExportPanel() {
   if (!exportSettings) {
     return (
       <View style={styles.errorContainer}>
-        <Ionicons name="warning" size={64} color="#ef4444" />
+        <WebIcon name="warning" size={64} color="#ef4444" />
         <Text style={styles.errorTitle}>Failed to Load Settings</Text>
         <Text style={styles.errorSubtitle}>
           Unable to load export settings. Please try again.
@@ -310,7 +310,7 @@ export default function PerformanceExportPanel() {
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <>
-                  <Ionicons name="download" size={20} color="white" />
+                  <WebIcon name="download" size={20} color="white" />
                   <Text style={styles.exportButtonText}>Generate Export</Text>
                 </>
               )}
@@ -394,7 +394,7 @@ export default function PerformanceExportPanel() {
               <View style={styles.recipientsHeader}>
                 <Text style={styles.settingLabel}>Email Recipients:</Text>
                 <TouchableOpacity style={styles.addButton} onPress={addRecipient}>
-                  <Ionicons name="add" size={20} color="#be185d" />
+                  <WebIcon name="add" size={20} color="#be185d" />
                 </TouchableOpacity>
               </View>
               
@@ -405,14 +405,14 @@ export default function PerformanceExportPanel() {
                     style={styles.removeButton}
                     onPress={() => removeRecipient(email)}
                   >
-                    <Ionicons name="close" size={16} color="#ef4444" />
+                    <WebIcon name="close" size={16} color="#ef4444" />
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
 
             <TouchableOpacity style={styles.saveButton} onPress={saveSettings}>
-              <Ionicons name="save" size={20} color="white" />
+              <WebIcon name="save" size={20} color="white" />
               <Text style={styles.saveButtonText}>Save Settings</Text>
             </TouchableOpacity>
           </View>
@@ -434,14 +434,14 @@ export default function PerformanceExportPanel() {
                   style={styles.downloadButton}
                   onPress={() => downloadExport(item)}
                 >
-                  <Ionicons name="download" size={20} color="#be185d" />
+                  <WebIcon name="download" size={20} color="#be185d" />
                 </TouchableOpacity>
               </View>
             ))}
             
             {exportHistory.length === 0 && (
               <View style={styles.emptyHistory}>
-                <Ionicons name="document-text" size={48} color="#9ca3af" />
+                <WebIcon name="document-text" size={48} color="#9ca3af" />
                 <Text style={styles.emptyHistoryText}>No exports generated yet</Text>
                 <Text style={styles.emptyHistorySubtext}>
                   Generate your first export to see it here

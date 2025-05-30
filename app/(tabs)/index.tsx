@@ -129,7 +129,7 @@ export default function HomeScreen() {
             style={styles.rewardStoreButton}
             onPress={() => setShowRewardStore(true)}
           >
-            <Ionicons name="storefront" size={20} color="#ffffff" />
+            <WebIcon name="storefront" size={20} color="#ffffff" />
             <Text style={styles.rewardStoreButtonText}>Reward Store</Text>
           </TouchableOpacity>
         </View>
@@ -137,7 +137,7 @@ export default function HomeScreen() {
         {/* Family Info Card */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="people-outline" size={24} color="#be185d" />
+            <WebIcon name="people-outline" size={24} color="#be185d" />
             <Text style={styles.sectionTitle}>Family Info</Text>
           </View>
           

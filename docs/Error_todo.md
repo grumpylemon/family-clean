@@ -50,8 +50,10 @@
   - **WebIcon Improvements**: Added emoji fallbacks for server, person-circle-outline, settings-outline, shield-outline, code-outline
   - **Additional Fixes v2.126**: Updated ManageMembers, ChoreManagement, FamilySettings
   - **WebIcon Additions**: Added fallbacks for create-outline, home-outline, trash-outline, lock-closed-outline, list-outline
-  - **Status**: SUBSTANTIALLY COMPLETE - All major user-facing components now use WebIcon
-  - **Deployed**: v2.126 with comprehensive icon consistency across the app
+  - **Additional Fixes v2.131**: Fixed remaining admin components (PerformanceExportPanel, CustomRulesManager, TakeoverApprovalQueue)
+  - **WebIcon Additions v2.131**: Added fallbacks for square-outline, document-text, volume-high, checkmark-done-circle, people-outline
+  - **Status**: COMPLETE - All components now use WebIcon, expo-image-picker installed for avatar functionality
+  - **Deployed**: v2.131 with complete icon consistency across the entire app
 
 ### Authentication & Database Issues (Found 2025-05-29)
 
@@ -83,10 +85,20 @@
   - **Implementation**: Foundation for full dark mode (theme infrastructure in place)
   - **Deployed**: v2.131 with functional theme preference system
 
-- [ ] **Admin Panel Loop**: Continuous [useAuth] authData logs in console
+- [x] **Admin Panel Component Errors**: AdminSettings causing console errors from Ionicons usage
+  - **Status**: FIXED in v2.131 - Replaced all Ionicons with WebIcon in admin components
+  - **Location**: /settings page - AdminSettings component and subcomponents
+  - **Error**: Component stack at AdminSettings showing Ionicons reference errors
+  - **Fixed Components**: AdminSettings Access Levels, NotificationSettings, PerformanceExportPanel, CustomRulesManager, TakeoverApprovalQueue
+  - **Solution**: Global replacement of <Ionicons> with <WebIcon> across all admin components
+  - **Deployed**: v2.131 with complete admin panel icon consistency
+
+- [x] **Admin Panel Loop**: Continuous [useAuth] authData logs in console
+  - **Status**: FIXED in v2.133 - Removed signInWithGoogle dependency from useEffect
   - **Location**: /settings → Admin Panel
   - **Console**: Repetitive useAuth signInWithGoogle logs
-  - **Family Name Inconsistency**: Shows "Christian Stoehr's Family" instead of "Porto Vaz - Stoehr"
+  - **Fix**: Modified useAuthZustand hook to only log once on mount instead of on every render
+  - **Script**: Created fix-family-name.js script to clear stale Zustand cache
 
 - [x] **Zustand Admin Panel Crash**: "TypeError: I is not a function" when accessing panel
   - **Status**: FIXED in v2.110 - Was calling non-existent setNetworkStatus()
@@ -110,13 +122,22 @@
 
 ### Data Issues (Found 2025-05-29)
 
-- [ ] **Stale Points Data**: User profile showing old points data possibly from Zustand cache
+- [x] **Stale Points Data**: User profile showing old points data possibly from Zustand cache
+  - **Status**: FIXED in v2.134 - Enhanced family data refresh after chore completion
   - **Symptom**: Points data persisting across sessions
   - **Possible Cause**: Zustand persistence not clearing properly
+  - **Fix 1**: Increased timeout after chore completion to ensure Firebase has updated
+  - **Fix 2**: Disabled family data caching optimization to ensure fresh data
+  - **Fix 3**: Created fix-stale-points.js script for users to clear cache
+  - **Solution**: Family data now always fetches fresh from Firebase after point-earning activities
 
-- [ ] **Family Name Inconsistency**: Multiple family names appearing
+- [x] **Family Name Inconsistency**: Multiple family names appearing
+  - **Status**: FIXED in v2.133 - Fixed AdminSettings import and created cache clear script
   - **Database**: "Porto Vaz - Stoehr" (correct)
   - **Admin Panel**: "Christian Stoehr's Family" (incorrect)
-  - **Issue**: Possible stale data or incorrect family reference
+  - **Issue**: Stale data in Zustand localStorage cache
+  - **Fix 1**: Updated AdminSettings to use useFamily from Zustand hooks instead of React Context
+  - **Fix 2**: Created fix-family-name.js script to guide users in clearing stale cache
+  - **Solution**: localStorage.removeItem("family-store") clears the stale cached data
 
 ### Known Issues from Previous

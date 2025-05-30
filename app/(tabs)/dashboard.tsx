@@ -28,6 +28,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
@@ -35,6 +36,7 @@ const isTablet = width >= 768;
 export default function DashboardScreen() {
   const { user, loading: authLoading, logout } = useAuth();
   const { family, loading: familyLoading, isAdmin, currentMember } = useFamily();
+  const { colors, theme } = useTheme();
   const [showManageMembers, setShowManageMembers] = useState(false);
   const [showChoreManagement, setShowChoreManagement] = useState(false);
   const [showFamilySettings, setShowFamilySettings] = useState(false);
@@ -155,7 +157,7 @@ export default function DashboardScreen() {
   if (authLoading || familyLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#be185d" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
@@ -180,6 +182,574 @@ export default function DashboardScreen() {
     !chore.assignedTo && chore.status === 'open'
   );
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      backgroundColor: colors.background,
+      paddingTop: Platform.OS === 'ios' ? 50 : 30,
+      paddingBottom: 20,
+      paddingHorizontal: 20,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    greeting: {
+      fontSize: 18,
+      color: colors.primary,
+      fontWeight: '500',
+    },
+    userName: {
+      fontSize: 32,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 4,
+    },
+    logoutButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: Platform.OS === 'web' ? 16 : 12,
+      paddingHorizontal: Platform.OS === 'web' ? 20 : 12,
+      backgroundColor: colors.primaryLight,
+      borderRadius: Platform.OS === 'web' ? 25 : 20,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+    logoutButtonText: {
+      marginLeft: 8,
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingBottom: 100,
+    },
+    loadingText: {
+      marginTop: 16,
+      fontSize: 16,
+      color: colors.textMuted,
+      textAlign: 'center',
+    },
+    statsContainer: {
+      flexDirection: 'row',
+      padding: 20,
+      gap: 12,
+      justifyContent: 'space-between',
+    },
+    statCard: {
+      backgroundColor: colors.cardBackground,
+      padding: 20,
+      borderRadius: 16,
+      alignItems: 'center',
+      minWidth: 100,
+      maxWidth: 120,
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
+      shadowRadius: 8,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+      position: 'relative',
+    },
+    statIcon: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      opacity: 0.7,
+    },
+    statValue: {
+      fontSize: 32,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    statLabel: {
+      fontSize: 14,
+      color: colors.textMuted,
+      marginTop: 6,
+      fontWeight: '600',
+    },
+    quickActions: {
+      flexDirection: 'row',
+      paddingHorizontal: 20,
+      gap: 16,
+      marginBottom: 20,
+      justifyContent: 'space-between',
+    },
+    actionCard: {
+      backgroundColor: colors.cardBackground,
+      padding: 24,
+      borderRadius: 16,
+      alignItems: 'center',
+      gap: 10,
+      minWidth: 140,
+      maxWidth: 160,
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
+      shadowRadius: 8,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    actionCardText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      textAlign: 'center',
+    },
+    progressSection: {
+      paddingHorizontal: 20,
+      marginBottom: 20,
+    },
+    sectionCard: {
+      backgroundColor: colors.cardBackground,
+      padding: 20,
+      borderRadius: 20,
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 16,
+    },
+    choresSection: {
+      paddingHorizontal: 20,
+      marginBottom: 20,
+    },
+    choresHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    choresList: {
+      gap: 12,
+    },
+    choreCard: {
+      backgroundColor: colors.cardBackground,
+      padding: 16,
+      borderRadius: 16,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
+      shadowRadius: 4,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    choreInfo: {
+      flex: 1,
+      gap: 4,
+    },
+    choreTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    choreDetails: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 4,
+    },
+    choreDetailItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    choreDetailText: {
+      fontSize: 14,
+      color: colors.textMuted,
+    },
+    choreStatus: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    pointsBadge: {
+      backgroundColor: colors.accent,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+    },
+    pointsText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    emptyState: {
+      padding: 40,
+      alignItems: 'center',
+    },
+    emptyStateText: {
+      fontSize: 16,
+      color: colors.textMuted,
+      textAlign: 'center',
+      marginTop: 12,
+    },
+    familySection: {
+      paddingHorizontal: 20,
+      marginBottom: 20,
+    },
+    infoGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      marginTop: 16,
+    },
+    infoItem: {
+      backgroundColor: colors.accent,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    infoLabel: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+    infoValue: {
+      fontSize: 14,
+      color: colors.text,
+      fontWeight: '700',
+    },
+    choreModalContainer: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    choreModalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 20,
+      paddingTop: Platform.OS === 'ios' ? 60 : 20,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    closeButton: {
+      padding: 8,
+    },
+    headerSpacer: {
+      width: 40,
+    },
+    choreModalTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.text,
+      textAlign: 'center',
+      flex: 1,
+    },
+    choreModalContent: {
+      flex: 1,
+      padding: 20,
+    },
+    choreModalCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 20,
+      padding: 24,
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    choreModalChoreTitle: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 20,
+    },
+    choreModalSection: {
+      marginBottom: 20,
+    },
+    choreModalSectionTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: 8,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    choreModalDescription: {
+      fontSize: 16,
+      color: colors.text,
+      lineHeight: 24,
+    },
+    choreModalDetailsRow: {
+      flexDirection: 'row',
+      gap: 20,
+      marginBottom: 24,
+    },
+    choreModalDetail: {
+      flex: 1,
+    },
+    choreModalDetailLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: 8,
+    },
+    choreModalPointsBadge: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      alignSelf: 'flex-start',
+    },
+    choreModalPointsText: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#ffffff',
+    },
+    choreModalDifficultyBadge: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      alignSelf: 'flex-start',
+    },
+    choreModalDifficultyText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#ffffff',
+    },
+    choreModalDueDate: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: colors.accent,
+      padding: 12,
+      borderRadius: 12,
+      marginBottom: 20,
+    },
+    choreModalDueDateText: {
+      fontSize: 16,
+      color: colors.text,
+      fontWeight: '600',
+    },
+    choreModalOverdueDate: {
+      backgroundColor: '#fee2e2',
+    },
+    choreModalOverdueDateText: {
+      color: '#dc2626',
+    },
+    choreModalAssignedTo: {
+      marginBottom: 24,
+    },
+    choreModalAssignedCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      padding: 16,
+      borderRadius: 12,
+      gap: 12,
+    },
+    choreModalAssignedAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    choreModalAssignedInitials: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: '#ffffff',
+    },
+    choreModalAssignedName: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    choreModalCommentSection: {
+      marginBottom: 24,
+    },
+    choreModalCommentInput: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      fontSize: 16,
+      color: colors.text,
+      minHeight: 100,
+      textAlignVertical: 'top',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    choreModalActions: {
+      flexDirection: 'row',
+      padding: 20,
+      gap: 12,
+      backgroundColor: colors.cardBackground,
+      borderTopWidth: 1,
+      borderTopColor: colors.divider,
+    },
+    choreModalCancelButton: {
+      flex: 1,
+      padding: 16,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.border,
+      alignItems: 'center',
+    },
+    choreModalCancelText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textMuted,
+    },
+    choreModalCompleteButton: {
+      flex: 2,
+      padding: 16,
+      borderRadius: 12,
+      backgroundColor: colors.success,
+      alignItems: 'center',
+      shadowColor: colors.success,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+    choreModalCompleteText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: '#ffffff',
+    },
+    versionContainer: {
+      position: 'absolute',
+      top: Platform.OS === 'ios' ? 60 : 40,
+      right: 20,
+      zIndex: 100,
+      backgroundColor: 'rgba(0,0,0,0.1)',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
+    },
+    versionText: {
+      fontSize: 10,
+      color: colors.textMuted,
+      fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    },
+    centerContent: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    setupCard: {
+      backgroundColor: colors.cardBackground,
+      padding: 32,
+      borderRadius: 24,
+      alignItems: 'center',
+      maxWidth: 400,
+      width: '100%',
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.08,
+      shadowRadius: 12,
+      elevation: 5,
+    },
+    setupIcon: {
+      marginBottom: 20,
+    },
+    setupTitle: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 12,
+      textAlign: 'center',
+    },
+    setupDescription: {
+      fontSize: 16,
+      color: colors.textMuted,
+      textAlign: 'center',
+      marginBottom: 24,
+      lineHeight: 24,
+    },
+    setupButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 32,
+      paddingVertical: 16,
+      borderRadius: 24,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+    setupButtonText: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#ffffff',
+    },
+    sectionHeader: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 16,
+    },
+    viewAllButton: {
+      backgroundColor: colors.primaryLight,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+    },
+    viewAllText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    choreArrow: {
+      opacity: 0.6,
+    },
+    choreActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    choreItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    choreDate: {
+      fontSize: 13,
+      color: colors.textMuted,
+    },
+    choreDescription: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    choreModalButtonDisabled: {
+      opacity: 0.5,
+    },
+    choreModalCommentHint: {
+      fontSize: 13,
+      color: colors.textMuted,
+      marginTop: 8,
+    },
+  });
+
   return (
     <View style={styles.container}>
       {/* Version Number */}
@@ -194,7 +764,7 @@ export default function DashboardScreen() {
             <Text style={styles.userName}>{currentMember?.name || user.displayName}</Text>
           </View>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <UniversalIcon name="log-out-outline" size={20} color="#831843" />
+            <UniversalIcon name="log-out-outline" size={20} color={colors.text} />
             {Platform.OS === 'web' && (
               <Text style={styles.logoutButtonText}>Logout</Text>
             )}
@@ -247,7 +817,7 @@ export default function DashboardScreen() {
           </View>
           
           {loadingChores ? (
-            <ActivityIndicator size="small" color="#be185d" />
+            <ActivityIndicator size="small" color={colors.primary} />
           ) : myChores.length === 0 ? (
             <Text style={styles.emptyText}>No chores assigned to you</Text>
           ) : (
@@ -277,7 +847,7 @@ export default function DashboardScreen() {
                     <View style={styles.chorePoints}>
                       <Text style={styles.chorePointsText}>{chore.points} pts</Text>
                     </View>
-                    <UniversalIcon name="chevron-forward" size={20} color="#be185d" style={styles.choreArrow} />
+                    <UniversalIcon name="chevron-forward" size={20} color={colors.primary} style={styles.choreArrow} />
                   </View>
                 </TouchableOpacity>
               ))
@@ -372,7 +942,7 @@ export default function DashboardScreen() {
         <View style={styles.choreModalContainer}>
           <View style={styles.choreModalHeader}>
             <TouchableOpacity onPress={closeChoreModal} style={styles.closeButton}>
-              <UniversalIcon name="close" size={24} color="#be185d" />
+              <UniversalIcon name="close" size={24} color={colors.primary} />
             </TouchableOpacity>
             <Text style={styles.choreModalTitle}>Chore Details</Text>
             <View style={styles.headerSpacer} />
@@ -475,472 +1045,3 @@ export default function DashboardScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fdf2f8',
-  },
-  header: {
-    backgroundColor: '#fdf2f8',
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  greeting: {
-    fontSize: 18,
-    color: '#be185d',
-    fontWeight: '500',
-  },
-  userName: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#831843',
-    marginTop: 4,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Platform.OS === 'web' ? 16 : 12,
-    paddingHorizontal: Platform.OS === 'web' ? 20 : 12,
-    backgroundColor: '#f9a8d4',
-    borderRadius: Platform.OS === 'web' ? 25 : 20,
-    shadowColor: '#ec4899',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  logoutButtonText: {
-    marginLeft: 8,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#831843',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 100,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    padding: 20,
-    gap: 12,
-    justifyContent: 'space-between',
-  },
-  statCard: {
-    backgroundColor: '#ffffff',
-    padding: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-    minWidth: 100,
-    maxWidth: 120,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-    position: 'relative',
-  },
-  statIcon: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    opacity: 0.7,
-  },
-  statValue: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#1f2937',
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 6,
-    fontWeight: '600',
-  },
-  quickActions: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 16,
-    marginBottom: 20,
-    justifyContent: 'space-between',
-  },
-  actionCard: {
-    backgroundColor: '#ffffff',
-    padding: 24,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 10,
-    minWidth: 140,
-    maxWidth: 160,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-  },
-  primaryAction: {
-    backgroundColor: '#be185d',
-    borderColor: '#be185d',
-  },
-  actionCardText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-    textAlign: 'center',
-  },
-  actionCardTextPrimary: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
-    textAlign: 'center',
-  },
-  section: {
-    marginHorizontal: 20,
-    marginBottom: 24,
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 28,
-    shadowColor: '#ec4899',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 6,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#831843',
-    marginBottom: 8,
-  },
-  seeAllText: {
-    color: '#be185d',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#be185d',
-    paddingVertical: 32,
-    fontSize: 17,
-    fontWeight: '500',
-    opacity: 0.7,
-  },
-  choreItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 18,
-    marginBottom: 12,
-    backgroundColor: '#fce7f3',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-  },
-  choreInfo: {
-    flex: 1,
-  },
-  choreTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    marginBottom: 4,
-    color: '#831843',
-  },
-  choreDate: {
-    fontSize: 15,
-    color: '#be185d',
-    fontWeight: '500',
-    opacity: 0.8,
-  },
-  chorePoints: {
-    backgroundColor: '#a7f3d0',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-  },
-  chorePointsText: {
-    color: '#065f46',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  adminGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginTop: 16,
-    justifyContent: 'space-between',
-  },
-  adminCard: {
-    backgroundColor: '#fce7f3',
-    padding: 20,
-    borderRadius: 20,
-    alignItems: 'center',
-    gap: 12,
-    minWidth: 100,
-    maxWidth: 110,
-    shadowColor: '#ec4899',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  adminCardText: {
-    fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'center',
-    color: '#be185d',
-  },
-  familyCodeSection: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    backgroundColor: '#bbf7d0',
-    borderRadius: 24,
-    padding: 28,
-    alignItems: 'center',
-    shadowColor: '#10b981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  familyCodeLabel: {
-    fontSize: 18,
-    color: '#064e3b',
-    marginBottom: 8,
-    fontWeight: '600',
-  },
-  familyCode: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#022c22',
-    letterSpacing: 4,
-  },
-  familyCodeHint: {
-    fontSize: 16,
-    color: '#047857',
-    marginTop: 8,
-    fontWeight: '500',
-  },
-  testDataSection: {
-    marginTop: 20,
-    padding: 20,
-    backgroundColor: '#fef3c7',
-    borderRadius: 20,
-    shadowColor: '#f59e0b',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  versionContainer: {
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 0,
-  },
-  versionText: {
-    fontSize: 14,
-    color: '#be185d',
-    fontWeight: '600',
-    letterSpacing: 1,
-    opacity: 0.6,
-  },
-  // Enhanced Chore Item Styles
-  choreDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 2,
-    fontStyle: 'italic',
-  },
-  choreActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  choreArrow: {
-    marginLeft: 4,
-  },
-  // Chore Modal Styles
-  choreModalContainer: {
-    flex: 1,
-    backgroundColor: '#fdf2f8',
-  },
-  choreModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-    paddingTop: Platform.OS === 'ios' ? 50 : 20,
-  },
-  choreModalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#831843',
-  },
-  headerSpacer: {
-    width: 24,
-  },
-  choreModalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  choreModalCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: '#ec4899',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  choreModalChoreTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#831843',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  choreModalSection: {
-    marginBottom: 24,
-  },
-  choreModalSectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#be185d',
-    marginBottom: 12,
-  },
-  choreModalDescription: {
-    fontSize: 16,
-    color: '#374151',
-    lineHeight: 24,
-  },
-  choreModalDetailsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  choreModalDetail: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  choreModalDetailLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-    fontWeight: '500',
-    marginBottom: 6,
-  },
-  choreModalDetailValue: {
-    fontSize: 16,
-    color: '#831843',
-    fontWeight: '600',
-  },
-  choreModalDetailTime: {
-    fontSize: 14,
-    color: '#be185d',
-    fontWeight: '500',
-    marginTop: 2,
-  },
-  choreModalPointsBadge: {
-    backgroundColor: '#a7f3d0',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  choreModalPointsText: {
-    color: '#065f46',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  choreModalCommentInput: {
-    backgroundColor: '#f9f9f9',
-    borderWidth: 1,
-    borderColor: '#f9a8d4',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: '#831843',
-    textAlignVertical: 'top',
-    minHeight: 80,
-  },
-  choreModalCommentHint: {
-    fontSize: 12,
-    color: '#9ca3af',
-    marginTop: 8,
-    fontStyle: 'italic',
-    textAlign: 'center',
-  },
-  choreModalActions: {
-    flexDirection: 'row',
-    padding: 20,
-    gap: 12,
-    backgroundColor: '#ffffff',
-    borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
-  },
-  choreModalCancelButton: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-    alignItems: 'center',
-  },
-  choreModalCancelText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6b7280',
-  },
-  choreModalCompleteButton: {
-    flex: 2,
-    flexDirection: 'row',
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: '#be185d',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  choreModalCompleteText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-  choreModalButtonDisabled: {
-    opacity: 0.6,
-  },
-  xpCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
-    shadowColor: '#be185d',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-});

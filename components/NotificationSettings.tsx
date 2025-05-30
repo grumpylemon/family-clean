@@ -9,7 +9,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { WebIcon } from './ui/WebIcon';
 import { NotificationSettings as NotificationSettingsType } from '@/types';
 import { notificationService } from '@/services/notificationService';
 import { useFamilyStore } from '@/stores/hooks';
@@ -118,7 +118,7 @@ export default function NotificationSettings() {
       <View style={styles.settingInfo}>
         {icon && (
           <View style={styles.settingIcon}>
-            <Ionicons name={icon as any} size={20} color="#be185d" />
+            <WebIcon name={icon} size={20} color="#be185d" />
           </View>
         )}
         <View style={styles.settingText}>
@@ -163,7 +163,7 @@ export default function NotificationSettings() {
         
         {!settings.enabled && (
           <TouchableOpacity style={styles.enableButton} onPress={requestPermissions}>
-            <Ionicons name="rocket" size={20} color="white" />
+            <WebIcon name="rocket" size={20} color="white" />
             <Text style={styles.enableButtonText}>Enable Notifications</Text>
           </TouchableOpacity>
         )}
@@ -285,7 +285,7 @@ export default function NotificationSettings() {
           }}
           disabled={!settings.enabled}
         >
-          <Ionicons name="flask" size={20} color={settings.enabled ? '#be185d' : '#9ca3af'} />
+          <WebIcon name="flask" size={20} color={settings.enabled ? '#be185d' : '#9ca3af'} />
           <Text style={[styles.testButtonText, !settings.enabled && styles.disabledText]}>
             Send Test Notification
           </Text>

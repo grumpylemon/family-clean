@@ -11,7 +11,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { WebIcon } from '../ui/WebIcon';
 import { useFamilyStore } from '@/stores/hooks';
 import { CustomTakeoverRules, ChoreTypeRules, MemberRules, User } from '@/types';
 
@@ -215,7 +215,7 @@ export default function CustomRulesManager() {
   if (!rules) {
     return (
       <View style={styles.errorContainer}>
-        <Ionicons name="warning" size={64} color="#ef4444" />
+        <WebIcon name="warning" size={64} color="#ef4444" />
         <Text style={styles.errorTitle}>Failed to Load Rules</Text>
         <Text style={styles.errorSubtitle}>
           Unable to load custom takeover rules. Please try again.
@@ -244,7 +244,7 @@ export default function CustomRulesManager() {
             onPress={() => toggleSection('choreTypes')}
           >
             <Text style={styles.sectionTitle}>Chore Type Rules</Text>
-            <Ionicons
+            <WebIcon
               name={expandedSections.choreTypes ? 'chevron-up' : 'chevron-down'}
               size={24}
               color="#be185d"
@@ -334,7 +334,7 @@ export default function CustomRulesManager() {
             onPress={() => toggleSection('members')}
           >
             <Text style={styles.sectionTitle}>Member-Specific Rules</Text>
-            <Ionicons
+            <WebIcon
               name={expandedSections.members ? 'chevron-up' : 'chevron-down'}
               size={24}
               color="#be185d"
@@ -411,7 +411,7 @@ export default function CustomRulesManager() {
             onPress={() => toggleSection('timeRules')}
           >
             <Text style={styles.sectionTitle}>Time-Based Rules</Text>
-            <Ionicons
+            <WebIcon
               name={expandedSections.timeRules ? 'chevron-up' : 'chevron-down'}
               size={24}
               color="#be185d"
@@ -465,7 +465,7 @@ export default function CustomRulesManager() {
           onPress={resetToDefaults}
           disabled={isSaving}
         >
-          <Ionicons name="refresh" size={20} color="#ef4444" />
+          <WebIcon name="refresh" size={20} color="#ef4444" />
           <Text style={styles.resetButtonText}>Reset</Text>
         </TouchableOpacity>
 
@@ -478,7 +478,7 @@ export default function CustomRulesManager() {
             <ActivityIndicator size="small" color="white" />
           ) : (
             <>
-              <Ionicons name="save" size={20} color="white" />
+              <WebIcon name="save" size={20} color="white" />
               <Text style={styles.saveButtonText}>Save Rules</Text>
             </>
           )}

@@ -416,10 +416,12 @@ function createFamilySliceFactory() {
       }
 
       // Check if we already have this family loaded
-      if (family.family?.id === familyId && !family.error) {
-        console.log('[FamilySlice] Family already loaded, skipping fetch');
-        return;
-      }
+      // Temporarily disabled to ensure fresh data after point updates
+      // TODO: Add a force refresh parameter instead
+      // if (family.family?.id === familyId && !family.error) {
+      //   console.log('[FamilySlice] Family already loaded, skipping fetch');
+      //   return;
+      // }
 
       set((state) => ({
         family: { ...state.family, isLoading: true, error: null }
