@@ -153,9 +153,22 @@ Last Updated: May 30, 2025
 #### Essential React Native Libraries
 - **react-native-gesture-handler ~2.24.0** - Touch gesture system
 - **react-native-reanimated ~3.17.4** - High-performance animations
-- **react-native-safe-area-context ~5.4.0** - Safe area handling
+- **react-native-safe-area-context ~4.5.0** - Safe area handling (downgraded for compatibility)
 - **react-native-screens ~4.10.0** - Native navigation optimization
 - **react-native-webview ~13.13.5** - Web content display
+- **react-native-svg ~15.11.2** - SVG rendering support
+
+#### New Architecture Compatibility (Added: 2025-05-30)
+- **Temporary Fix Script** - `scripts/fix-new-architecture-ios.js`
+  - Patches native component spec files for libraries not yet compatible
+  - Runs automatically on `npm install` via postinstall
+  - Fixes: safe-area-context, svg, screens, gesture-handler
+  - Allows iOS builds to succeed with Expo SDK 53
+- **Libraries Awaiting Updates**:
+  - react-native-safe-area-context (needs v5.4.1+ with proper New Architecture support)
+  - react-native-svg (fabric components need updating)
+  - react-native-screens (fabric components need updating)
+  - react-native-gesture-handler (TurboModule specs need updating)
 
 #### State Management & Offline Libraries (Added: 2025-05-29)
 - **zustand ^4.5.7** - Modern state management with persistence (v4.x for Metro compatibility)

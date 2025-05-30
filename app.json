@@ -12,7 +12,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.grumpylemon.familyfun",
-      "buildNumber": "23",
+      "buildNumber": "24",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to scan QR codes for family invites.",
