@@ -30,6 +30,12 @@ const shouldEnableSentry = (): boolean => {
     return false;
   }
 
+  // TEMPORARY: Disable Sentry for iOS to fix TestFlight crash
+  if (Platform.OS === 'ios') {
+    console.log('Sentry disabled: iOS platform (preventing crashes)');
+    return false;
+  }
+
   // Check for production domains
   if (Platform.OS === 'web') {
     const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
