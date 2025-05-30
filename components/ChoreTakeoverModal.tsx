@@ -183,7 +183,7 @@ export default function ChoreTakeoverModal({
               </Text>
               {!canTakeoverMore && (
                 <Text style={styles.warningText}>
-                  You've reached your daily takeover limit
+                  You&apos;ve reached your daily takeover limit
                 </Text>
               )}
             </View>

@@ -3,11 +3,19 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const { syncVersions } = require('./sync-versions');
 
 // Path to the app.json file
 const appJsonPath = path.join(__dirname, '..', 'app.json');
 
-// Read the current app.json
+// First, sync the version from constants/Version.ts to app.json
+console.log('🔄 Syncing version from constants/Version.ts to app.json...');
+if (!syncVersions()) {
+  console.error('❌ Failed to sync versions, aborting build');
+  process.exit(1);
+}
+
+// Read the current app.json (after version sync)
 const appJsonContent = fs.readFileSync(appJsonPath, 'utf8');
 const appJson = JSON.parse(appJsonContent);
 
@@ -22,6 +30,7 @@ appJson.expo.ios.buildNumber = newBuildNumber.toString();
 fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2) + '\n');
 
 console.log(`✅ iOS build number updated: ${currentBuildNumber} → ${newBuildNumber}`);
+console.log(`📱 TestFlight will show: Version ${appJson.expo.version} (${newBuildNumber})`);
 
 // Run pre-build validation before sending to EAS
 console.log('\n🔍 Running pre-build validation...\n');

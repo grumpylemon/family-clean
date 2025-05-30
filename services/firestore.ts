@@ -263,15 +263,13 @@ export const createChore = async (chore: Omit<Chore, 'id'>) => {
   }
   
   try {
-    // ALWAYS use default family ID for consistency, regardless of what was passed in
-    // const familyId = getDefaultFamilyId(...); // DISABLED: Use actual familyId
+    // Use the familyId from the chore object
+    const familyId = chore.familyId;
     
-    // Log original vs effective family ID
-    if (chore.familyId !== familyId) {
-      console.log(`Overriding passed family ID ${chore.familyId} with effective ID ${familyId} for persistence`);
-    }
+    // Log the family ID being used
+    console.log(`Creating chore with family ID: ${familyId}`);
     
-    // Make sure to set the family ID to the effective one
+    // Make sure to set the family ID and other required fields
     const choreWithFamilyId = {
       ...chore,
       familyId: familyId,
@@ -1076,13 +1074,15 @@ export const getFamily = async (familyId: string) => {
         // Return mock family with current user as the admin
         return {
           ...mockFamily,
+          id: mockFamily.id, // Ensure ID is included
           adminId: currentUser.uid,
           members: [userMember, ...mockFamily.members.slice(1)] // Replace first member with current user
         };
       }
     }
     
-    return mockFamily;
+    // Ensure mock family always has an ID
+    return { ...mockFamily, id: mockFamily.id || 'demo-family-qj7fep' };
   }
   
   try {
@@ -1653,7 +1653,8 @@ export const createReward = async (reward: Omit<Reward, 'id' | 'createdAt' | 'up
   }
   
   try {
-    // const familyId = getDefaultFamilyId(...); // DISABLED: Use actual familyId
+    // Use the familyId from the reward object
+    const familyId = reward.familyId;
     
     const rewardWithDefaults = {
       ...reward,

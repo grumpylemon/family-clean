@@ -33,6 +33,11 @@ export function FamilySetup({ onComplete }: FamilySetupProps) {
     try {
       const success = await createNewFamily(familyName.trim());
       if (success) {
+        console.log('[FamilySetup] Family created successfully');
+        
+        // Add a small delay to ensure state propagation
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // If onComplete is provided, call it
         if (onComplete) {
           onComplete();

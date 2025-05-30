@@ -224,6 +224,63 @@ import { useFamilyStore } from '@/stores/hooks';
 
 ---
 
+## FamilyId Undefined Errors Fixed (v2.163)
+
+**Date**: May 30, 2025  
+**Error Type**: Reference Error  
+**Components Affected**: Chore creation, Reward creation  
+
+### Create Chore Button Error
+**Issue**: ReferenceError: familyId is not defined  
+**Root Cause**: createChore function using undefined variable instead of parameter  
+**Solution**: Changed `doc(choreRef, familyId)` to `doc(choreRef, chore.familyId)`  
+**Files Modified**: 
+- `/services/firestore.ts` - Fixed variable reference
+- `/components/ChoreManagement.tsx` - Added null safety checks
+
+### Rewards Page Error  
+**Issue**: ReferenceError: familyId is not defined  
+**Root Cause**: createReward function using undefined variable  
+**Solution**: Changed to use `reward.familyId` from parameter  
+**Files Modified**:
+- `/services/firestore.ts` - Fixed variable reference  
+- `/components/RewardManagement.tsx` - Added loading state
+
+### Additional Improvements
+- Added loading UI components when family data isn't ready
+- Fixed mock family to always include id field
+- Added delay after family creation for state propagation
+- Improved error handling throughout family-dependent components
+
+---
+
+## Pet Creation Undefined Notes Error Fixed (v2.163)
+
+**Date**: May 30, 2025  
+**Error Type**: Firestore Validation Error  
+**Component**: PetManagement  
+
+### Error Details
+**Issue**: FirebaseError: Unsupported field value: undefined (found in field notes)  
+**Root Cause**: Using `|| undefined` pattern set empty strings to undefined  
+**Solution**: Use conditional object spreading to omit empty fields  
+
+### Technical Fix
+**Before**: 
+```typescript
+notes: formData.notes.trim() || undefined
+```
+
+**After**:
+```typescript
+...(formData.notes.trim() && { notes: formData.notes.trim() })
+```
+
+**Result**: Optional fields are omitted when empty instead of being set to undefined  
+**Applied to**: notes, breed, and age fields in both create and update functions  
+
+---
+
 ## Future Error Prevention Guidelines
 
 1. **Always use UniversalIcon** instead of direct Ionicons imports
@@ -231,3 +288,7 @@ import { useFamilyStore } from '@/stores/hooks';
 3. **Test iOS builds locally** before submitting to EAS
 4. **Check package compatibility** when updating dependencies
 5. **Document all fixes** in this file for future reference
+6. **Use parameter properties** not undefined variables in functions
+7. **Add null safety checks** for async loaded data
+8. **Use conditional spreading** for optional Firestore fields
+9. **Always handle loading states** in components

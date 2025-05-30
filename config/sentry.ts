@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import * as Sentry from '@sentry/react-native';
 import * as SentryReact from '@sentry/react';
+import React from 'react';
 import { getCurrentVersion } from '../constants/Version';
 import { isMockImplementation } from './firebase';
 
@@ -145,31 +146,16 @@ export const initializeSentry = async (): Promise<void> => {
         beforeSend: config.beforeSend,
         release: getCurrentVersion(),
         integrations: [
-          // Browser tracing for performance monitoring
+          // Simple browser tracing without router instrumentation
           new SentryReact.BrowserTracing({
-            // Set tracingOrigins to your app's origin
             tracingOrigins: ['localhost', 'family-fun-app.web.app', /^\//],
-            // Capture interactions (clicks, navigation)
-            routingInstrumentation: SentryReact.reactRouterV6Instrumentation(
-              React.useEffect,
-              // @ts-ignore - Expo Router not fully typed
-              useLocation,
-              useNavigationType
-            ),
-          }),
-          // Capture console errors
-          new SentryReact.CaptureConsole({
-            levels: ['error', 'warn'],
           }),
         ],
-        // Performance monitoring
-        tracesSampleRate: config.tracesSampleRate,
-        // Session tracking
         autoSessionTracking: true,
         sessionTrackingIntervalMillis: 30000,
       });
     } else {
-      // Use React Native SDK for mobile
+      // Use React Native SDK for mobile - simplified config to avoid crashes
       Sentry.init({
         dsn: config.dsn,
         environment: config.environment,
@@ -180,23 +166,13 @@ export const initializeSentry = async (): Promise<void> => {
         beforeSend: config.beforeSend,
         release: getCurrentVersion(),
         dist: Platform.OS,
-        integrations: [
-          new Sentry.ReactNativeTracing({
-            // Performance monitoring for React Navigation
-            routingInstrumentation: new Sentry.ReactNavigationInstrumentation(),
-            tracingOptions: {
-              shouldCreateSpanForRequest: (url) => {
-                // Don't create spans for Sentry requests
-                return !url.includes('sentry.io');
-              },
-            },
-          }),
-        ],
-        // React Native specific options
+        // Minimal integrations to avoid iOS crashes
+        integrations: [],
+        // Basic React Native options
         enableAutoSessionTracking: true,
         sessionTrackingIntervalMillis: 30000,
-        enableNativeCrashHandling: true,
-        enableAutoPerformanceTracking: true,
+        enableNativeCrashHandling: false, // Disable to prevent conflicts
+        enableAutoPerformanceTracking: false, // Disable to prevent conflicts
       });
     }
     
@@ -279,16 +255,4 @@ export const startTransaction = (name: string, op: string): any => {
   return SentryLib.startTransaction({ name, op });
 };
 
-// For web-specific imports (will be tree-shaken on native)
-let useLocation: any;
-let useNavigationType: any;
-
-if (Platform.OS === 'web') {
-  try {
-    const routerModule = require('expo-router');
-    useLocation = routerModule.useLocation;
-    useNavigationType = routerModule.useNavigationType;
-  } catch {
-    // Expo Router not available, will use default routing instrumentation
-  }
-}
+// Router instrumentation removed to prevent iOS crashes

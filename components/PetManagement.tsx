@@ -145,13 +145,13 @@ const PetManagement: React.FC<PetManagementProps> = () => {
       const petData: Omit<Pet, 'id' | 'createdAt' | 'updatedAt'> = {
         name: formData.name.trim(),
         type: formData.type,
-        breed: formData.breed.trim() || undefined,
-        age: formData.age ? parseInt(formData.age) : undefined,
+        ...(formData.breed.trim() && { breed: formData.breed.trim() }),
+        ...(formData.age && { age: parseInt(formData.age) }),
         size: formData.size,
         activityLevel: formData.activityLevel,
         familyId: family.id,
         isActive: true,
-        notes: formData.notes.trim() || undefined,
+        ...(formData.notes.trim() && { notes: formData.notes.trim() }),
         careSettings: {
           feedingTimes: parseInt(formData.feedingTimes) || 2,
           feedingHours: [8, 18], // Default morning and evening

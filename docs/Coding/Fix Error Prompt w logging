@@ -1,0 +1,84 @@
+ For this "Error Fixing" task follow the following steps and rules:
+
+## 1 Deep Thinking & Impact Analysis (⟨no code yet⟩)
+Check @docs if a similar error or integration document is available on the subject and incorporate that in your thinking and evaluation.
+
+#Create a **concise deep-dive documement filename_fixplan.md with filename being the error headline. Put document into @docs/Errors** covering:
+
+- **1.0 The Error** Explain the error and what it means
+- **1.1 Issues it causes** Create a list of the issues it causes and functions it restricts
+- **1.2 Logic breakdown** List every rule, edge-case, cooldown, permission check, compatability issue.  
+- **1.3 Ripple map** Enumerate all files, modules, Cloud Functions, UI flows, and tests that will need changes or new additions—be exhaustive.  
+- **1.4 UX & Engagement uplift** Describe any UX or UI changes that might have to be made to accomodate the solution for the error. 
+- **1.5 Documents and Instructions** Create links to available instructions on libraries or other content that can be of help to solve the error
+- **1.6 Fixes checklist** Bullet the conditions that must be true for us to call the error “fixed”.
+- **1.7 Detailed to-do task list** List every step to complete for later checkoff and refrence after fixing in this format:
+- [ ] **Fixed Part A** (Name of Update)
+  - [X] Sub Category Part 1 (name of sub-point todo)
+  - [ ] Sub Category Part 2 (name of sub-point todo)
+  ... and so on
+
+- **1.8 Future issues or incompatabilities** List of future possible incompatabilities and things to watch
+- **1.9 Admin Panel Options** List all Admin panel options and integration or changes that should be included to fix or test the error solution.
+
+
+---
+#Create a **2nd document inside of @docs/Errors filename_fixed.md where filename is Error headline**, covering:
+
+- **1.1 Description** Clear Description of new "Error Fix"
+- **1.2 Changes** Detailed list of the changes that made to fix the error
+- **1.3 Insights** Any insights for other coders to learn from the research or integration
+- **1.4 Watchdog** Upgrades, version changes, library incompatibilies,... list anything to watch out for that might be a future red flag
+- **1.5 Admin Pannel** Admin Pannel Options and Instructions if they can influence this change
+
+
+## 2 Implementation / Coding
+**Education** Based on potential errors or incompatabilities if using new libraries search and download documentation via context7, websearch, and GitHub. Use this to learn about potential solutions.
+
+#Follow this disciplined cycle **for each logical chunk** (commit):
+ **1. Plan snippet (1–2 lines)**
+    - Define what you're building
+    - Note which errors from error_todo.md this might fix
+  **2. Code with error tracking**
+  // Wrap risky operations
+  try {
+    // Your feature code
+  } catch (error) {
+    captureExceptionWithContext(error, {
+      feature: 'feature-name',
+      action: 'specific-action'
+    });
+    // Handle gracefully
+  }
+  **3. Add breadcrumbs for debugging**
+  import { addBreadcrumb } from '../config/sentry';
+
+  addBreadcrumb({
+    message: 'User started chore completion',
+    category: 'user_action',
+    data: { choreId, points }
+  });
+  **4. Immediate unit tests (Jest)**
+    - Test happy path
+    - Test error scenarios
+    - Verify Sentry capture is called
+  **5. Run static checks & verify**
+  npm run lint
+  npm start # Test locally
+  **6. Test error handling**
+    - Trigger test errors in your feature
+    - Check Admin Panel → Error Monitoring
+    - Verify error appears with proper contex
+
+## 3 Document Updates
+1. Append a dated changelog entry in the filename_fixplan.md in @docs/Error and mark any completed task checked off. If integration or fixing steps are not in document yet, add them and check-off.
+2. Update any affected ADRs, tech_stack, README snippets, or API docs
+
+## 4 Updates
+1. Move Error to-do from @docs/Errors/error_todo.md doc over to the @docs/Errors/error_fixes.md doc
+2. Push to Git with tracking and Detailed description
+3. Build and Deploy new version to web server and hosting
+4. Run Webserver and check for any errors
+
+## 5 Recommend next steps to user
+1.Based on the updated @docs/Errors/error_todo.md doc, propose list of 1-5 next improvements to takle prioritised by user impact, technical risk, or debt reduction. 

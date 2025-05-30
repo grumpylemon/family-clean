@@ -76,11 +76,14 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   }, [visible, family]);
 
   const loadChores = async () => {
-    if (!family) return;
+    if (!family || !family.id) {
+      console.warn('Cannot load chores - family data not ready');
+      return;
+    }
     
     setLoading(true);
     try {
-      const familyChores = await getChores(family.id!);
+      const familyChores = await getChores(family.id);
       setChores(familyChores);
     } catch (error) {
       console.error('Error loading chores:', error);
@@ -91,10 +94,13 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   };
 
   const loadRooms = async () => {
-    if (!family) return;
+    if (!family || !family.id) {
+      console.warn('Cannot load rooms - family data not ready');
+      return;
+    }
     
     try {
-      const familyRooms = await getFamilyRooms(family.id!);
+      const familyRooms = await getFamilyRooms(family.id);
       setRooms(familyRooms);
     } catch (error) {
       console.error('Error loading rooms:', error);
@@ -120,7 +126,11 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   };
 
   const handleSaveChore = async () => {
-    if (!family) return;
+    if (!family || !family.id) {
+      Toast.error('Family data not loaded. Please try again.');
+      console.error('Family data missing:', { family, hasId: family?.id });
+      return;
+    }
     
     const values = {
       title,
@@ -147,7 +157,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
         dueDate: dueDate.toISOString(),
         createdAt: new Date().toISOString(),
         createdBy: family.adminId,
-        familyId: family.id!,
+        familyId: family.id,
         status: 'open',
         cooldownHours: parseInt(cooldownHours) || 24,
         recurring: isRecurring ? {
@@ -285,6 +295,35 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
             <WebIcon name="lock-closed-outline" size={64} color="#f9a8d4" />
             <Text style={styles.errorText}>
               {getPermissionErrorMessage('admin')}
+            </Text>
+          </View>
+        </SafeAreaView>
+      </Modal>
+    );
+  }
+
+  // Add check for family data
+  if (!family || !family.id) {
+    return (
+      <Modal
+        visible={visible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={onClose}
+      >
+        <SafeAreaView style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onClose} style={styles.backButton}>
+              <WebIcon name="chevron-back" size={24} color="#be185d" />
+              <Text style={styles.backText}>Admin</Text>
+            </TouchableOpacity>
+            <Text style={styles.title}>Manage Chores</Text>
+            <View style={styles.headerSpacer} />
+          </View>
+          <View style={styles.errorContainer}>
+            <LoadingSpinner size="large" />
+            <Text style={styles.errorText}>
+              Loading family data...
             </Text>
           </View>
         </SafeAreaView>

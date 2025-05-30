@@ -23,17 +23,29 @@ This document describes all build scripts and commands for the Family Compass ap
 
 ## Version Numbering System
 
-### Web Version (app.json → expo.version)
-- Format: `MAJOR.MINOR.PATCH` (e.g., "1.1.0")
-- Automatically incremented by `npm run export-web`
-- Increments the PATCH number (third digit)
-- Example: 1.1.0 → 1.1.1 → 1.1.2
+### App Version (constants/Version.ts → APP_VERSION)
+- Format: `vMAJOR.MINOR` (e.g., "v2.165")
+- Master version number for the entire app
+- Manually updated or incremented by `npm run export-web`
+- Used for internal tracking and web builds
+
+### iOS Version (app.json → expo.version) **[Auto-Synced]**
+- Format: `MAJOR.MINOR` (e.g., "2.165")
+- **Automatically synced** from `constants/Version.ts` when running `npm run build-ios`
+- Displayed in TestFlight as "Version 2.165 (build number)"
+- No manual updates needed - always matches app version
 
 ### iOS Build Number (app.json → expo.ios.buildNumber)
-- Format: Integer string (e.g., "22")
+- Format: Integer string (e.g., "24")
 - Automatically incremented by `npm run build-ios`
 - Required by App Store Connect - must be unique for each upload
-- Example: "22" → "23" → "24"
+- Example: "24" → "25" → "26"
+
+### Version Sync Process
+When running `npm run build-ios`:
+1. **Version Sync**: `constants/Version.ts` (v2.165) → `app.json` (2.165)
+2. **Build Increment**: iOS build number increases (24 → 25)
+3. **Result**: TestFlight shows "Version 2.165 (25)"
 
 ### Android Version Code
 - Currently manual - update in `app.json` → `expo.android.versionCode`
@@ -47,12 +59,12 @@ npm run build-ios
 ```
 
 **Steps performed:**
-1. Runs `fix-safe-area-ios-build.js` to patch react-native-safe-area-context
-2. Auto-increments iOS build number in app.json
-3. Runs pre-build validation (currently skipped due to path alias issue)
-4. Executes `eas build --platform ios --auto-submit`
-5. Builds on EAS servers
-6. Automatically submits to App Store Connect for TestFlight
+1. **Version Sync**: Syncs `app.json` version from `constants/Version.ts`
+2. **Build Increment**: Auto-increments iOS build number in app.json
+3. **Pre-build Validation**: Runs comprehensive checks
+4. **EAS Build**: Executes `eas build --platform ios --auto-submit`
+5. **Cloud Build**: Builds on EAS servers
+6. **Auto Submit**: Automatically submits to App Store Connect for TestFlight
 
 **When to use:** Production releases to TestFlight/App Store
 
@@ -233,11 +245,17 @@ npm run lint
 ```
 Checks code quality
 
+### Version Sync Only
+```bash
+node scripts/sync-versions.js
+```
+Syncs `app.json` version with `constants/Version.ts` without building
+
 ### Increment Build Number Only
 ```bash
-npm run increment-ios-build
+node scripts/increment-ios-build.js
 ```
-Just increments iOS build number without building
+Syncs version AND increments iOS build number without building
 
 ## Environment Setup
 
@@ -289,8 +307,8 @@ firebase init
    - Accept suggested versions
 
 3. **Build number already used**
-   - Manually increment in app.json
-   - Or run `npm run increment-ios-build`
+   - Run `node scripts/increment-ios-build.js` to increment build number
+   - This also syncs the version from `constants/Version.ts`
 
 ### Web Build Issues
 

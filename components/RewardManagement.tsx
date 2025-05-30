@@ -204,7 +204,34 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
   };
 
   if (!familyId) {
-    return null;
+    return (
+      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+        <View style={{
+          flex: 1,
+          backgroundColor: '#fdf2f8',
+          paddingTop: Platform.OS === 'ios' ? 44 : 20,
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <TouchableOpacity onPress={onClose} style={{
+            position: 'absolute',
+            top: Platform.OS === 'ios' ? 60 : 40,
+            right: 20,
+            padding: 8
+          }}>
+            <Ionicons name="close" size={24} color="#831843" />
+          </TouchableOpacity>
+          <Text style={{
+            fontSize: 18,
+            fontWeight: '600',
+            color: '#831843',
+            marginTop: 20
+          }}>
+            Loading family data...
+          </Text>
+        </View>
+      </Modal>
+    );
   }
 
   return (

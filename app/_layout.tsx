@@ -67,10 +67,14 @@ export default function RootLayout() {
   useEffect(() => {
     setIsClient(true);
     
-    // Initialize Sentry first (if in production)
-    initializeSentry().catch(error => {
-      console.warn('Failed to initialize Sentry:', error);
-    });
+    // Initialize Sentry first (if in production) - wrapped in try/catch for safety
+    try {
+      initializeSentry().catch(error => {
+        console.warn('Failed to initialize Sentry:', error);
+      });
+    } catch (error) {
+      console.warn('Sentry initialization error:', error);
+    }
     
     // Set up global error handlers for unhandled promises
     if (typeof window !== 'undefined') {

@@ -80,6 +80,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       setUserProfile(null);
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Sync with Zustand store whenever state changes
