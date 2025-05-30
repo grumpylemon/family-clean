@@ -10,7 +10,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './ui/UniversalIcon';
 import { Chore } from '../types';
 import { useFamilyStore } from '../stores/familyStore';
 import Toast from './ui/Toast';
@@ -106,7 +106,7 @@ export default function ChoreTakeoverModal({
           ]}
           onPress={() => setTakeoverReason(reason.value)}
         >
-          <Ionicons
+          <UniversalIcon
             name={reason.icon as any}
             size={20}
             color={takeoverReason === reason.value ? '#be185d' : '#9f1239'}
@@ -136,7 +136,7 @@ export default function ChoreTakeoverModal({
           <View style={styles.header}>
             <Text style={styles.title}>Takeover Chore</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#831843" />
+              <UniversalIcon name="close" size={24} color="#831843" />
             </TouchableOpacity>
           </View>
           
@@ -160,13 +160,13 @@ export default function ChoreTakeoverModal({
               <Text style={styles.sectionTitle}>Takeover Rewards</Text>
               <View style={styles.rewardRow}>
                 <View style={styles.rewardItem}>
-                  <Ionicons name="star" size={24} color="#f59e0b" />
+                  <UniversalIcon name="star" size={24} color="#f59e0b" />
                   <Text style={styles.rewardValue}>{chore.points + bonusPoints}</Text>
                   <Text style={styles.rewardLabel}>Total Points</Text>
                   <Text style={styles.bonusText}>+{bonusPoints} bonus</Text>
                 </View>
                 <View style={styles.rewardItem}>
-                  <Ionicons name="sparkles" size={24} color="#10b981" />
+                  <UniversalIcon name="sparkles" size={24} color="#10b981" />
                   <Text style={styles.rewardValue}>
                     {(chore.xpReward || chore.points) + bonusXP}
                   </Text>
@@ -194,7 +194,7 @@ export default function ChoreTakeoverModal({
             {/* Admin Approval Notice */}
             {requiresAdminApproval && (
               <View style={styles.noticeContainer}>
-                <Ionicons name="information-circle" size={20} color="#f59e0b" />
+                <UniversalIcon name="information-circle" size={20} color="#f59e0b" />
                 <Text style={styles.noticeText}>
                   This high-value chore requires admin approval for takeover
                 </Text>
@@ -204,7 +204,7 @@ export default function ChoreTakeoverModal({
             {/* Eligibility Warning */}
             {!eligible && (
               <View style={[styles.noticeContainer, styles.errorNotice]}>
-                <Ionicons name="alert-circle" size={20} color="#ef4444" />
+                <UniversalIcon name="alert-circle" size={20} color="#ef4444" />
                 <Text style={[styles.noticeText, styles.errorText]}>
                   {ineligibleReason}
                 </Text>
@@ -233,7 +233,7 @@ export default function ChoreTakeoverModal({
                 <ActivityIndicator color="white" />
               ) : (
                 <>
-                  <Ionicons name="hand-right" size={20} color="white" />
+                  <UniversalIcon name="hand-right" size={20} color="white" />
                   <Text style={styles.takeoverButtonText}>Take Over</Text>
                 </>
               )}

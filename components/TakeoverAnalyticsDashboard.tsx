@@ -8,7 +8,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './ui/UniversalIcon';
 import { useFamilyStore } from '../stores/hooks';
 import TakeoverLeaderboard from './TakeoverLeaderboard';
 import ChoreHealthMetrics from './ChoreHealthMetrics';
@@ -87,7 +87,7 @@ export default function TakeoverAnalyticsDashboard() {
           style={styles.refreshButton}
           onPress={refreshAnalytics}
         >
-          <Ionicons name="refresh" size={24} color="#be185d" />
+          <UniversalIcon name="refresh" size={24} color="#be185d" />
         </TouchableOpacity>
       </View>
 
@@ -95,7 +95,7 @@ export default function TakeoverAnalyticsDashboard() {
       <View style={styles.scoreCard}>
         <View style={styles.scoreHeader}>
           <Text style={styles.scoreTitle}>Collaboration Score</Text>
-          <Ionicons name="people" size={24} color="#be185d" />
+          <UniversalIcon name="people" size={24} color="#be185d" />
         </View>
         <View style={styles.scoreContent}>
           <View style={styles.scoreCircle}>
@@ -136,7 +136,7 @@ export default function TakeoverAnalyticsDashboard() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Family Insights</Text>
-            <Ionicons name="sparkles" size={20} color="#be185d" />
+            <UniversalIcon name="sparkles" size={20} color="#be185d" />
           </View>
           <View style={styles.insightsList}>
             {insights.slice(0, 5).map((insight) => (
@@ -148,7 +148,7 @@ export default function TakeoverAnalyticsDashboard() {
                 ]}
               >
                 <View style={styles.insightHeader}>
-                  <Ionicons
+                  <UniversalIcon
                     name={getInsightIcon(insight.type) as any}
                     size={20}
                     color={getInsightColor(insight.priority)}
@@ -169,7 +169,7 @@ export default function TakeoverAnalyticsDashboard() {
                         ? 'Update Schedule'
                         : 'Take Action'}
                     </Text>
-                    <Ionicons name="arrow-forward" size={16} color="#be185d" />
+                    <UniversalIcon name="arrow-forward" size={16} color="#be185d" />
                   </TouchableOpacity>
                 )}
               </View>
@@ -181,21 +181,21 @@ export default function TakeoverAnalyticsDashboard() {
       {/* Quick Stats */}
       <View style={styles.quickStats}>
         <View style={styles.statCard}>
-          <Ionicons name="trending-up" size={24} color="#10b981" />
+          <UniversalIcon name="trending-up" size={24} color="#10b981" />
           <Text style={styles.statValue}>
             {insights.filter((i) => i.type === 'achievement').length}
           </Text>
           <Text style={styles.statLabel}>Achievements</Text>
         </View>
         <View style={styles.statCard}>
-          <Ionicons name="bulb" size={24} color="#f59e0b" />
+          <UniversalIcon name="bulb" size={24} color="#f59e0b" />
           <Text style={styles.statValue}>
             {insights.filter((i) => i.type === 'suggestion').length}
           </Text>
           <Text style={styles.statLabel}>Suggestions</Text>
         </View>
         <View style={styles.statCard}>
-          <Ionicons name="alert-circle" size={24} color="#ef4444" />
+          <UniversalIcon name="alert-circle" size={24} color="#ef4444" />
           <Text style={styles.statValue}>
             {insights.filter((i) => i.type === 'warning').length}
           </Text>

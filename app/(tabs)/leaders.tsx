@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from '../../components/ui/UniversalIcon';
 import { useFamily } from '../../contexts/FamilyContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { calculateLevel } from '../../services/gamification';
@@ -31,11 +31,11 @@ export default function LeadersScreen() {
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
-        return <Ionicons name="trophy" size={20} color="#fbbf24" />;
+        return <UniversalIcon name="trophy" size={20} color="#fbbf24" />;
       case 2:
-        return <Ionicons name="medal" size={20} color="#9ca3af" />;
+        return <UniversalIcon name="medal" size={20} color="#9ca3af" />;
       case 3:
-        return <Ionicons name="ribbon" size={20} color="#f97316" />;
+        return <UniversalIcon name="ribbon" size={20} color="#f97316" />;
       default:
         return <Text style={styles.rankNumber}>{rank}</Text>;
     }
@@ -62,9 +62,9 @@ export default function LeadersScreen() {
           {/* Weekly Champions */}
           <View style={styles.leaderboardSection}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="trophy" size={24} color="#fbbf24" />
+              <UniversalIcon name="trophy" size={24} color="#fbbf24" />
               <Text style={styles.sectionTitle}>Weekly Champions</Text>
-              <Ionicons name="chevron-up" size={20} color="#831843" />
+              <UniversalIcon name="chevron-up" size={20} color="#831843" />
             </View>
             
             <View style={styles.leaderboardCard}>
@@ -117,18 +117,18 @@ export default function LeadersScreen() {
           {/* All-Time Legends */}
           <View style={styles.leaderboardSection}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="trophy" size={24} color="#fbbf24" />
+              <UniversalIcon name="trophy" size={24} color="#fbbf24" />
               <Text style={styles.sectionTitle}>All-Time Legends</Text>
-              <Ionicons name="chevron-down" size={20} color="#831843" />
+              <UniversalIcon name="chevron-down" size={20} color="#831843" />
             </View>
           </View>
 
           {/* Most Consistent */}
           <View style={styles.leaderboardSection}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="flame" size={24} color="#f97316" />
+              <UniversalIcon name="flame" size={24} color="#f97316" />
               <Text style={styles.sectionTitle}>Most Consistent</Text>
-              <Ionicons name="chevron-down" size={20} color="#831843" />
+              <UniversalIcon name="chevron-down" size={20} color="#831843" />
             </View>
           </View>
         </View>

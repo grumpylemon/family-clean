@@ -281,9 +281,39 @@ notes: formData.notes.trim() || undefined
 
 ---
 
+---
+
+## Font Loading Errors Completely Fixed (v2.168)
+
+**Date**: May 30, 2025  
+**Error Type**: Font Loading Error  
+**Platform**: Web  
+
+### The Error
+**Issue**: Failed to decode downloaded font - OTS parsing error  
+**Root Cause**: Browser fails to parse Ionicons.ttf font file from @expo/vector-icons  
+**Impact**: Console errors and fallback to default browser fonts  
+
+### Solution Implemented
+**Approach**: Migrated all 20 components from direct @expo/vector-icons imports to UniversalIcon  
+**Result**: All font errors eliminated through automatic emoji fallbacks  
+
+### Files Migrated
+- 14 component files in `components/` directory
+- 2 files in `app/(tabs)/` directory  
+- 4 UI component files cleaned up
+- Total: 20 files fully migrated
+
+### Prevention Measures
+- Added ESLint rule to block direct @expo/vector-icons imports
+- Created .gitattributes to prevent font file corruption
+- Documented migration pattern for future developers
+
+---
+
 ## Future Error Prevention Guidelines
 
-1. **Always use UniversalIcon** instead of direct Ionicons imports
+1. **Always use UniversalIcon** instead of direct Ionicons imports (enforced by ESLint)
 2. **Import hooks from** `@/hooks/useZustandHooks` for auth/family access
 3. **Test iOS builds locally** before submitting to EAS
 4. **Check package compatibility** when updating dependencies

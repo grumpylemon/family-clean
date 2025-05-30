@@ -7,7 +7,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './ui/UniversalIcon';
 import { CompletionReward } from '../types';
 
 interface CompletionRewardModalProps {
@@ -45,7 +45,7 @@ export const CompletionRewardModal: React.FC<CompletionRewardModalProps> = ({
             {/* Points Earned */}
             <View style={styles.rewardItem}>
               <View style={styles.rewardIcon}>
-                <Ionicons name="star" size={24} color="#f59e0b" />
+                <UniversalIcon name="star" size={24} color="#f59e0b" />
               </View>
               <View style={styles.rewardContent}>
                 <Text style={styles.rewardLabel}>Points Earned</Text>
@@ -56,7 +56,7 @@ export const CompletionRewardModal: React.FC<CompletionRewardModalProps> = ({
             {/* XP Earned */}
             <View style={styles.rewardItem}>
               <View style={styles.rewardIcon}>
-                <Ionicons name="flash" size={24} color="#8b5cf6" />
+                <UniversalIcon name="flash" size={24} color="#8b5cf6" />
               </View>
               <View style={styles.rewardContent}>
                 <Text style={styles.rewardLabel}>XP Gained</Text>
@@ -68,7 +68,7 @@ export const CompletionRewardModal: React.FC<CompletionRewardModalProps> = ({
             {reward.streakBonus && reward.streakBonus > 1 && (
               <View style={styles.rewardItem}>
                 <View style={styles.rewardIcon}>
-                  <Ionicons name="flame" size={24} color="#ef4444" />
+                  <UniversalIcon name="flame" size={24} color="#ef4444" />
                 </View>
                 <View style={styles.rewardContent}>
                   <Text style={styles.rewardLabel}>Streak Bonus</Text>
@@ -81,7 +81,7 @@ export const CompletionRewardModal: React.FC<CompletionRewardModalProps> = ({
             {reward.levelUp && (
               <View style={[styles.rewardItem, styles.levelUpItem]}>
                 <View style={styles.rewardIcon}>
-                  <Ionicons name="trending-up" size={24} color="#10b981" />
+                  <UniversalIcon name="trending-up" size={24} color="#10b981" />
                 </View>
                 <View style={styles.rewardContent}>
                   <Text style={styles.rewardLabel}>Level Up!</Text>

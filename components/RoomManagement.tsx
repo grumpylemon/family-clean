@@ -10,7 +10,7 @@ import {
   Modal,
   ActivityIndicator
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './ui/UniversalIcon';
 import { useFamily } from '../contexts/FamilyContext';
 import { useAccessControl } from '../hooks/useAccessControl';
 import {
@@ -307,14 +307,14 @@ const RoomManagement: React.FC = () => {
               style={styles.actionButton}
               onPress={() => handleEditRoom(room)}
             >
-              <Ionicons name="pencil" size={16} color="#be185d" />
+              <UniversalIcon name="pencil" size={16} color="#be185d" />
             </TouchableOpacity>
             
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => handleDeleteRoom(room)}
             >
-              <Ionicons name="trash" size={16} color="#ef4444" />
+              <UniversalIcon name="trash" size={16} color="#ef4444" />
             </TouchableOpacity>
           </View>
         </View>
@@ -333,7 +333,7 @@ const RoomManagement: React.FC = () => {
                 setShowAssignModal(true);
               }}
             >
-              <Ionicons name="person-add" size={16} color="#be185d" />
+              <UniversalIcon name="person-add" size={16} color="#be185d" />
               <Text style={styles.assignButtonText}>Assign</Text>
             </TouchableOpacity>
           </View>
@@ -361,7 +361,7 @@ const RoomManagement: React.FC = () => {
                       if (member) handleUnassignMember(member);
                     }}
                   >
-                    <Ionicons name="close" size={16} color="#ef4444" />
+                    <UniversalIcon name="close" size={16} color="#ef4444" />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -375,7 +375,7 @@ const RoomManagement: React.FC = () => {
           style={styles.generateButton}
           onPress={() => handleGenerateChores(room)}
         >
-          <Ionicons name="refresh" size={16} color="#be185d" />
+          <UniversalIcon name="refresh" size={16} color="#be185d" />
           <Text style={styles.generateButtonText}>Generate Chores</Text>
         </TouchableOpacity>
       </View>
@@ -385,7 +385,7 @@ const RoomManagement: React.FC = () => {
   if (!canManageMembers) {
     return (
       <View style={styles.accessDenied}>
-        <Ionicons name="lock-closed" size={48} color="#9f1239" />
+        <UniversalIcon name="lock-closed" size={48} color="#9f1239" />
         <Text style={styles.accessDeniedText}>Admin access required</Text>
         <Text style={styles.accessDeniedSubtext}>
           You need admin permissions to manage rooms and spaces.
@@ -414,13 +414,13 @@ const RoomManagement: React.FC = () => {
         </View>
 
         <TouchableOpacity style={styles.addButton} onPress={handleAddRoom}>
-          <Ionicons name="add" size={20} color="#ffffff" />
+          <UniversalIcon name="add" size={20} color="#ffffff" />
           <Text style={styles.addButtonText}>Add Room</Text>
         </TouchableOpacity>
 
         {rooms.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="home" size={64} color="#f9a8d4" />
+            <UniversalIcon name="home" size={64} color="#f9a8d4" />
             <Text style={styles.emptyTitle}>No rooms yet</Text>
             <Text style={styles.emptyText}>
               Add rooms to organize chores by space and assign responsibilities to family members.
@@ -450,7 +450,7 @@ const RoomManagement: React.FC = () => {
                 style={styles.closeButton}
                 onPress={() => setShowAddModal(false)}
               >
-                <Ionicons name="close" size={24} color="#831843" />
+                <UniversalIcon name="close" size={24} color="#831843" />
               </TouchableOpacity>
             </View>
 
@@ -570,7 +570,7 @@ const RoomManagement: React.FC = () => {
                 style={styles.closeButton}
                 onPress={() => setShowAssignModal(false)}
               >
-                <Ionicons name="close" size={24} color="#831843" />
+                <UniversalIcon name="close" size={24} color="#831843" />
               </TouchableOpacity>
             </View>
 

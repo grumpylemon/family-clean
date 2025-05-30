@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Image, Text, StyleSheet, ViewStyle } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
 interface AvatarProps {
   photoURL?: string | null;

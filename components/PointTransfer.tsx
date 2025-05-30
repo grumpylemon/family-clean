@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './ui/UniversalIcon';
 import { useFamily , useAuth } from '../hooks/useZustandHooks';
 import { createPointTransferRequest } from '../services/pointsService';
 import { FamilyMember } from '../types';
@@ -102,12 +102,12 @@ export const PointTransfer: React.FC<PointTransferProps> = ({
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Point Transfers</Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#831843" />
+              <UniversalIcon name="close" size={24} color="#831843" />
             </TouchableOpacity>
           </View>
           
           <View style={styles.disabledContainer}>
-            <Ionicons name="lock-closed" size={64} color="#9ca3af" />
+            <UniversalIcon name="lock-closed" size={64} color="#9ca3af" />
             <Text style={styles.disabledTitle}>Point Transfers Disabled</Text>
             <Text style={styles.disabledText}>
               Point transfers are currently disabled for your family. 
@@ -126,7 +126,7 @@ export const PointTransfer: React.FC<PointTransferProps> = ({
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Transfer Points</Text>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#831843" />
+            <UniversalIcon name="close" size={24} color="#831843" />
           </TouchableOpacity>
         </View>
 
@@ -157,9 +157,9 @@ export const PointTransfer: React.FC<PointTransferProps> = ({
                 </View>
                 <View style={styles.memberSelection}>
                   {selectedRecipient?.uid === member.uid ? (
-                    <Ionicons name="radio-button-on" size={24} color="#be185d" />
+                    <UniversalIcon name="radio-button-on" size={24} color="#be185d" />
                   ) : (
-                    <Ionicons name="radio-button-off" size={24} color="#9ca3af" />
+                    <UniversalIcon name="radio-button-off" size={24} color="#9ca3af" />
                   )}
                 </View>
               </TouchableOpacity>
@@ -221,7 +221,7 @@ export const PointTransfer: React.FC<PointTransferProps> = ({
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
               <>
-                <Ionicons name="arrow-forward" size={20} color="#ffffff" />
+                <UniversalIcon name="arrow-forward" size={20} color="#ffffff" />
                 <Text style={styles.transferButtonText}>Send Transfer Request</Text>
               </>
             )}

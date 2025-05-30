@@ -6,7 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './ui/UniversalIcon';
 import { WeeklyPointsData } from '../types';
 import { getWeeklyComparison } from '../services/firestore';
 
@@ -105,7 +105,7 @@ const WeeklyComparison: React.FC<WeeklyComparisonProps> = ({
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color="#9f1239" />
+          <UniversalIcon name="alert-circle-outline" size={48} color="#9f1239" />
           <Text style={styles.errorText}>{error || 'No data available'}</Text>
         </View>
       </View>
@@ -125,13 +125,13 @@ const WeeklyComparison: React.FC<WeeklyComparisonProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="bar-chart" size={24} color="#be185d" />
+        <UniversalIcon name="bar-chart" size={24} color="#be185d" />
         <Text style={styles.title}>Weekly Comparison</Text>
       </View>
 
       {weeksData.length >= 2 && (
         <View style={styles.changeContainer}>
-          <Ionicons
+          <UniversalIcon
             name={weekChange >= 0 ? 'trending-up' : 'trending-down'}
             size={20}
             color={weekChange >= 0 ? '#10b981' : '#ef4444'}

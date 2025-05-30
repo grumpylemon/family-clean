@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './ui/UniversalIcon';
 import { 
   getPointStatistics, 
   getPointTransactionHistory, 
@@ -141,7 +141,7 @@ export const PointsStatistics: React.FC<PointsStatisticsProps> = ({
           style={styles.transferButton}
           onPress={() => setShowTransfer(true)}
         >
-          <Ionicons name="arrow-forward" size={20} color="#ffffff" />
+          <UniversalIcon name="arrow-forward" size={20} color="#ffffff" />
           <Text style={styles.transferButtonText}>Transfer Points to Family</Text>
         </TouchableOpacity>
       </View>
@@ -297,13 +297,13 @@ export const PointsStatistics: React.FC<PointsStatisticsProps> = ({
             
             <View style={styles.milestoneStatus}>
               {isAchieved ? (
-                <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+                <UniversalIcon name="checkmark-circle" size={24} color="#10b981" />
               ) : isNext ? (
                 <Text style={styles.milestoneProgress}>
                   {stats ? Math.round((stats.lifetimePoints / milestone.pointsRequired) * 100) : 0}%
                 </Text>
               ) : (
-                <Ionicons name="lock-closed" size={20} color="#9ca3af" />
+                <UniversalIcon name="lock-closed" size={20} color="#9ca3af" />
               )}
             </View>
           </View>
@@ -319,7 +319,7 @@ export const PointsStatistics: React.FC<PointsStatisticsProps> = ({
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Points & Progress</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#831843" />
+            <UniversalIcon name="close" size={24} color="#831843" />
           </TouchableOpacity>
         </View>
 

@@ -10,7 +10,7 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from '../ui/UniversalIcon';
 import { useTheme } from '../../contexts/ThemeContext';
 import * as Sentry from '@sentry/react-native';
 import * as SentryReact from '@sentry/react';
@@ -191,7 +191,7 @@ export function ErrorMonitoringPanel() {
         </Text>
         <View style={styles.platformGrid}>
           <View style={styles.platformItem}>
-            <Ionicons name="globe-outline" size={24} color={colors.text} />
+            <UniversalIcon name="globe-outline" size={24} color={colors.text} />
             <Text style={[styles.platformCount, { color: colors.text }]}>
               {stats?.platformBreakdown.web}
             </Text>
@@ -200,7 +200,7 @@ export function ErrorMonitoringPanel() {
             </Text>
           </View>
           <View style={styles.platformItem}>
-            <Ionicons name="logo-apple" size={24} color={colors.text} />
+            <UniversalIcon name="logo-apple" size={24} color={colors.text} />
             <Text style={[styles.platformCount, { color: colors.text }]}>
               {stats?.platformBreakdown.ios}
             </Text>
@@ -209,7 +209,7 @@ export function ErrorMonitoringPanel() {
             </Text>
           </View>
           <View style={styles.platformItem}>
-            <Ionicons name="logo-android" size={24} color={colors.text} />
+            <UniversalIcon name="logo-android" size={24} color={colors.text} />
             <Text style={[styles.platformCount, { color: colors.text }]}>
               {stats?.platformBreakdown.android}
             </Text>
@@ -300,7 +300,7 @@ export function ErrorMonitoringPanel() {
           style={[styles.actionButton, { backgroundColor: colors.warning }]}
           onPress={handleTestError}
         >
-          <Ionicons name="bug-outline" size={20} color="#ffffff" />
+          <UniversalIcon name="bug-outline" size={20} color="#ffffff" />
           <Text style={styles.actionButtonText}>Trigger Test Error</Text>
         </TouchableOpacity>
 
@@ -308,7 +308,7 @@ export function ErrorMonitoringPanel() {
           style={[styles.actionButton, { backgroundColor: colors.text }]}
           onPress={handleViewInSentry}
         >
-          <Ionicons name="open-outline" size={20} color="#ffffff" />
+          <UniversalIcon name="open-outline" size={20} color="#ffffff" />
           <Text style={styles.actionButtonText}>View in Sentry</Text>
         </TouchableOpacity>
       </View>

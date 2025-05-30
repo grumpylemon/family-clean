@@ -73,7 +73,8 @@
         "projectId": "6b63f9ee-7702-4622-a992-d52429573749"
       },
       "EXPO_PUBLIC_USE_MOCK": false,
-      "EXPO_PUBLIC_FORCE_PRODUCTION": true
+      "EXPO_PUBLIC_FORCE_PRODUCTION": true,
+      "EXPO_PUBLIC_FORCE_REAL_FIREBASE": true
     }
   }
 }

@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './ui/UniversalIcon';
 import { TakeoverLeaderboardEntry, AnalyticsPeriod } from '../types';
 import { useFamilyStore } from '../stores/hooks';
 
@@ -48,11 +48,11 @@ export default function TakeoverLeaderboard({ onPeriodChange }: TakeoverLeaderbo
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
     switch (trend) {
       case 'up':
-        return <Ionicons name="trending-up" size={16} color="#10b981" />;
+        return <UniversalIcon name="trending-up" size={16} color="#10b981" />;
       case 'down':
-        return <Ionicons name="trending-down" size={16} color="#ef4444" />;
+        return <UniversalIcon name="trending-down" size={16} color="#ef4444" />;
       case 'stable':
-        return <Ionicons name="remove" size={16} color="#6b7280" />;
+        return <UniversalIcon name="remove" size={16} color="#6b7280" />;
     }
   };
 
@@ -60,7 +60,7 @@ export default function TakeoverLeaderboard({ onPeriodChange }: TakeoverLeaderbo
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Helper Heroes</Text>
-        <Ionicons name="trophy" size={24} color="#f59e0b" />
+        <UniversalIcon name="trophy" size={24} color="#f59e0b" />
       </View>
 
       {/* Period Selector */}
@@ -95,7 +95,7 @@ export default function TakeoverLeaderboard({ onPeriodChange }: TakeoverLeaderbo
       <ScrollView style={styles.leaderboardList}>
         {leaderboard.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={48} color="#f9a8d4" />
+            <UniversalIcon name="people-outline" size={48} color="#f9a8d4" />
             <Text style={styles.emptyText}>No takeover data yet</Text>
             <Text style={styles.emptySubtext}>
               Be the first to help a family member!
@@ -133,15 +133,15 @@ export default function TakeoverLeaderboard({ onPeriodChange }: TakeoverLeaderbo
                   <Text style={styles.userName}>{entry.userName}</Text>
                   <View style={styles.stats}>
                     <View style={styles.statItem}>
-                      <Ionicons name="hand-right" size={14} color="#9f1239" />
+                      <UniversalIcon name="hand-right" size={14} color="#9f1239" />
                       <Text style={styles.statText}>{entry.totalTakeovers}</Text>
                     </View>
                     <View style={styles.statItem}>
-                      <Ionicons name="star" size={14} color="#f59e0b" />
+                      <UniversalIcon name="star" size={14} color="#f59e0b" />
                       <Text style={styles.statText}>+{entry.bonusPointsEarned}</Text>
                     </View>
                     <View style={styles.statItem}>
-                      <Ionicons name="time" size={14} color="#6b7280" />
+                      <UniversalIcon name="time" size={14} color="#6b7280" />
                       <Text style={styles.statText}>
                         {entry.averageResponseTime.toFixed(1)}h
                       </Text>
@@ -152,7 +152,7 @@ export default function TakeoverLeaderboard({ onPeriodChange }: TakeoverLeaderbo
 
               {entry.currentStreak > 0 && (
                 <View style={styles.streakBadge}>
-                  <Ionicons name="flame" size={16} color="#ef4444" />
+                  <UniversalIcon name="flame" size={16} color="#ef4444" />
                   <Text style={styles.streakText}>{entry.currentStreak}</Text>
                 </View>
               )}

@@ -277,6 +277,11 @@ _isUsingMock = (() => {
   console.log('process.env.EXPO_PUBLIC_USE_MOCK:', process.env.EXPO_PUBLIC_USE_MOCK);
   
   // 🚨 PRIORITY 1: Explicit Environment Variables (early detection can't check hostname)
+  if (process.env.EXPO_PUBLIC_FORCE_REAL_FIREBASE === 'true') {
+    console.log('🚀 EARLY: Real Firebase forced via EXPO_PUBLIC_FORCE_REAL_FIREBASE');
+    return false;
+  }
+  
   if (process.env.EXPO_PUBLIC_FORCE_PRODUCTION === 'true') {
     console.log('🚀 EARLY: Production forced via EXPO_PUBLIC_FORCE_PRODUCTION');
     return false;

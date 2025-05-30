@@ -6,7 +6,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './ui/UniversalIcon';
 import { useFamilyStore } from '../stores/hooks';
 import { ChoreHealthMetric } from '../types';
 
@@ -57,7 +57,7 @@ export default function ChoreHealthMetrics() {
       <View style={styles.header}>
         <Text style={styles.title}>Chore Health</Text>
         <View style={styles.overallHealth}>
-          <Ionicons
+          <UniversalIcon
             name={getHealthIcon(overallHealth) as any}
             size={20}
             color={getHealthColor(overallHealth)}
@@ -75,7 +75,7 @@ export default function ChoreHealthMetrics() {
 
       {choreHealthMetrics.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="analytics-outline" size={48} color="#f9a8d4" />
+          <UniversalIcon name="analytics-outline" size={48} color="#f9a8d4" />
           <Text style={styles.emptyText}>No chore health data available</Text>
         </View>
       ) : (
@@ -121,7 +121,7 @@ export default function ChoreHealthMetrics() {
                           { backgroundColor: `${getHealthColor(metric.healthScore)}20` },
                         ]}
                       >
-                        <Ionicons
+                        <UniversalIcon
                           name={getHealthIcon(metric.healthScore) as any}
                           size={16}
                           color={getHealthColor(metric.healthScore)}
@@ -165,7 +165,7 @@ export default function ChoreHealthMetrics() {
 
                     {metric.mostFrequentHelper && (
                       <View style={styles.helperInfo}>
-                        <Ionicons name="person" size={14} color="#9f1239" />
+                        <UniversalIcon name="person" size={14} color="#9f1239" />
                         <Text style={styles.helperText}>
                           Most helped by {metric.mostFrequentHelperName}
                         </Text>
@@ -174,7 +174,7 @@ export default function ChoreHealthMetrics() {
 
                     {metric.originalAssigneePattern && (
                       <View style={styles.patternInfo}>
-                        <Ionicons name="warning" size={14} color="#f59e0b" />
+                        <UniversalIcon name="warning" size={14} color="#f59e0b" />
                         <Text style={styles.patternText}>
                           {metric.originalAssigneePattern.userName} misses{' '}
                           {Math.round(metric.originalAssigneePattern.missRate * 100)}%

@@ -1,4 +1,5 @@
 import React from 'react';
+import UniversalIcon from './UniversalIcon';
 import {
   Modal,
   View,
@@ -8,7 +9,6 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -19,7 +19,7 @@ interface ConfirmDialogProps {
   confirmButtonStyle?: 'danger' | 'primary';
   onConfirm: () => void;
   onCancel: () => void;
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: string;
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -104,7 +104,7 @@ export const CustomConfirmDialog: React.FC<ConfirmDialogProps> = ({
       >
         <View style={styles.container} onStartShouldSetResponder={() => true}>
           <View style={styles.iconContainer}>
-            <Ionicons name={icon} size={48} color={getIconColor()} />
+            <UniversalIcon name={icon} size={48} color={getIconColor()} />
           </View>
           
           <Text style={styles.title}>{title}</Text>

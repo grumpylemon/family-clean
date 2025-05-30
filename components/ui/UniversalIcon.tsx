@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Platform, Text, StyleProp, TextStyle, ViewStyle } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 interface UniversalIconProps {
   name: string;

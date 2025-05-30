@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './ui/UniversalIcon';
 import { WeeklyPointsData } from '../types';
 import { getWeeklyPointsData } from '../services/firestore';
 
@@ -107,7 +107,7 @@ const WeeklyProgress: React.FC<WeeklyProgressProps> = ({ userId, familyId, userN
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color="#9f1239" />
+          <UniversalIcon name="alert-circle-outline" size={48} color="#9f1239" />
           <Text style={styles.errorText}>{error || 'No data available'}</Text>
         </View>
       </View>
@@ -119,7 +119,7 @@ const WeeklyProgress: React.FC<WeeklyProgressProps> = ({ userId, familyId, userN
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="trending-up" size={24} color="#be185d" />
+        <UniversalIcon name="trending-up" size={24} color="#be185d" />
         <Text style={styles.title}>
           {userName ? `${userName}'s Week` : 'Weekly Progress'}
         </Text>
