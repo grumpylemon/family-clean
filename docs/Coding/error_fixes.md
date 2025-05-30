@@ -86,10 +86,20 @@ Due to persistent issues with react-native-safe-area-context and React Native's 
 - Updated expo-build-properties plugin configuration
 - This is a temporary fix until react-native-safe-area-context is fully compatible
 
+Additional fix:
+- Updated iOS deployment target from 13.4 to 15.1 (required by EAS Build)
+
 To re-enable new architecture later:
 1. Update `app.json`: `"newArchEnabled": true`
 2. Update expo-build-properties plugin: `"newArchEnabled": true`
 3. Test iOS build again
+
+### Build Success
+
+After applying the fixes:
+1. The codegen error was resolved by disabling new architecture
+2. The deployment target was updated to meet EAS requirements
+3. Build now proceeds to credential stage successfully
 
 ### Prevention
 
