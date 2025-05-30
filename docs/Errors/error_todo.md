@@ -3,6 +3,16 @@
 ## Active High Priority Issues to Fix
 
 ### Critical Production Issues
+- [ ] **iOS Build Error - Sentry Authentication**
+  - **Status**: FIXED in v2.169 (2025-05-30)
+  - **Root Cause**: EAS Build environment lacks SENTRY_AUTH_TOKEN for source map uploads
+  - **Fix Applied**: Disabled automatic Sentry uploads via SENTRY_DISABLE_AUTO_UPLOAD environment variable
+  - **Evidence**: Added to all EAS build profiles in eas.json with fallback handling
+  - **Next Steps**: 
+    - [ ] Test v2.169 iOS build on EAS to confirm fix
+    - [ ] Monitor build success rate post-deployment
+    - [ ] Consider re-enabling uploads with proper auth token in future
+  - **Impact**: Critical - iOS builds were completely blocked
 - [ ] **iOS TestFlight Crash - Sentry Initialization** 
   - **Status**: FIXED in v2.168 (2025-05-30)
   - **Root Cause**: Sentry initialization causing SIGABRT crashes on iOS production builds

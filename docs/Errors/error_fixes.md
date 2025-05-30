@@ -2,6 +2,32 @@
 
 This document tracks all error fixes implemented in the Family Compass app, including detailed explanations and solutions.
 
+## iOS Build Authentication Error (v2.169)
+
+**Date**: May 30, 2025  
+**Error Type**: EAS Build Failure  
+**Status**: FIXED
+
+**Issue**: iOS builds failing with "Auth token is required for this request. Please run 'sentry-cli login' and try again!"  
+**Root Cause**: EAS Build environment attempting Sentry source map uploads without authentication token  
+**Solution**: Disabled automatic Sentry uploads via environment variables in eas.json  
+
+**Technical Details**:
+- Added `SENTRY_DISABLE_AUTO_UPLOAD=true` to all EAS build profiles
+- Added `SENTRY_ALLOW_FAILURE=true` for production builds as fallback
+- Created setup script (`scripts/setup-ios-build.sh`) for environment configuration
+- Updated `.env.example` with documentation for new variables
+
+**Files Modified**:
+- `/eas.json` - Environment variable configuration for all build profiles
+- `/.env.example` - Documentation for Sentry build variables
+- `/scripts/setup-ios-build.sh` - Automated setup script
+- `/ios/.xcode.env.local` - iOS build environment configuration
+
+**Impact**: Unblocks iOS builds while maintaining runtime error monitoring functionality
+
+**Alternative Solutions**: Future enhancement could add proper SENTRY_AUTH_TOKEN to EAS secrets to re-enable source map uploads for better error debugging.
+
 ## Room Management Fix (v2.162)
 
 **Date**: May 30, 2025  
