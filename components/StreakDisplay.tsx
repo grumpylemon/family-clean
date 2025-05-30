@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Modal } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { EnhancedStreak, StreakCategory, StreakMilestone } from '../types';
+import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import UniversalIcon from './ui/UniversalIcon';
+import { EnhancedStreak, StreakCategory } from '../types';
 import { getStreakMilestones, calculateCompoundStreakMultiplier, countActiveStreaks } from '../services/gamification';
 
 interface StreakDisplayProps {
@@ -256,7 +256,7 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ streaks, showDetailed = f
               style={styles.closeButton}
               onPress={() => setShowModal(false)}
             >
-              <Ionicons name="close" size={24} color="#831843" />
+              <UniversalIcon name="close" size={24} color="#831843" />
             </TouchableOpacity>
           </View>
           {renderDetailedView()}

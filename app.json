@@ -2,7 +2,7 @@
   "expo": {
     "name": "Family Compass",
     "slug": "family-chores",
-    "version": "2.165",
+    "version": "2.166",
     "owner": "grumpylemon",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -12,7 +12,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.grumpylemon.familyfun",
-      "buildNumber": "26",
+      "buildNumber": "27",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to scan QR codes for family invites.",

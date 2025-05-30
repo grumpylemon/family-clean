@@ -9,7 +9,7 @@ import {
   Alert,
   Platform
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './ui/UniversalIcon';
 import { Reward, RewardCategory } from '../types';
 import { 
   getRewards, 
@@ -219,7 +219,7 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
             right: 20,
             padding: 8
           }}>
-            <Ionicons name="close" size={24} color="#831843" />
+            <UniversalIcon name="close" size={24} color="#831843" />
           </TouchableOpacity>
           <Text style={{
             fontSize: 18,
@@ -253,7 +253,7 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
           backgroundColor: '#ffffff'
         }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="gift" size={24} color="#be185d" />
+            <UniversalIcon name="gift" size={24} color="#be185d" />
             <Text style={{
               fontSize: 20,
               fontWeight: '700',
@@ -264,7 +264,7 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
             </Text>
           </View>
           <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={24} color="#831843" />
+            <UniversalIcon name="close" size={24} color="#831843" />
           </TouchableOpacity>
         </View>
 
@@ -291,7 +291,7 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
               setShowCreateModal(true);
             }}
           >
-            <Ionicons name="add" size={20} color="#ffffff" />
+            <UniversalIcon name="add" size={20} color="#ffffff" />
             <Text style={{
               color: '#ffffff',
               fontSize: 16,
@@ -329,7 +329,7 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
               shadowRadius: 8,
               elevation: 2
             }}>
-              <Ionicons name="gift-outline" size={48} color="#f9a8d4" />
+              <UniversalIcon name="gift-outline" size={48} color="#f9a8d4" />
               <Text style={{
                 color: '#831843',
                 fontSize: 18,
@@ -372,7 +372,7 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
                 }}>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                      <Ionicons
+                      <UniversalIcon
                         name={getCategoryIcon(reward.category) as any}
                         size={20}
                         color="#be185d"
@@ -485,7 +485,7 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
                       }}
                       onPress={() => handleEditReward(reward)}
                     >
-                      <Ionicons name="pencil" size={16} color="#be185d" />
+                      <UniversalIcon name="pencil" size={16} color="#be185d" />
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={{
@@ -495,7 +495,7 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
                       }}
                       onPress={() => handleDeleteReward(reward)}
                     >
-                      <Ionicons name="trash" size={16} color="#dc2626" />
+                      <UniversalIcon name="trash" size={16} color="#dc2626" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -534,7 +534,7 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
                 {editingReward ? 'Edit Reward' : 'Create New Reward'}
               </Text>
               <TouchableOpacity onPress={() => setShowCreateModal(false)}>
-                <Ionicons name="close" size={24} color="#831843" />
+                <UniversalIcon name="close" size={24} color="#831843" />
               </TouchableOpacity>
             </View>
 
@@ -656,7 +656,7 @@ export default function RewardManagement({ visible, onClose }: RewardManagementP
                         }}
                         onPress={() => setFormData({ ...formData, category: category.value })}
                       >
-                        <Ionicons
+                        <UniversalIcon
                           name={category.icon as any}
                           size={16}
                           color={formData.category === category.value ? '#ffffff' : '#be185d'}

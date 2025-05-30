@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Animated,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './UniversalIcon';
 
 interface ValidatedInputProps extends TextInputProps {
   label?: string;
@@ -84,9 +84,9 @@ export const ValidatedInput: React.FC<ValidatedInputProps> = ({
         {showValidation && (error || isValid) && (
           <View style={styles.iconContainer}>
             {error ? (
-              <Ionicons name="close-circle" size={20} color="#ef4444" />
+              <UniversalIcon name="close-circle" size={20} color="#ef4444" />
             ) : (
-              <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+              <UniversalIcon name="checkmark-circle" size={20} color="#10b981" />
             )}
           </View>
         )}

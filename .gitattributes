@@ -1,0 +1,20 @@
+# Font files should be treated as binary to prevent corruption
+*.ttf binary
+*.eot binary
+*.woff binary
+*.woff2 binary
+*.otf binary
+
+# Image files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+
+# Other binary files
+*.pdf binary
+*.zip binary
+*.gz binary
+*.tar binary

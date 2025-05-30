@@ -1,6 +1,6 @@
 import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './UniversalIcon';
 import * as Sentry from '@sentry/react-native';
 import * as SentryReact from '@sentry/react';
 
@@ -104,7 +104,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <View style={styles.container}>
           <View style={styles.errorCard}>
-            <Ionicons name="alert-circle-outline" size={64} color="#ef4444" />
+            <UniversalIcon name="alert-circle-outline" size={64} color="#ef4444" />
             
             <Text style={styles.title}>Oops! Something went wrong</Text>
             

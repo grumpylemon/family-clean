@@ -8,7 +8,7 @@ import {
   Platform,
   ToastAndroid
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from './UniversalIcon';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -138,13 +138,13 @@ const ToastComponent: React.FC<ToastProps> = ({
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <Ionicons name="checkmark-circle" size={24} color="#10b981" />;
+        return <UniversalIcon name="checkmark-circle" size={24} color="#10b981" />;
       case 'error':
-        return <Ionicons name="close-circle" size={24} color="#ef4444" />;
+        return <UniversalIcon name="close-circle" size={24} color="#ef4444" />;
       case 'warning':
-        return <Ionicons name="warning" size={24} color="#f59e0b" />;
+        return <UniversalIcon name="warning" size={24} color="#f59e0b" />;
       default:
-        return <Ionicons name="information-circle" size={24} color="#be185d" />;
+        return <UniversalIcon name="information-circle" size={24} color="#be185d" />;
     }
   };
 

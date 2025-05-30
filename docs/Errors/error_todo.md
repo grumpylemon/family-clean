@@ -2,9 +2,11 @@
 
 ## Active High Priority Issues to Fix
 
-- [ ] **Failed to download font** This is a consistant error accross the app
-      leaders:1 Failed to decode downloaded font: https://family-fun-app.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.6148e7019854f3bde85b633cb88f3c25.ttf
-      leaders:1 OTS parsing error: invalid sfntVersion: 1008813135
+- [ ] **Failed to download font** (Partial Fix - v2.167)
+      - **Status**: Partially fixed by migrating ~6 components to UniversalIcon
+      - **Remaining**: ~15 more components need migration
+      - **Note**: Font error will persist until all components are migrated
+      - **Impact**: Reduced but still present in unmigrated components
 
 
 ### Manual Intervention Required (Scripts Available)

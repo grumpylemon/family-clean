@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import UniversalIcon from '../../components/ui/UniversalIcon';
 import { useAccessControl } from '../../hooks/useAccessControl';
 import { useFamily } from '../../hooks/useZustandHooks';
 import RoomManagement from '../../components/RoomManagement';
@@ -158,7 +158,7 @@ export default function AdminScreen() {
               disabled={!tool.enabled}
             >
               <View style={[styles.toolIcon, { backgroundColor: `${tool.color}20` }]}>
-                <Ionicons 
+                <UniversalIcon 
                   name={tool.icon} 
                   size={32} 
                   color={tool.enabled ? tool.color : '#9ca3af'} 
@@ -178,7 +178,7 @@ export default function AdminScreen() {
                   {tool.description}
                 </Text>
               </View>
-              <Ionicons 
+              <UniversalIcon 
                 name="chevron-forward" 
                 size={20} 
                 color={tool.enabled ? "#be185d" : "#9ca3af"} 
@@ -201,7 +201,7 @@ export default function AdminScreen() {
           <Text style={styles.infoTitle}>Access Levels</Text>
           <View style={styles.accessInfo}>
             <View style={styles.accessItem}>
-              <Ionicons 
+              <UniversalIcon 
                 name={canManageFamily ? "checkmark-circle" : "close-circle"} 
                 size={20} 
                 color={canManageFamily ? "#10b981" : "#ef4444"} 
@@ -209,7 +209,7 @@ export default function AdminScreen() {
               <Text style={styles.accessText}>Family Management</Text>
             </View>
             <View style={styles.accessItem}>
-              <Ionicons 
+              <UniversalIcon 
                 name={canManageChores ? "checkmark-circle" : "close-circle"} 
                 size={20} 
                 color={canManageChores ? "#10b981" : "#ef4444"} 
@@ -217,7 +217,7 @@ export default function AdminScreen() {
               <Text style={styles.accessText}>Chore Management</Text>
             </View>
             <View style={styles.accessItem}>
-              <Ionicons 
+              <UniversalIcon 
                 name={canManageRewards ? "checkmark-circle" : "close-circle"} 
                 size={20} 
                 color={canManageRewards ? "#10b981" : "#ef4444"} 
@@ -242,7 +242,7 @@ export default function AdminScreen() {
                 style={styles.modalCloseButton}
                 onPress={() => setShowRoomManagement(false)}
               >
-                <Ionicons name="close" size={24} color="#831843" />
+                <UniversalIcon name="close" size={24} color="#831843" />
               </TouchableOpacity>
             </View>
             <RoomManagement />
@@ -289,7 +289,7 @@ export default function AdminScreen() {
               style={styles.modalCloseButton}
               onPress={() => setShowTakeoverAnalytics(false)}
             >
-              <Ionicons name="close" size={24} color="#831843" />
+              <UniversalIcon name="close" size={24} color="#831843" />
             </TouchableOpacity>
           </View>
           <TakeoverAnalyticsDashboard />
@@ -310,7 +310,7 @@ export default function AdminScreen() {
               style={styles.modalCloseButton}
               onPress={() => setShowApprovalQueue(false)}
             >
-              <Ionicons name="close" size={24} color="#831843" />
+              <UniversalIcon name="close" size={24} color="#831843" />
             </TouchableOpacity>
           </View>
           <TakeoverApprovalQueue />
@@ -331,7 +331,7 @@ export default function AdminScreen() {
               style={styles.modalCloseButton}
               onPress={() => setShowCustomRules(false)}
             >
-              <Ionicons name="close" size={24} color="#831843" />
+              <UniversalIcon name="close" size={24} color="#831843" />
             </TouchableOpacity>
           </View>
           <CustomRulesManager />
@@ -352,7 +352,7 @@ export default function AdminScreen() {
               style={styles.modalCloseButton}
               onPress={() => setShowExportPanel(false)}
             >
-              <Ionicons name="close" size={24} color="#831843" />
+              <UniversalIcon name="close" size={24} color="#831843" />
             </TouchableOpacity>
           </View>
           <PerformanceExportPanel />
