@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { WebIcon } from './ui/WebIcon';
 import { NotificationSettings as NotificationSettingsType } from '@/types';
-import { useFamilyStore } from '@/stores/hooks';
+import { useAuth } from '@/hooks/useZustandHooks';
 
 // Conditionally import notification service only on mobile platforms
 let notificationService: any = null;
@@ -42,7 +42,7 @@ const DEFAULT_SETTINGS: NotificationSettingsType = {
 };
 
 export default function NotificationSettings() {
-  const { user } = useFamilyStore((state) => state.auth);
+  const { user } = useAuth();
   const [settings, setSettings] = useState<NotificationSettingsType>(
     user?.notificationSettings || DEFAULT_SETTINGS
   );

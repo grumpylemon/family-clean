@@ -3,6 +3,12 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
+      // Conditionally disable codegen for react-native-safe-area-context to fix iOS build
+      ...(process.env.NODE_ENV === 'production' ? [
+        ['@react-native/babel-plugin-codegen', { 
+          exclude: /node_modules\/react-native-safe-area-context/ 
+        }]
+      ] : []),
       // Transform import.meta before any other transformations
       ['babel-plugin-transform-import-meta', { module: 'ES6' }],
       // Enhanced import.meta transformer that works with Metro CommonJS resolution

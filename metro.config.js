@@ -10,8 +10,11 @@ config.resolver.assetExts.push('ttf');
 config.resolver.sourceExts.push('cjs');
 
 // Exclude debugger frontend from web builds to avoid import.meta issues
+// Also exclude react-native-safe-area-context specs from codegen processing to fix iOS build
 config.resolver.blockList = [
   /.*\/@react-native\/debugger-frontend\/.*/,
+  // Fix for iOS build error with react-native-safe-area-context codegen
+  /node_modules\/react-native-safe-area-context\/lib\/specs\/.*/,
 ];
 
 // CRITICAL FIX: Prioritize CommonJS over ESM to avoid import.meta issues with Zustand v5

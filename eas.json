@@ -33,6 +33,15 @@
       "env": {
         "EXPO_PUBLIC_FORCE_PRODUCTION": "true",
         "EXPO_PUBLIC_USE_MOCK": "false"
+      },
+      "hooks": {
+        "eas": {
+          "build": {
+            "onStart": {
+              "scripts": ["node ./scripts/fix-safe-area-ios-build.js"]
+            }
+          }
+        }
       }
     }
   },
