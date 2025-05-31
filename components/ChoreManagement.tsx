@@ -24,6 +24,8 @@ import { LoadingSpinner } from './ui/LoadingSpinner';
 import { Toast } from './ui/Toast';
 import { ConfirmDialog } from './ui/ConfirmDialog';
 import { ValidatedInput } from './ui/ValidatedInput';
+import { TemplateQuickPicker } from './TemplateQuickPicker';
+import { TemplateLibrary } from './TemplateLibrary';
 import { useFormValidation, validationRules, crossFieldValidations } from '../hooks/useFormValidation';
 
 interface ChoreManagementProps {
@@ -52,6 +54,10 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingChore, setEditingChore] = useState<Chore | null>(null);
   const [choreToDelete, setChoreToDelete] = useState<Chore | null>(null);
+  
+  // Template integration state
+  const [showTemplateQuickPicker, setShowTemplateQuickPicker] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   
   // Form validation
   const { 
@@ -416,6 +422,18 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
 
     await choreCardService.createAdvancedCard(advancedCard);
     Toast.success(`Advanced chore card created with ${Object.keys(advancedCard).length - 3} features!`);
+  };
+
+  const handleTemplateApplied = async (templateId: string, choreCount: number) => {
+    console.log(`Template ${templateId} applied, created ${choreCount} chores`);
+    Toast.success(`Successfully created ${choreCount} chores from template!`);
+    
+    // Reload chores to show the new ones
+    await loadChores();
+    
+    // Close any open template modals
+    setShowTemplateQuickPicker(false);
+    setShowTemplateLibrary(false);
   };
 
   const handleDeleteChore = (chore: Chore) => {
@@ -1217,6 +1235,31 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
               <Text style={styles.createButtonText}>+ Create New Chore</Text>
             </TouchableOpacity>
             
+            {/* Template Integration Section */}
+            <View style={styles.templateSection}>
+              <Text style={styles.templateSectionTitle}>📋 Or Start with a Template</Text>
+              <Text style={styles.templateSectionSubtitle}>
+                Create multiple chores quickly using pre-made templates
+              </Text>
+              <View style={styles.templateButtons}>
+                <TouchableOpacity
+                  style={styles.templateButton}
+                  onPress={() => setShowTemplateQuickPicker(true)}
+                >
+                  <WebIcon name="flash" size={20} color="#be185d" />
+                  <Text style={styles.templateButtonText}>Quick Templates</Text>
+                  <Text style={styles.templateButtonSubtext}>Instant chore creation</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.templateButton}
+                  onPress={() => setShowTemplateLibrary(true)}
+                >
+                  <WebIcon name="library" size={20} color="#be185d" />
+                  <Text style={styles.templateButtonText}>Browse Library</Text>
+                  <Text style={styles.templateButtonSubtext}>All templates & filters</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
             {/* Test Data Generator */}
             <View style={styles.testDataSection}>
@@ -1342,6 +1385,21 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
             setChorToUpgrade(null);
           }}
           icon="star"
+        />
+
+        {/* Template Integration Modals */}
+        <TemplateQuickPicker
+          visible={showTemplateQuickPicker}
+          onClose={() => setShowTemplateQuickPicker(false)}
+          onTemplateApplied={handleTemplateApplied}
+          mode="quick"
+          compact={false}
+        />
+
+        <TemplateLibrary
+          visible={showTemplateLibrary}
+          onClose={() => setShowTemplateLibrary(false)}
+          onTemplateApplied={handleTemplateApplied}
         />
 
       </SafeAreaView>
@@ -1926,6 +1984,54 @@ const styles = StyleSheet.create({
     color: '#15803d',
     marginBottom: 4,
     paddingLeft: 8,
+  },
+  
+  // Template Integration Styles
+  templateSection: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 20,
+    backgroundColor: '#fef7ff',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#f9a8d4',
+  },
+  templateSectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#831843',
+    marginBottom: 8,
+  },
+  templateSectionSubtitle: {
+    fontSize: 14,
+    color: '#9f1239',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  templateButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  templateButton: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
+    alignItems: 'center',
+    gap: 8,
+  },
+  templateButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#831843',
+    textAlign: 'center',
+  },
+  templateButtonSubtext: {
+    fontSize: 12,
+    color: '#9f1239',
+    textAlign: 'center',
   },
 });
 

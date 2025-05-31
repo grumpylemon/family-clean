@@ -1,6 +1,6 @@
  Family Clean App - Integration & Polish Completion Prompt
 
-  Mission Overview
+  # Mission Overview
 
   You are a senior full-stack developer tasked with completing the integration
   and polish of the Family Clean app. The app has exceptional foundations with
@@ -8,19 +8,19 @@
   main user workflows. Your job is to systematically integrate these features
   and create a fully polished family management ecosystem.
 
-  Your Systematic Workflow
+  # Your Systematic Workflow
 
-  Step 1: Task Identification & Analysis
+  ## Step 1: Task Identification & Analysis
 
   1. Read the task document: Use the Read tool to examine
   @docs/Codebase_polish.md
   2. Find the next uncompleted main task: Look for the first main task
-  (numbered sections 1-12) that is not marked with ✅ COMPLETED
+  (numbered sections) that is not marked with ✅ COMPLETED
   3. Analyze the task scope: Read all sub-tasks and understand the full
   integration requirements
   4. Document your plan: Briefly summarize what you'll be working on
 
-  Step 2: Codebase Investigation
+  ## Step 2: Codebase Investigation
 
   1. Read relevant files: Use Read tool to examine all files mentioned in the
   task (specific file paths are provided)
@@ -30,18 +30,18 @@
   need to connect
   4. Review related tests: Check existing test coverage in __tests__/ directory
 
-  Step 3: Implementation Strategy
+  ## Step 3: Implementation Strategy
 
   1. Plan integration approach: Think through the implementation strategy for
   connecting all subsystems
   2. Consider cross-functional impacts: Analyze how changes will affect other
   parts of the app
   3. Design feature toggles: Plan family-level settings and admin controls
-  where specified
+  where specified or needed
   4. Plan error handling: Ensure graceful degradation and proper error
   boundaries
 
-  Step 4: Implementation & Integration
+  ## Step 4: Implementation & Integration
 
   1. Work systematically through sub-tasks: Complete each sub-task in the order
    listed
@@ -53,7 +53,37 @@
   5. Follow existing patterns: Maintain consistency with existing code style
   and architecture
 
-  Step 5: Quality Assurance
+      Key Implementation Guidelines
+
+      File Integration Rules
+
+      - Read first, then edit: Always read files completely before making changes
+      - Follow existing patterns: Maintain consistency with current code
+      architecture
+      - Use existing services: Connect to established services rather than creating
+      new ones
+      - Preserve error handling: Maintain or improve existing error boundaries and
+      fallbacks
+
+      Feature Toggle Implementation
+
+      - Family-level controls: Add settings in FamilySettings component for feature
+      enablement
+      - Progressive disclosure: Show advanced features only when family opts in
+      - Admin permissions: Respect existing admin role systems
+      - Graceful fallbacks: Ensure basic functionality works when advanced features
+      are disabled
+
+      Integration Connection Points
+
+      - Service layer: Connect through existing services in services/ directory
+      - State management: Use Zustand store integration where available
+      - Component composition: Follow existing component hierarchy and prop passing
+      - Error boundaries: Wrap new integrations in appropriate error handling
+
+      
+
+  ## Step 5: Quality Assurance
 
   1. Test the complete workflow: Verify end-to-end functionality works as
   intended
@@ -63,7 +93,16 @@
   degradation
   5. Run lint and type checking: Execute npm run lint to ensure code quality
 
-  Step 6: Documentation & Completion
+      Testing Requirements
+
+      - End-to-end flows: Verify complete user workflows function correctly
+      - Cross-system integration: Test that connected systems work together
+      properly
+      - Edge cases: Test error scenarios and edge cases
+      - Performance: Ensure integrations don't negatively impact app performance
+
+
+  ## Step 6: Documentation & Completion
 
   1. Mark tasks as complete: Update the @docs/Codebase_polish.md file, changing
    - [ ] to - [x] for all completed sub-tasks
@@ -71,7 +110,7 @@
   status
   3. Add completion timestamp: Note when the integration was completed
 
-  Step 7: Deployment & Git Management
+  ## Step 7: Deployment & Git Management
 
   1. Create web build: Run npm run export-web to build and deploy to web server
   2. Commit changes: Create a comprehensive git commit with detailed
@@ -85,7 +124,7 @@
       - Generated with Claude Code signature
   3. Push to repository: Push changes with descriptive commit message
 
-  Step 8: Next Task Identification
+  ## Step 8: Next Task Identification
 
   1. Read updated document: Re-read @docs/Codebase_polish.md to find next
   uncompleted task
@@ -94,45 +133,8 @@
   3. Request permission: Ask "Ready to proceed with [Task Name]?" before
   starting
 
-  Key Implementation Guidelines
-
-  File Integration Rules
-
-  - Read first, then edit: Always read files completely before making changes
-  - Follow existing patterns: Maintain consistency with current code
-  architecture
-  - Use existing services: Connect to established services rather than creating
-   new ones
-  - Preserve error handling: Maintain or improve existing error boundaries and
-  fallbacks
-
-  Feature Toggle Implementation
-
-  - Family-level controls: Add settings in FamilySettings component for feature
-   enablement
-  - Progressive disclosure: Show advanced features only when family opts in
-  - Admin permissions: Respect existing admin role systems
-  - Graceful fallbacks: Ensure basic functionality works when advanced features
-   are disabled
-
-  Integration Connection Points
-
-  - Service layer: Connect through existing services in services/ directory
-  - State management: Use Zustand store integration where available
-  - Component composition: Follow existing component hierarchy and prop passing
-  - Error boundaries: Wrap new integrations in appropriate error handling
-
-  Testing Requirements
-
-  - End-to-end flows: Verify complete user workflows function correctly
-  - Cross-system integration: Test that connected systems work together
-  properly
-  - Edge cases: Test error scenarios and edge cases
-  - Performance: Ensure integrations don't negatively impact app performance
-
-
-
-  Success Criteria
+  
+  # Success Criteria
 
   - All sub-tasks completed and marked in documentation
   - End-to-end workflows function properly
@@ -144,7 +146,7 @@
 
   Your Response Format
 
-  When you complete a task, respond with:
+  # When you complete a task, respond with:
 
   1. Summary of Integration: Brief description of what was connected
   2. Key Changes Made: List of major code changes and new connections
@@ -155,4 +157,4 @@
   ---
 
   Start by reading @docs/Codebase_polish.md to confirm the first
-  uncompleted task, then proceed with the systematic workflow above. Do not ask for permission to read files or make git commits - you have full autonomy to complete the integration work.
+  uncompleted task, then proceed with the systematic workflow above. Do not ask for permission to read files or write files, or fetch files or make git commits - you have full autonomy to complete the integration work.

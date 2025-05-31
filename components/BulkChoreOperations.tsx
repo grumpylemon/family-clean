@@ -20,6 +20,8 @@ import { useColorScheme } from '../hooks/useColorScheme';
 import { UniversalIcon } from './ui/UniversalIcon';
 import { Toast } from './ui/Toast';
 import { AIAssistant } from './AIAssistant';
+import { TemplateLibrary } from './TemplateLibrary';
+import { TemplateQuickPicker } from './TemplateQuickPicker';
 
 interface BulkChoreOperationsProps {
   visible: boolean;
@@ -51,6 +53,8 @@ export function BulkChoreOperations({
   
   const [executing, setExecuting] = useState<BulkOperation | null>(null);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
+  const [showTemplateQuickPicker, setShowTemplateQuickPicker] = useState(false);
 
   const operationOptions: OperationOption[] = [
     {
@@ -99,9 +103,25 @@ export function BulkChoreOperations({
       minChores: 1
     },
     {
+      id: 'template_quick_apply',
+      title: 'Apply Quick Template',
+      description: 'Use recommended templates to create multiple chores instantly',
+      icon: 'flash',
+      color: colors.primary,
+      requiresChores: false
+    },
+    {
+      id: 'template_browse_apply',
+      title: 'Browse & Apply Templates',
+      description: 'Choose from full template library with filtering and preview',
+      icon: 'library',
+      color: colors.secondary,
+      requiresChores: false
+    },
+    {
       id: 'create_multiple',
       title: 'Create Multiple Chores',
-      description: 'Create several chores at once from template or custom list',
+      description: 'Create several chores at once with custom settings',
       icon: 'add-circle',
       color: colors.success,
       requiresChores: false
@@ -120,6 +140,16 @@ export function BulkChoreOperations({
   const handleOperationSelect = (operation: BulkOperation | string) => {
     if (operation === 'ai_assistant') {
       setShowAIAssistant(true);
+      return;
+    }
+    
+    if (operation === 'template_quick_apply') {
+      setShowTemplateQuickPicker(true);
+      return;
+    }
+    
+    if (operation === 'template_browse_apply') {
+      setShowTemplateLibrary(true);
       return;
     }
     
@@ -207,6 +237,23 @@ export function BulkChoreOperations({
     if (result.warnings && result.warnings.length > 0) {
       console.warn('Operation completed with warnings:', result.warnings);
     }
+  };
+
+  const handleTemplateApplied = (templateId: string, choreCount: number) => {
+    Toast.show(
+      `Successfully created ${choreCount} chores from template!`,
+      'success'
+    );
+    
+    // Notify parent component about the operation
+    onOperationComplete('create_multiple', choreCount);
+    
+    // Close template modals
+    setShowTemplateQuickPicker(false);
+    setShowTemplateLibrary(false);
+    
+    // Close the bulk operations modal
+    onClose();
   };
 
   const renderOperationCard = (option: OperationOption) => {
@@ -351,6 +398,21 @@ export function BulkChoreOperations({
           }}
         />
       )}
+      
+      {/* Template Integration Modals */}
+      <TemplateQuickPicker
+        visible={showTemplateQuickPicker}
+        onClose={() => setShowTemplateQuickPicker(false)}
+        onTemplateApplied={handleTemplateApplied}
+        mode="quick"
+        compact={false}
+      />
+
+      <TemplateLibrary
+        visible={showTemplateLibrary}
+        onClose={() => setShowTemplateLibrary(false)}
+        onTemplateApplied={handleTemplateApplied}
+      />
     </Modal>
   );
 }
