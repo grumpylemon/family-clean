@@ -1,1 +1,503 @@
-import React, { useState, useEffect } from 'react';\nimport { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, FlatList } from 'react-native';\nimport { Ionicons } from '@expo/vector-icons';\nimport { ChoreCompletionHistory, PerformanceMetrics } from '../../types';\nimport { choreCardService } from '../../services/choreCardService';\n\ninterface Props {\n  choreId: string;\n  userId: string;\n  choreTitle: string;\n  visible: boolean;\n  onClose: () => void;\n}\n\nconst PerformanceHistory: React.FC<Props> = ({\n  choreId,\n  userId,\n  choreTitle,\n  visible,\n  onClose\n}) => {\n  const [completionHistory, setCompletionHistory] = useState<ChoreCompletionHistory[]>([]);\n  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);\n  const [loading, setLoading] = useState(true);\n\n  useEffect(() => {\n    if (visible) {\n      loadPerformanceData();\n    }\n  }, [visible, choreId, userId]);\n\n  const loadPerformanceData = async () => {\n    try {\n      setLoading(true);\n      const [history, metrics] = await Promise.all([\n        choreCardService.getCompletionHistory(userId, choreId, 20),\n        choreCardService.getPerformanceMetrics(userId, choreId)\n      ]);\n      \n      setCompletionHistory(history);\n      setPerformanceMetrics(metrics);\n    } catch (error) {\n      console.error('Error loading performance data:', error);\n    } finally {\n      setLoading(false);\n    }\n  };\n\n  const getQualityColor = (rating: string) => {\n    switch (rating) {\n      case 'excellent': return '#be185d';\n      case 'complete': return '#10b981';\n      case 'partial': return '#f59e0b';\n      case 'incomplete': return '#ef4444';\n      default: return '#6b7280';\n    }\n  };\n\n  const getQualityIcon = (rating: string) => {\n    switch (rating) {\n      case 'excellent': return 'star';\n      case 'complete': return 'checkmark-circle';\n      case 'partial': return 'remove-circle';\n      case 'incomplete': return 'close-circle';\n      default: return 'help-circle';\n    }\n  };\n\n  const getSatisfactionEmoji = (rating: number) => {\n    switch (rating) {\n      case 1: return '😤';\n      case 2: return '😕';\n      case 3: return '😐';\n      case 4: return '🙂';\n      case 5: return '😊';\n      default: return '😐';\n    }\n  };\n\n  const formatDuration = (minutes: number) => {\n    if (minutes < 60) {\n      return `${minutes}m`;\n    }\n    const hours = Math.floor(minutes / 60);\n    const mins = minutes % 60;\n    return `${hours}h ${mins}m`;\n  };\n\n  const renderCompletionItem = ({ item, index }: { item: ChoreCompletionHistory; index: number }) => {\n    const qualityColor = getQualityColor(item.qualityRating);\n    const qualityIcon = getQualityIcon(item.qualityRating);\n    \n    return (\n      <View style={styles.completionItem}>\n        <View style={styles.completionHeader}>\n          <View style={styles.completionLeft}>\n            <View style={[styles.qualityBadge, { backgroundColor: qualityColor }]}>\n              <Ionicons name={qualityIcon as any} size={16} color=\"#ffffff\" />\n            </View>\n            <View style={styles.completionInfo}>\n              <Text style={styles.completionTitle}>\n                {item.qualityRating.charAt(0).toUpperCase() + item.qualityRating.slice(1)}\n              </Text>\n              <Text style={styles.completionDate}>\n                {new Date(item.completedAt).toLocaleDateString()}\n              </Text>\n            </View>\n          </View>\n          \n          <View style={styles.completionRight}>\n            <Text style={styles.satisfactionEmoji}>\n              {getSatisfactionEmoji(item.satisfactionRating)}\n            </Text>\n            <Text style={styles.timeText}>\n              {formatDuration(item.timeToComplete)}\n            </Text>\n          </View>\n        </View>\n        \n        <View style={styles.completionDetails}>\n          <View style={styles.pointsEarned}>\n            <Text style={styles.pointsText}>{item.pointsEarned} pts</Text>\n            <Text style={styles.xpText}>{item.xpEarned} XP</Text>\n          </View>\n          \n          {item.comments && (\n            <Text style={styles.commentText}>\"{item.comments}\"</Text>\n          )}\n        </View>\n      </View>\n    );\n  };\n\n  const renderMetricCard = (title: string, value: string | number, subtitle?: string, icon?: string, color = '#be185d') => (\n    <View style={styles.metricCard}>\n      {icon && (\n        <Ionicons name={icon as any} size={24} color={color} style={styles.metricIcon} />\n      )}\n      <Text style={[styles.metricValue, { color }]}>{value}</Text>\n      <Text style={styles.metricTitle}>{title}</Text>\n      {subtitle && (\n        <Text style={styles.metricSubtitle}>{subtitle}</Text>\n      )}\n    </View>\n  );\n\n  if (loading) {\n    return (\n      <Modal visible={visible} animationType=\"slide\" presentationStyle=\"pageSheet\">\n        <View style={styles.loadingContainer}>\n          <Text style={styles.loadingText}>Loading performance data...</Text>\n        </View>\n      </Modal>\n    );\n  }\n\n  return (\n    <Modal\n      visible={visible}\n      animationType=\"slide\"\n      presentationStyle=\"pageSheet\"\n      onRequestClose={onClose}\n    >\n      <View style={styles.container}>\n        {/* Header */}\n        <View style={styles.header}>\n          <TouchableOpacity style={styles.closeButton} onPress={onClose}>\n            <Ionicons name=\"close\" size={24} color=\"#831843\" />\n          </TouchableOpacity>\n          <View style={styles.headerTitle}>\n            <Text style={styles.title}>Performance History</Text>\n            <Text style={styles.subtitle}>{choreTitle}</Text>\n          </View>\n          <View style={styles.placeholder} />\n        </View>\n\n        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>\n          {/* Performance Metrics */}\n          {performanceMetrics && (\n            <View style={styles.metricsSection}>\n              <Text style={styles.sectionTitle}>📊 Your Stats</Text>\n              \n              <View style={styles.metricsGrid}>\n                {renderMetricCard(\n                  'Completions',\n                  performanceMetrics.totalCompletions,\n                  'Total times',\n                  'checkmark-done',\n                  '#10b981'\n                )}\n                \n                {renderMetricCard(\n                  'Quality',\n                  (performanceMetrics.averageQualityRating * 100).toFixed(0) + '%',\n                  'Average rating',\n                  'star',\n                  '#be185d'\n                )}\n                \n                {renderMetricCard(\n                  'Satisfaction',\n                  getSatisfactionEmoji(Math.round(performanceMetrics.averageSatisfactionRating)),\n                  `${performanceMetrics.averageSatisfactionRating.toFixed(1)}/5`,\n                  'heart',\n                  '#f59e0b'\n                )}\n                \n                {renderMetricCard(\n                  'Avg Time',\n                  formatDuration(Math.round(performanceMetrics.averageCompletionTime)),\n                  'Per completion',\n                  'time',\n                  '#6b7280'\n                )}\n              </View>\n              \n              {performanceMetrics.excellentCount > 0 && (\n                <View style={styles.achievementBadge}>\n                  <Ionicons name=\"trophy\" size={20} color=\"#be185d\" />\n                  <Text style={styles.achievementText}>\n                    🌟 {performanceMetrics.excellentCount} Excellent completion{performanceMetrics.excellentCount !== 1 ? 's' : ''}!\n                  </Text>\n                </View>\n              )}\n              \n              {performanceMetrics.qualityStreak > 0 && (\n                <View style={styles.streakBadge}>\n                  <Ionicons name=\"flame\" size={20} color=\"#ef4444\" />\n                  <Text style={styles.streakText}>\n                    🔥 {performanceMetrics.qualityStreak} excellent streak!\n                  </Text>\n                </View>\n              )}\n            </View>\n          )}\n\n          {/* Completion History */}\n          <View style={styles.historySection}>\n            <Text style={styles.sectionTitle}>📋 Recent Completions</Text>\n            \n            {completionHistory.length > 0 ? (\n              <FlatList\n                data={completionHistory}\n                renderItem={renderCompletionItem}\n                keyExtractor={(item, index) => `${item.id || index}`}\n                scrollEnabled={false}\n                showsVerticalScrollIndicator={false}\n              />\n            ) : (\n              <View style={styles.emptyState}>\n                <Ionicons name=\"document-text-outline\" size={48} color=\"#d1d5db\" />\n                <Text style={styles.emptyTitle}>No completion history yet</Text>\n                <Text style={styles.emptySubtitle}>\n                  Complete this task to start tracking your performance!\n                </Text>\n              </View>\n            )}\n          </View>\n        </ScrollView>\n      </View>\n    </Modal>\n  );\n};\n\nconst styles = StyleSheet.create({\n  container: {\n    flex: 1,\n    backgroundColor: '#fdf2f8',\n  },\n  loadingContainer: {\n    flex: 1,\n    justifyContent: 'center',\n    alignItems: 'center',\n    backgroundColor: '#fdf2f8',\n  },\n  loadingText: {\n    fontSize: 16,\n    color: '#831843',\n    fontWeight: '500',\n  },\n  header: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    justifyContent: 'space-between',\n    paddingHorizontal: 20,\n    paddingTop: 20,\n    paddingBottom: 16,\n    backgroundColor: '#ffffff',\n    borderBottomWidth: 1,\n    borderBottomColor: '#f9a8d4',\n  },\n  closeButton: {\n    padding: 8,\n  },\n  headerTitle: {\n    flex: 1,\n    alignItems: 'center',\n  },\n  title: {\n    fontSize: 18,\n    fontWeight: '700',\n    color: '#831843',\n  },\n  subtitle: {\n    fontSize: 14,\n    color: '#9f1239',\n    fontWeight: '500',\n    marginTop: 2,\n  },\n  placeholder: {\n    width: 40,\n  },\n  content: {\n    flex: 1,\n    paddingHorizontal: 20,\n  },\n  metricsSection: {\n    marginTop: 20,\n    marginBottom: 24,\n  },\n  sectionTitle: {\n    fontSize: 20,\n    fontWeight: '700',\n    color: '#831843',\n    marginBottom: 16,\n  },\n  metricsGrid: {\n    flexDirection: 'row',\n    flexWrap: 'wrap',\n    gap: 12,\n    marginBottom: 16,\n  },\n  metricCard: {\n    flex: 1,\n    minWidth: '45%',\n    backgroundColor: '#ffffff',\n    borderRadius: 16,\n    padding: 16,\n    alignItems: 'center',\n    shadowColor: '#be185d',\n    shadowOffset: { width: 0, height: 2 },\n    shadowOpacity: 0.06,\n    shadowRadius: 8,\n    elevation: 3,\n  },\n  metricIcon: {\n    marginBottom: 8,\n  },\n  metricValue: {\n    fontSize: 24,\n    fontWeight: '700',\n    marginBottom: 4,\n  },\n  metricTitle: {\n    fontSize: 14,\n    fontWeight: '600',\n    color: '#6b7280',\n    textAlign: 'center',\n  },\n  metricSubtitle: {\n    fontSize: 12,\n    color: '#9ca3af',\n    textAlign: 'center',\n    marginTop: 2,\n  },\n  achievementBadge: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    backgroundColor: '#fef7ff',\n    padding: 12,\n    borderRadius: 12,\n    marginBottom: 8,\n    borderWidth: 1,\n    borderColor: '#f9a8d4',\n  },\n  achievementText: {\n    fontSize: 14,\n    fontWeight: '600',\n    color: '#be185d',\n    marginLeft: 8,\n  },\n  streakBadge: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    backgroundColor: '#fef2f2',\n    padding: 12,\n    borderRadius: 12,\n    borderWidth: 1,\n    borderColor: '#fecaca',\n  },\n  streakText: {\n    fontSize: 14,\n    fontWeight: '600',\n    color: '#ef4444',\n    marginLeft: 8,\n  },\n  historySection: {\n    marginBottom: 24,\n  },\n  completionItem: {\n    backgroundColor: '#ffffff',\n    borderRadius: 16,\n    padding: 16,\n    marginBottom: 12,\n    shadowColor: '#be185d',\n    shadowOffset: { width: 0, height: 2 },\n    shadowOpacity: 0.04,\n    shadowRadius: 8,\n    elevation: 2,\n  },\n  completionHeader: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    justifyContent: 'space-between',\n    marginBottom: 12,\n  },\n  completionLeft: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    flex: 1,\n  },\n  qualityBadge: {\n    width: 32,\n    height: 32,\n    borderRadius: 16,\n    alignItems: 'center',\n    justifyContent: 'center',\n    marginRight: 12,\n  },\n  completionInfo: {\n    flex: 1,\n  },\n  completionTitle: {\n    fontSize: 16,\n    fontWeight: '600',\n    color: '#374151',\n    marginBottom: 2,\n  },\n  completionDate: {\n    fontSize: 12,\n    color: '#9ca3af',\n    fontWeight: '500',\n  },\n  completionRight: {\n    alignItems: 'center',\n  },\n  satisfactionEmoji: {\n    fontSize: 20,\n    marginBottom: 4,\n  },\n  timeText: {\n    fontSize: 12,\n    color: '#6b7280',\n    fontWeight: '500',\n  },\n  completionDetails: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    justifyContent: 'space-between',\n  },\n  pointsEarned: {\n    flexDirection: 'row',\n    alignItems: 'center',\n  },\n  pointsText: {\n    fontSize: 14,\n    fontWeight: '600',\n    color: '#be185d',\n    marginRight: 8,\n  },\n  xpText: {\n    fontSize: 14,\n    fontWeight: '600',\n    color: '#9f1239',\n  },\n  commentText: {\n    fontSize: 12,\n    color: '#6b7280',\n    fontStyle: 'italic',\n    flex: 1,\n    textAlign: 'right',\n    marginLeft: 16,\n  },\n  emptyState: {\n    alignItems: 'center',\n    paddingVertical: 48,\n  },\n  emptyTitle: {\n    fontSize: 18,\n    fontWeight: '600',\n    color: '#6b7280',\n    marginTop: 16,\n    marginBottom: 8,\n  },\n  emptySubtitle: {\n    fontSize: 14,\n    color: '#9ca3af',\n    textAlign: 'center',\n    lineHeight: 20,\n  },\n});\n\nexport default PerformanceHistory;"
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, FlatList } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { ChoreCompletionHistory, PerformanceMetrics } from '../../types';
+import { choreCardService } from '../../services/choreCardService';
+
+interface Props {
+  choreId: string;
+  userId: string;
+  choreTitle: string;
+  visible: boolean;
+  onClose: () => void;
+}
+
+const PerformanceHistory: React.FC<Props> = ({
+  choreId,
+  userId,
+  choreTitle,
+  visible,
+  onClose
+}) => {
+  const [completionHistory, setCompletionHistory] = useState<ChoreCompletionHistory[]>([]);
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (visible) {
+      loadPerformanceData();
+    }
+  }, [visible, choreId, userId]);
+
+  const loadPerformanceData = async () => {
+    try {
+      setLoading(true);
+      const [history, metrics] = await Promise.all([
+        choreCardService.getCompletionHistory(userId, choreId, 20),
+        choreCardService.getPerformanceMetrics(userId, choreId)
+      ]);
+      
+      setCompletionHistory(history);
+      setPerformanceMetrics(metrics);
+    } catch (error) {
+      console.error('Error loading performance data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getQualityColor = (rating: string) => {
+    switch (rating) {
+      case 'excellent': return '#be185d';
+      case 'complete': return '#10b981';
+      case 'partial': return '#f59e0b';
+      case 'incomplete': return '#ef4444';
+      default: return '#6b7280';
+    }
+  };
+
+  const getQualityIcon = (rating: string) => {
+    switch (rating) {
+      case 'excellent': return 'star';
+      case 'complete': return 'checkmark-circle';
+      case 'partial': return 'remove-circle';
+      case 'incomplete': return 'close-circle';
+      default: return 'help-circle';
+    }
+  };
+
+  const getSatisfactionEmoji = (rating: number) => {
+    switch (rating) {
+      case 1: return '😤';
+      case 2: return '😕';
+      case 3: return '😐';
+      case 4: return '🙂';
+      case 5: return '😊';
+      default: return '😐';
+    }
+  };
+
+  const formatDuration = (minutes: number) => {
+    if (minutes < 60) {
+      return `${minutes}m`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
+  const renderCompletionItem = ({ item, index }: { item: ChoreCompletionHistory; index: number }) => {
+    const qualityColor = getQualityColor(item.qualityRating);
+    const qualityIcon = getQualityIcon(item.qualityRating);
+    
+    return (
+      <View style={styles.completionItem}>
+        <View style={styles.completionHeader}>
+          <View style={styles.completionLeft}>
+            <View style={[styles.qualityBadge, { backgroundColor: qualityColor }]}>
+              <Ionicons name={qualityIcon as any} size={16} color="#ffffff" />
+            </View>
+            <View style={styles.completionInfo}>
+              <Text style={styles.completionTitle}>
+                {item.qualityRating.charAt(0).toUpperCase() + item.qualityRating.slice(1)}
+              </Text>
+              <Text style={styles.completionDate}>
+                {new Date(item.completedAt).toLocaleDateString()}
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.completionRight}>
+            <Text style={styles.satisfactionEmoji}>
+              {getSatisfactionEmoji(item.satisfactionRating)}
+            </Text>
+            <Text style={styles.timeText}>
+              {formatDuration(item.timeToComplete)}
+            </Text>
+          </View>
+        </View>
+        
+        <View style={styles.completionDetails}>
+          <View style={styles.pointsEarned}>
+            <Text style={styles.pointsText}>{item.pointsEarned} pts</Text>
+            <Text style={styles.xpText}>{item.xpEarned} XP</Text>
+          </View>
+          
+          {item.comments && (
+            <Text style={styles.commentText}>"{item.comments}"</Text>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const renderMetricCard = (title: string, value: string | number, subtitle?: string, icon?: string, color = '#be185d') => (
+    <View style={styles.metricCard}>
+      {icon && (
+        <Ionicons name={icon as any} size={24} color={color} style={styles.metricIcon} />
+      )}
+      <Text style={[styles.metricValue, { color }]}>{value}</Text>
+      <Text style={styles.metricTitle}>{title}</Text>
+      {subtitle && (
+        <Text style={styles.metricSubtitle}>{subtitle}</Text>
+      )}
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading performance data...</Text>
+        </View>
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Ionicons name="close" size={24} color="#831843" />
+          </TouchableOpacity>
+          <View style={styles.headerTitle}>
+            <Text style={styles.title}>Performance History</Text>
+            <Text style={styles.subtitle}>{choreTitle}</Text>
+          </View>
+          <View style={styles.placeholder} />
+        </View>
+
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Performance Metrics */}
+          {performanceMetrics && (
+            <View style={styles.metricsSection}>
+              <Text style={styles.sectionTitle}>📊 Your Stats</Text>
+              
+              <View style={styles.metricsGrid}>
+                {renderMetricCard(
+                  'Completions',
+                  performanceMetrics.totalCompletions,
+                  'Total times',
+                  'checkmark-done',
+                  '#10b981'
+                )}
+                
+                {renderMetricCard(
+                  'Quality',
+                  (performanceMetrics.averageQualityRating * 100).toFixed(0) + '%',
+                  'Average rating',
+                  'star',
+                  '#be185d'
+                )}
+                
+                {renderMetricCard(
+                  'Satisfaction',
+                  getSatisfactionEmoji(Math.round(performanceMetrics.averageSatisfactionRating)),
+                  `${performanceMetrics.averageSatisfactionRating.toFixed(1)}/5`,
+                  'heart',
+                  '#f59e0b'
+                )}
+                
+                {renderMetricCard(
+                  'Avg Time',
+                  formatDuration(Math.round(performanceMetrics.averageCompletionTime)),
+                  'Per completion',
+                  'time',
+                  '#6b7280'
+                )}
+              </View>
+              
+              {performanceMetrics.excellentCount > 0 && (
+                <View style={styles.achievementBadge}>
+                  <Ionicons name="trophy" size={20} color="#be185d" />
+                  <Text style={styles.achievementText}>
+                    🌟 {performanceMetrics.excellentCount} Excellent completion{performanceMetrics.excellentCount !== 1 ? 's' : ''}!
+                  </Text>
+                </View>
+              )}
+              
+              {performanceMetrics.qualityStreak > 0 && (
+                <View style={styles.streakBadge}>
+                  <Ionicons name="flame" size={20} color="#ef4444" />
+                  <Text style={styles.streakText}>
+                    🔥 {performanceMetrics.qualityStreak} excellent streak!
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Completion History */}
+          <View style={styles.historySection}>
+            <Text style={styles.sectionTitle}>📋 Recent Completions</Text>
+            
+            {completionHistory.length > 0 ? (
+              <FlatList
+                data={completionHistory}
+                renderItem={renderCompletionItem}
+                keyExtractor={(item, index) => `${item.id || index}`}
+                scrollEnabled={false}
+                showsVerticalScrollIndicator={false}
+              />
+            ) : (
+              <View style={styles.emptyState}>
+                <Ionicons name="document-text-outline" size={48} color="#d1d5db" />
+                <Text style={styles.emptyTitle}>No completion history yet</Text>
+                <Text style={styles.emptySubtitle}>
+                  Complete this task to start tracking your performance!
+                </Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fdf2f8',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fdf2f8',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#831843',
+    fontWeight: '500',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f9a8d4',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#831843',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#9f1239',
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  placeholder: {
+    width: 40,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  metricsSection: {
+    marginTop: 20,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#831843',
+    marginBottom: 16,
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 16,
+  },
+  metricCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  metricIcon: {
+    marginBottom: 8,
+  },
+  metricValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  metricTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  metricSubtitle: {
+    fontSize: 12,
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  achievementBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef7ff',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#f9a8d4',
+  },
+  achievementText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#be185d',
+    marginLeft: 8,
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef2f2',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  streakText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ef4444',
+    marginLeft: 8,
+  },
+  historySection: {
+    marginBottom: 24,
+  },
+  completionItem: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  completionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  completionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  qualityBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  completionInfo: {
+    flex: 1,
+  },
+  completionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 2,
+  },
+  completionDate: {
+    fontSize: 12,
+    color: '#9ca3af',
+    fontWeight: '500',
+  },
+  completionRight: {
+    alignItems: 'center',
+  },
+  satisfactionEmoji: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  timeText: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  completionDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  pointsEarned: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pointsText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#be185d',
+    marginRight: 8,
+  },
+  xpText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#9f1239',
+  },
+  commentText: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontStyle: 'italic',
+    flex: 1,
+    textAlign: 'right',
+    marginLeft: 16,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 48,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#6b7280',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+});
+
+export default PerformanceHistory;

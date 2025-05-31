@@ -1,1 +1,310 @@
-import React, { useState, useEffect } from 'react';\nimport { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';\nimport { Ionicons } from '@expo/vector-icons';\nimport { ChoreCardCertification, UserCertificationStatus, CertificationLevel } from '../../types';\nimport { choreCardService } from '../../services/choreCardService';\n\ninterface Props {\n  choreId: string;\n  userId: string;\n  certification: ChoreCardCertification;\n}\n\nconst CertificationBadge: React.FC<Props> = ({\n  choreId,\n  userId,\n  certification\n}) => {\n  const [certificationStatus, setCertificationStatus] = useState<UserCertificationStatus | null>(null);\n  const [loading, setLoading] = useState(true);\n\n  useEffect(() => {\n    loadCertificationStatus();\n  }, [choreId, userId]);\n\n  const loadCertificationStatus = async () => {\n    try {\n      setLoading(true);\n      const status = await choreCardService.getCertificationStatus(userId, choreId);\n      setCertificationStatus(status);\n    } catch (error) {\n      console.error('Error loading certification status:', error);\n    } finally {\n      setLoading(false);\n    }\n  };\n\n  const handleCertificationPress = () => {\n    const status = certificationStatus?.status || 'not_started';\n    \n    switch (status) {\n      case 'not_started':\n        Alert.alert(\n          'Certification Required',\n          `This task requires ${certification.level} level certification. Would you like to start the training process?`,\n          [\n            { text: 'Not Now', style: 'cancel' },\n            { text: 'Start Training', onPress: startTraining }\n          ]\n        );\n        break;\n      \n      case 'in_progress':\n        Alert.alert(\n          'Training in Progress',\n          'You are currently working on certification for this task. Continue with your assigned trainer.',\n          [{ text: 'OK' }]\n        );\n        break;\n      \n      case 'expired':\n        Alert.alert(\n          'Certification Expired',\n          'Your certification for this task has expired. You need to complete re-certification.',\n          [\n            { text: 'Not Now', style: 'cancel' },\n            { text: 'Re-Certify', onPress: startRecertification }\n          ]\n        );\n        break;\n      \n      case 'probation':\n        Alert.alert(\n          'Certification on Probation',\n          'Your certification is currently under review. Please complete additional training.',\n          [{ text: 'OK' }]\n        );\n        break;\n      \n      case 'certified':\n        Alert.alert(\n          'Certified ✅',\n          `You are certified at ${certification.level} level for this task.${certificationStatus?.expiresAt ? ` Expires: ${new Date(certificationStatus.expiresAt).toLocaleDateString()}` : ''}`,\n          [{ text: 'OK' }]\n        );\n        break;\n    }\n  };\n\n  const startTraining = async () => {\n    try {\n      const newStatus: UserCertificationStatus = {\n        choreId,\n        userId,\n        status: 'in_progress',\n        level: certification.level,\n        probationCount: 0\n      };\n      \n      await choreCardService.updateCertificationStatus(newStatus);\n      setCertificationStatus(newStatus);\n      \n      Alert.alert(\n        'Training Started',\n        'Your certification training has begun. A family trainer will be assigned to help you.',\n        [{ text: 'Great!' }]\n      );\n    } catch (error) {\n      console.error('Error starting training:', error);\n      Alert.alert('Error', 'Unable to start training. Please try again.');\n    }\n  };\n\n  const startRecertification = async () => {\n    try {\n      const updatedStatus: UserCertificationStatus = {\n        ...certificationStatus!,\n        status: 'in_progress'\n      };\n      \n      await choreCardService.updateCertificationStatus(updatedStatus);\n      setCertificationStatus(updatedStatus);\n      \n      Alert.alert(\n        'Re-certification Started',\n        'Your re-certification process has begun.',\n        [{ text: 'OK' }]\n      );\n    } catch (error) {\n      console.error('Error starting re-certification:', error);\n      Alert.alert('Error', 'Unable to start re-certification. Please try again.');\n    }\n  };\n\n  const getBadgeStyle = () => {\n    const status = certificationStatus?.status || 'not_started';\n    \n    switch (status) {\n      case 'certified':\n        return {\n          backgroundColor: '#f0fdf4',\n          borderColor: '#10b981',\n          icon: 'shield-checkmark',\n          iconColor: '#10b981',\n          textColor: '#166534'\n        };\n      \n      case 'in_progress':\n        return {\n          backgroundColor: '#fefce8',\n          borderColor: '#f59e0b',\n          icon: 'school',\n          iconColor: '#f59e0b',\n          textColor: '#92400e'\n        };\n      \n      case 'expired':\n        return {\n          backgroundColor: '#fef2f2',\n          borderColor: '#ef4444',\n          icon: 'time',\n          iconColor: '#ef4444',\n          textColor: '#dc2626'\n        };\n      \n      case 'probation':\n        return {\n          backgroundColor: '#fdf4ff',\n          borderColor: '#a855f7',\n          icon: 'warning',\n          iconColor: '#a855f7',\n          textColor: '#7c3aed'\n        };\n      \n      default: // not_started\n        return {\n          backgroundColor: '#f1f5f9',\n          borderColor: '#64748b',\n          icon: 'lock-closed',\n          iconColor: '#64748b',\n          textColor: '#475569'\n        };\n    }\n  };\n\n  const getBadgeText = () => {\n    const status = certificationStatus?.status || 'not_started';\n    const level = certification.level;\n    \n    switch (status) {\n      case 'certified':\n        return `${level.charAt(0).toUpperCase() + level.slice(1)} Certified`;\n      case 'in_progress':\n        return `${level.charAt(0).toUpperCase() + level.slice(1)} Training`;\n      case 'expired':\n        return `${level.charAt(0).toUpperCase() + level.slice(1)} Expired`;\n      case 'probation':\n        return `${level.charAt(0).toUpperCase() + level.slice(1)} Review`;\n      default:\n        return `${level.charAt(0).toUpperCase() + level.slice(1)} Required`;\n    }\n  };\n\n  if (loading) {\n    return (\n      <View style={styles.loadingBadge}>\n        <Text style={styles.loadingText}>Loading certification...</Text>\n      </View>\n    );\n  }\n\n  if (!certification.required) {\n    return null;\n  }\n\n  const badgeStyle = getBadgeStyle();\n\n  return (\n    <TouchableOpacity \n      style={[\n        styles.certificationBadge,\n        { \n          backgroundColor: badgeStyle.backgroundColor,\n          borderColor: badgeStyle.borderColor\n        }\n      ]}\n      onPress={handleCertificationPress}\n      activeOpacity={0.7}\n    >\n      <View style={styles.badgeContent}>\n        <Ionicons \n          name={badgeStyle.icon as any} \n          size={18} \n          color={badgeStyle.iconColor} \n        />\n        <View style={styles.badgeText}>\n          <Text style={[styles.badgeTitle, { color: badgeStyle.textColor }]}>\n            {getBadgeText()}\n          </Text>\n          {certification.skills && certification.skills.length > 0 && (\n            <Text style={[styles.badgeSubtitle, { color: badgeStyle.textColor }]}>\n              Skills: {certification.skills.join(', ')}\n            </Text>\n          )}\n        </View>\n        <Ionicons \n          name=\"information-circle-outline\" \n          size={16} \n          color={badgeStyle.iconColor} \n        />\n      </View>\n      \n      {certificationStatus?.status === 'certified' && certificationStatus.expiresAt && (\n        <Text style={[styles.expiryText, { color: badgeStyle.textColor }]}>\n          Expires: {new Date(certificationStatus.expiresAt).toLocaleDateString()}\n        </Text>\n      )}\n    </TouchableOpacity>\n  );\n};\n\nconst styles = StyleSheet.create({\n  certificationBadge: {\n    marginHorizontal: 20,\n    marginTop: 8,\n    padding: 16,\n    borderRadius: 16,\n    borderWidth: 2,\n  },\n  loadingBadge: {\n    marginHorizontal: 20,\n    marginTop: 8,\n    padding: 16,\n    borderRadius: 16,\n    backgroundColor: '#f1f5f9',\n    alignItems: 'center',\n  },\n  loadingText: {\n    fontSize: 14,\n    color: '#64748b',\n    fontWeight: '500',\n  },\n  badgeContent: {\n    flexDirection: 'row',\n    alignItems: 'center',\n  },\n  badgeText: {\n    flex: 1,\n    marginLeft: 12,\n    marginRight: 8,\n  },\n  badgeTitle: {\n    fontSize: 14,\n    fontWeight: '700',\n    marginBottom: 2,\n  },\n  badgeSubtitle: {\n    fontSize: 12,\n    fontWeight: '500',\n    opacity: 0.8,\n  },\n  expiryText: {\n    fontSize: 11,\n    fontWeight: '500',\n    textAlign: 'center',\n    marginTop: 8,\n    opacity: 0.7,\n  },\n});\n\nexport default CertificationBadge;"
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { ChoreCardCertification, UserCertificationStatus, CertificationLevel } from '../../types';
+import { choreCardService } from '../../services/choreCardService';
+
+interface Props {
+  choreId: string;
+  userId: string;
+  certification: ChoreCardCertification;
+}
+
+const CertificationBadge: React.FC<Props> = ({
+  choreId,
+  userId,
+  certification
+}) => {
+  const [certificationStatus, setCertificationStatus] = useState<UserCertificationStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadCertificationStatus();
+  }, [choreId, userId]);
+
+  const loadCertificationStatus = async () => {
+    try {
+      setLoading(true);
+      const status = await choreCardService.getCertificationStatus(userId, choreId);
+      setCertificationStatus(status);
+    } catch (error) {
+      console.error('Error loading certification status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCertificationPress = () => {
+    const status = certificationStatus?.status || 'not_started';
+    
+    switch (status) {
+      case 'not_started':
+        Alert.alert(
+          'Certification Required',
+          `This task requires ${certification.level} level certification. Would you like to start the training process?`,
+          [
+            { text: 'Not Now', style: 'cancel' },
+            { text: 'Start Training', onPress: startTraining }
+          ]
+        );
+        break;
+      
+      case 'in_progress':
+        Alert.alert(
+          'Training in Progress',
+          'You are currently working on certification for this task. Continue with your assigned trainer.',
+          [{ text: 'OK' }]
+        );
+        break;
+      
+      case 'expired':
+        Alert.alert(
+          'Certification Expired',
+          'Your certification for this task has expired. You need to complete re-certification.',
+          [
+            { text: 'Not Now', style: 'cancel' },
+            { text: 'Re-Certify', onPress: startRecertification }
+          ]
+        );
+        break;
+      
+      case 'probation':
+        Alert.alert(
+          'Certification on Probation',
+          'Your certification is currently under review. Please complete additional training.',
+          [{ text: 'OK' }]
+        );
+        break;
+      
+      case 'certified':
+        Alert.alert(
+          'Certified ✅',
+          `You are certified at ${certification.level} level for this task.${certificationStatus?.expiresAt ? ` Expires: ${new Date(certificationStatus.expiresAt).toLocaleDateString()}` : ''}`,
+          [{ text: 'OK' }]
+        );
+        break;
+    }
+  };
+
+  const startTraining = async () => {
+    try {
+      const newStatus: UserCertificationStatus = {
+        choreId,
+        userId,
+        status: 'in_progress',
+        level: certification.level,
+        probationCount: 0
+      };
+      
+      await choreCardService.updateCertificationStatus(newStatus);
+      setCertificationStatus(newStatus);
+      
+      Alert.alert(
+        'Training Started',
+        'Your certification training has begun. A family trainer will be assigned to help you.',
+        [{ text: 'Great!' }]
+      );
+    } catch (error) {
+      console.error('Error starting training:', error);
+      Alert.alert('Error', 'Unable to start training. Please try again.');
+    }
+  };
+
+  const startRecertification = async () => {
+    try {
+      const updatedStatus: UserCertificationStatus = {
+        ...certificationStatus!,
+        status: 'in_progress'
+      };
+      
+      await choreCardService.updateCertificationStatus(updatedStatus);
+      setCertificationStatus(updatedStatus);
+      
+      Alert.alert(
+        'Re-certification Started',
+        'Your re-certification process has begun.',
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      console.error('Error starting re-certification:', error);
+      Alert.alert('Error', 'Unable to start re-certification. Please try again.');
+    }
+  };
+
+  const getBadgeStyle = () => {
+    const status = certificationStatus?.status || 'not_started';
+    
+    switch (status) {
+      case 'certified':
+        return {
+          backgroundColor: '#f0fdf4',
+          borderColor: '#10b981',
+          icon: 'shield-checkmark',
+          iconColor: '#10b981',
+          textColor: '#166534'
+        };
+      
+      case 'in_progress':
+        return {
+          backgroundColor: '#fefce8',
+          borderColor: '#f59e0b',
+          icon: 'school',
+          iconColor: '#f59e0b',
+          textColor: '#92400e'
+        };
+      
+      case 'expired':
+        return {
+          backgroundColor: '#fef2f2',
+          borderColor: '#ef4444',
+          icon: 'time',
+          iconColor: '#ef4444',
+          textColor: '#dc2626'
+        };
+      
+      case 'probation':
+        return {
+          backgroundColor: '#fdf4ff',
+          borderColor: '#a855f7',
+          icon: 'warning',
+          iconColor: '#a855f7',
+          textColor: '#7c3aed'
+        };
+      
+      default: // not_started
+        return {
+          backgroundColor: '#f1f5f9',
+          borderColor: '#64748b',
+          icon: 'lock-closed',
+          iconColor: '#64748b',
+          textColor: '#475569'
+        };
+    }
+  };
+
+  const getBadgeText = () => {
+    const status = certificationStatus?.status || 'not_started';
+    const level = certification.level;
+    
+    switch (status) {
+      case 'certified':
+        return `${level.charAt(0).toUpperCase() + level.slice(1)} Certified`;
+      case 'in_progress':
+        return `${level.charAt(0).toUpperCase() + level.slice(1)} Training`;
+      case 'expired':
+        return `${level.charAt(0).toUpperCase() + level.slice(1)} Expired`;
+      case 'probation':
+        return `${level.charAt(0).toUpperCase() + level.slice(1)} Review`;
+      default:
+        return `${level.charAt(0).toUpperCase() + level.slice(1)} Required`;
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingBadge}>
+        <Text style={styles.loadingText}>Loading certification...</Text>
+      </View>
+    );
+  }
+
+  if (!certification.required) {
+    return null;
+  }
+
+  const badgeStyle = getBadgeStyle();
+
+  return (
+    <TouchableOpacity 
+      style={[
+        styles.certificationBadge,
+        { 
+          backgroundColor: badgeStyle.backgroundColor,
+          borderColor: badgeStyle.borderColor
+        }
+      ]}
+      onPress={handleCertificationPress}
+      activeOpacity={0.7}
+    >
+      <View style={styles.badgeContent}>
+        <Ionicons 
+          name={badgeStyle.icon as any} 
+          size={18} 
+          color={badgeStyle.iconColor} 
+        />
+        <View style={styles.badgeText}>
+          <Text style={[styles.badgeTitle, { color: badgeStyle.textColor }]}>
+            {getBadgeText()}
+          </Text>
+          {certification.skills && certification.skills.length > 0 && (
+            <Text style={[styles.badgeSubtitle, { color: badgeStyle.textColor }]}>
+              Skills: {certification.skills.join(', ')}
+            </Text>
+          )}
+        </View>
+        <Ionicons 
+          name="information-circle-outline" 
+          size={16} 
+          color={badgeStyle.iconColor} 
+        />
+      </View>
+      
+      {certificationStatus?.status === 'certified' && certificationStatus.expiresAt && (
+        <Text style={[styles.expiryText, { color: badgeStyle.textColor }]}>
+          Expires: {new Date(certificationStatus.expiresAt).toLocaleDateString()}
+        </Text>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  certificationBadge: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+  },
+  loadingBadge: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  badgeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  badgeText: {
+    flex: 1,
+    marginLeft: 12,
+    marginRight: 8,
+  },
+  badgeTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  badgeSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    opacity: 0.8,
+  },
+  expiryText: {
+    fontSize: 11,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: 8,
+    opacity: 0.7,
+  },
+});
+
+export default CertificationBadge;

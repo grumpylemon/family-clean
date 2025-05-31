@@ -21,6 +21,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { Toast } from '../../components/ui/Toast';
 import AdminSettings from '../../components/AdminSettings';
 import NotificationSettings from '../../components/NotificationSettings';
+import { AdvancedUserProfile } from '../../components/profile/AdvancedUserProfile';
 
 export default function SettingsScreen() {
   const { user } = useAuth();
@@ -28,94 +29,9 @@ export default function SettingsScreen() {
   const { canManageFamily } = useAccessControl();
   const { colors, theme, themeMode, setThemeMode, isLoading: themeLoading } = useTheme();
   
-  const [name, setName] = useState(user?.displayName || '');
   const [showAdminSettings, setShowAdminSettings] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
 
-  const handleChangeAvatar = async () => {
-    try {
-      // Check if platform supports image picker
-      if (Platform.OS === 'web') {
-        Alert.alert(
-          'Avatar Change',
-          'Avatar changing is currently available on mobile devices only. Web support coming soon!',
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-
-      // Dynamic import for expo-image-picker on mobile platforms only
-      const ImagePicker = await import('expo-image-picker');
-      
-      // Request permission for camera/photo library access
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (permissionResult.granted === false) {
-        Alert.alert(
-          'Permission Required', 
-          'Please grant permission to access your photo library to change your avatar.',
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-
-      // Show options for camera or library
-      Alert.alert(
-        'Change Avatar',
-        'Choose how you\'d like to update your profile picture',
-        [
-          {
-            text: 'Camera',
-            onPress: async () => {
-              const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-              if (cameraPermission.granted) {
-                const result = await ImagePicker.launchCameraAsync({
-                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                  allowsEditing: true,
-                  aspect: [1, 1],
-                  quality: 0.8,
-                });
-                
-                if (!result.canceled && result.assets[0]) {
-                  // TODO: Upload image and update user profile
-                  Toast.show('Avatar upload feature coming soon!', 'info');
-                  console.log('Selected image:', result.assets[0].uri);
-                }
-              }
-            }
-          },
-          {
-            text: 'Photo Library',
-            onPress: async () => {
-              const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 0.8,
-              });
-              
-              if (!result.canceled && result.assets[0]) {
-                // TODO: Upload image and update user profile  
-                Toast.show('Avatar upload feature coming soon!', 'info');
-                console.log('Selected image:', result.assets[0].uri);
-              }
-            }
-          },
-          {
-            text: 'Cancel',
-            style: 'cancel'
-          }
-        ]
-      );
-    } catch (error) {
-      console.error('Error changing avatar:', error);
-      Toast.show('Failed to change avatar. Please try again.', 'error');
-    }
-  };
-
-  const handleUpdateProfile = () => {
-    Toast.show('Profile update coming soon!', 'info');
-  };
 
   const handleToggleDarkMode = async (mode: 'light' | 'dark' | 'system') => {
     try {
@@ -134,14 +50,6 @@ export default function SettingsScreen() {
     }
   };
 
-  const getInitials = (name: string): string => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   // Show loading while theme is initializing or colors not available
   if (themeLoading || !colors) {
@@ -173,55 +81,6 @@ export default function SettingsScreen() {
       fontWeight: '700',
       color: colors.text,
       marginLeft: 12,
-    },
-    profileSection: {
-      alignItems: 'center',
-      paddingVertical: 24,
-      backgroundColor: colors.cardBackground,
-      marginBottom: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.divider,
-    },
-    avatarContainer: {
-      marginBottom: 16,
-    },
-    avatar: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    avatarText: {
-      fontSize: 32,
-      fontWeight: '700',
-      color: '#ffffff',
-    },
-    profileName: {
-      fontSize: 24,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 4,
-    },
-    profileEmail: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      marginBottom: 16,
-    },
-    changeAvatarButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.primary,
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      borderRadius: 20,
-      gap: 8,
-    },
-    changeAvatarText: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: theme === 'dark' ? colors.buttonText || '#ffffff' : '#ffffff',
     },
     section: {
       marginBottom: 24,
@@ -433,42 +292,11 @@ export default function SettingsScreen() {
       shadowRadius: 8,
       elevation: 3,
     },
-    profileForm: {
-      paddingTop: 16,
-    },
-    fieldLabel: {
+    emptyProfileText: {
       fontSize: 16,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 8,
-    },
-    textInput: {
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      fontSize: 16,
-      color: colors.text,
-      marginBottom: 16,
-    },
-    updateButton: {
-      backgroundColor: colors.primary,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 24,
-      alignItems: 'center',
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 6,
-      elevation: 4,
-    },
-    updateButtonText: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: theme === 'dark' ? colors.buttonText || '#ffffff' : '#ffffff',
+      color: colors.textSecondary,
+      textAlign: 'center',
+      padding: 20,
     },
   });
 
@@ -481,47 +309,25 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.content}>
-          {/* My Profile Section */}
+          {/* Enhanced User Profile Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>My Profile</Text>
-            <View style={styles.profileCard}>
-              <View style={styles.avatarContainer}>
-                <View style={styles.avatar}>
-                  {user?.photoURL ? (
-                    <View style={styles.avatarCircle}>
-                      <Text style={styles.avatarText}>
-                        {getInitials(user.displayName || 'User')}
-                      </Text>
-                    </View>
-                  ) : (
-                    <View style={styles.avatarCircle}>
-                      <Text style={styles.avatarText}>
-                        {getInitials(user?.displayName || 'User')}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <TouchableOpacity style={styles.changeAvatarButton} onPress={handleChangeAvatar}>
-                  <WebIcon name="camera" size={16} color={theme === 'dark' ? colors.buttonText || '#ffffff' : '#ffffff'} />
-                  <Text style={styles.changeAvatarText}>Change Avatar</Text>
-                </TouchableOpacity>
+            {user ? (
+              <AdvancedUserProfile
+                user={user}
+                onProfileUpdate={(updates) => {
+                  // Profile updates will be handled by the component
+                  console.log('Profile updated:', updates);
+                }}
+                canEdit={true}
+                showPrivacyControls={true}
+                viewerRole="member"
+              />
+            ) : (
+              <View style={styles.profileCard}>
+                <Text style={styles.emptyProfileText}>Please log in to manage your profile</Text>
               </View>
-
-              <View style={styles.profileForm}>
-                <Text style={styles.fieldLabel}>My Name</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Enter your name"
-                  placeholderTextColor="#9ca3af"
-                />
-
-                <TouchableOpacity style={styles.updateButton} onPress={handleUpdateProfile}>
-                  <Text style={styles.updateButtonText}>Update Profile</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            )}
           </View>
 
           {/* Admin Section */}

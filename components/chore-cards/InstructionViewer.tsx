@@ -1,4 +1,530 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AdvancedChoreCard, InstructionSet, AgeGroup } from '../../types';\n\ninterface Props {\n  advancedCard: AdvancedChoreCard;\n  userAge?: number;\n  visible: boolean;\n  onClose: () => void;\n  onStepComplete: (stepId: string) => void;\n}\n\nconst InstructionViewer: React.FC<Props> = ({\n  advancedCard,\n  userAge,\n  visible,\n  onClose,\n  onStepComplete\n}) => {\n  const [currentStepIndex, setCurrentStepIndex] = useState(0);\n  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());\n  const [instructions, setInstructions] = useState<InstructionSet | null>(null);\n\n  useEffect(() => {\n    if (visible && advancedCard.instructions) {\n      // Determine age group\n      const ageGroup: AgeGroup = userAge && userAge <= 8 ? 'child' : \n                                 userAge && userAge <= 12 ? 'teen' : 'adult';\n      \n      // Get appropriate instructions\n      const instructionSet = advancedCard.instructions[ageGroup] ||\n                            advancedCard.instructions.adult ||\n                            advancedCard.instructions.teen ||\n                            advancedCard.instructions.child;\n      \n      setInstructions(instructionSet);\n      setCurrentStepIndex(0);\n      setCompletedSteps(new Set());\n    }\n  }, [visible, advancedCard, userAge]);\n\n  const handleStepComplete = (stepId: string) => {\n    const newCompleted = new Set(completedSteps);\n    newCompleted.add(stepId);\n    setCompletedSteps(newCompleted);\n    onStepComplete(stepId);\n\n    // Auto-advance to next step\n    if (instructions && currentStepIndex < instructions.steps.length - 1) {\n      setCurrentStepIndex(currentStepIndex + 1);\n    }\n  };\n\n  const handleStepUncomplete = (stepId: string) => {\n    const newCompleted = new Set(completedSteps);\n    newCompleted.delete(stepId);\n    setCompletedSteps(newCompleted);\n  };\n\n  const goToStep = (index: number) => {\n    setCurrentStepIndex(index);\n  };\n\n  const getSafetyIcon = (level: string) => {\n    switch (level) {\n      case 'caution': return { icon: 'warning-outline', color: '#f59e0b' };\n      case 'warning': return { icon: 'alert-circle-outline', color: '#ef4444' };\n      case 'danger': return { icon: 'skull-outline', color: '#dc2626' };\n      default: return { icon: 'information-circle-outline', color: '#6b7280' };\n    }\n  };\n\n  if (!instructions) {\n    return null;\n  }\n\n  const currentStep = instructions.steps[currentStepIndex];\n  const progress = (completedSteps.size / instructions.steps.length) * 100;\n\n  return (\n    <Modal\n      visible={visible}\n      animationType=\"slide\"\n      presentationStyle=\"pageSheet\"\n      onRequestClose={onClose}\n    >\n      <View style={styles.container}>\n        {/* Header */}\n        <View style={styles.header}>\n          <TouchableOpacity style={styles.closeButton} onPress={onClose}>\n            <Ionicons name=\"close\" size={24} color=\"#831843\" />\n          </TouchableOpacity>\n          <Text style={styles.headerTitle}>Step-by-Step Instructions</Text>\n          <View style={styles.placeholder} />\n        </View>\n\n        {/* Progress Bar */}\n        <View style={styles.progressContainer}>\n          <View style={styles.progressBarBackground}>\n            <View style={[styles.progressBarFill, { width: `${progress}%` }]} />\n          </View>\n          <Text style={styles.progressText}>\n            {completedSteps.size} of {instructions.steps.length} steps completed\n          </Text>\n        </View>\n\n        {/* Safety Warnings */}\n        {instructions.safetyWarnings.length > 0 && (\n          <View style={styles.safetySection}>\n            <Text style={styles.safetyTitle}>⚠️ Safety Information</Text>\n            {instructions.safetyWarnings.map((warning, index) => {\n              const { icon, color } = getSafetyIcon(warning.level);\n              return (\n                <View key={index} style={[styles.safetyWarning, { borderLeftColor: color }]}>\n                  <Ionicons name={icon as any} size={16} color={color} />\n                  <Text style={[styles.safetyText, { color }]}>{warning.message}</Text>\n                </View>\n              );\n            })}\n          </View>\n        )}\n\n        {/* Step Content */}\n        <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>\n          {currentStep && (\n            <View style={styles.stepContainer}>\n              {/* Step Header */}\n              <View style={styles.stepHeader}>\n                <View style={styles.stepNumberContainer}>\n                  <Text style={styles.stepNumber}>{currentStep.stepNumber}</Text>\n                </View>\n                <View style={styles.stepTitleContainer}>\n                  <Text style={styles.stepTitle}>{currentStep.title}</Text>\n                  {currentStep.estimatedMinutes && (\n                    <Text style={styles.stepTime}>~{currentStep.estimatedMinutes} min</Text>\n                  )}\n                </View>\n              </View>\n\n              {/* Step Description */}\n              <Text style={styles.stepDescription}>{currentStep.description}</Text>\n\n              {/* Required Tools */}\n              {currentStep.requiredTools && currentStep.requiredTools.length > 0 && (\n                <View style={styles.toolsSection}>\n                  <Text style={styles.toolsTitle}>🛠️ Tools Needed:</Text>\n                  {currentStep.requiredTools.map((tool, index) => (\n                    <Text key={index} style={styles.toolItem}>• {tool}</Text>\n                  ))}\n                </View>\n              )}\n\n              {/* Safety Note */}\n              {currentStep.safetyNote && (\n                <View style={styles.stepSafetyNote}>\n                  <Ionicons name=\"shield-checkmark\" size={16} color=\"#f59e0b\" />\n                  <Text style={styles.stepSafetyText}>{currentStep.safetyNote}</Text>\n                </View>\n              )}\n\n              {/* Media Assets */}\n              {currentStep.mediaAssets && currentStep.mediaAssets.length > 0 && (\n                <View style={styles.mediaSection}>\n                  {currentStep.mediaAssets.map((asset, index) => (\n                    <View key={index} style={styles.mediaContainer}>\n                      {asset.type === 'image' && (\n                        <Image source={{ uri: asset.url }} style={styles.instructionImage} />\n                      )}\n                      {asset.caption && (\n                        <Text style={styles.mediaCaption}>{asset.caption}</Text>\n                      )}\n                    </View>\n                  ))}\n                </View>\n              )}\n\n              {/* Step Completion */}\n              <View style={styles.stepCompletion}>\n                {completedSteps.has(currentStep.id) ? (\n                  <TouchableOpacity \n                    style={styles.uncompleteButton}\n                    onPress={() => handleStepUncomplete(currentStep.id)}\n                  >\n                    <Ionicons name=\"checkmark-circle\" size={20} color=\"#10b981\" />\n                    <Text style={styles.uncompleteText}>Step Completed</Text>\n                  </TouchableOpacity>\n                ) : (\n                  <TouchableOpacity \n                    style={styles.completeButton}\n                    onPress={() => handleStepComplete(currentStep.id)}\n                  >\n                    <Ionicons name=\"checkmark-circle-outline\" size={20} color=\"#ffffff\" />\n                    <Text style={styles.completeText}>Mark as Complete</Text>\n                  </TouchableOpacity>\n                )}\n              </View>\n            </View>\n          )}\n        </ScrollView>\n\n        {/* Navigation */}\n        <View style={styles.navigation}>\n          <TouchableOpacity \n            style={[styles.navButton, currentStepIndex === 0 && styles.navButtonDisabled]}\n            onPress={() => goToStep(Math.max(0, currentStepIndex - 1))}\n            disabled={currentStepIndex === 0}\n          >\n            <Ionicons name=\"chevron-back\" size={20} color={currentStepIndex === 0 ? \"#d1d5db\" : \"#be185d\"} />\n            <Text style={[styles.navText, currentStepIndex === 0 && styles.navTextDisabled]}>Previous</Text>\n          </TouchableOpacity>\n\n          <View style={styles.stepIndicators}>\n            {instructions.steps.map((_, index) => (\n              <TouchableOpacity\n                key={index}\n                style={[\n                  styles.stepIndicator,\n                  index === currentStepIndex && styles.stepIndicatorActive,\n                  completedSteps.has(instructions.steps[index].id) && styles.stepIndicatorCompleted\n                ]}\n                onPress={() => goToStep(index)}\n              >\n                {completedSteps.has(instructions.steps[index].id) ? (\n                  <Ionicons name=\"checkmark\" size={12} color=\"#ffffff\" />\n                ) : (\n                  <Text style={[\n                    styles.stepIndicatorText,\n                    index === currentStepIndex && styles.stepIndicatorTextActive\n                  ]}>\n                    {index + 1}\n                  </Text>\n                )}\n              </TouchableOpacity>\n            ))}\n          </View>\n\n          <TouchableOpacity \n            style={[\n              styles.navButton, \n              currentStepIndex === instructions.steps.length - 1 && styles.navButtonDisabled\n            ]}\n            onPress={() => goToStep(Math.min(instructions.steps.length - 1, currentStepIndex + 1))}\n            disabled={currentStepIndex === instructions.steps.length - 1}\n          >\n            <Text style={[\n              styles.navText, \n              currentStepIndex === instructions.steps.length - 1 && styles.navTextDisabled\n            ]}>Next</Text>\n            <Ionicons \n              name=\"chevron-forward\" \n              size={20} \n              color={currentStepIndex === instructions.steps.length - 1 ? \"#d1d5db\" : \"#be185d\"} \n            />\n          </TouchableOpacity>\n        </View>\n      </View>\n    </Modal>\n  );\n};\n\nconst styles = StyleSheet.create({\n  container: {\n    flex: 1,\n    backgroundColor: '#fdf2f8',\n  },\n  header: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    justifyContent: 'space-between',\n    paddingHorizontal: 20,\n    paddingTop: 20,\n    paddingBottom: 16,\n    backgroundColor: '#ffffff',\n    borderBottomWidth: 1,\n    borderBottomColor: '#f9a8d4',\n  },\n  closeButton: {\n    padding: 8,\n  },\n  headerTitle: {\n    fontSize: 18,\n    fontWeight: '700',\n    color: '#831843',\n  },\n  placeholder: {\n    width: 40,\n  },\n  progressContainer: {\n    paddingHorizontal: 20,\n    paddingVertical: 16,\n    backgroundColor: '#ffffff',\n  },\n  progressBarBackground: {\n    height: 6,\n    backgroundColor: '#f9a8d4',\n    borderRadius: 3,\n    marginBottom: 8,\n  },\n  progressBarFill: {\n    height: '100%',\n    backgroundColor: '#be185d',\n    borderRadius: 3,\n  },\n  progressText: {\n    fontSize: 14,\n    fontWeight: '600',\n    color: '#831843',\n    textAlign: 'center',\n  },\n  safetySection: {\n    backgroundColor: '#ffffff',\n    marginHorizontal: 20,\n    marginVertical: 8,\n    padding: 16,\n    borderRadius: 16,\n    borderWidth: 1,\n    borderColor: '#f59e0b',\n  },\n  safetyTitle: {\n    fontSize: 16,\n    fontWeight: '700',\n    color: '#92400e',\n    marginBottom: 12,\n  },\n  safetyWarning: {\n    flexDirection: 'row',\n    alignItems: 'flex-start',\n    paddingLeft: 12,\n    borderLeftWidth: 3,\n    marginBottom: 8,\n  },\n  safetyText: {\n    fontSize: 14,\n    fontWeight: '500',\n    marginLeft: 8,\n    flex: 1,\n  },\n  stepContent: {\n    flex: 1,\n    paddingHorizontal: 20,\n  },\n  stepContainer: {\n    backgroundColor: '#ffffff',\n    borderRadius: 24,\n    padding: 20,\n    marginVertical: 8,\n  },\n  stepHeader: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    marginBottom: 16,\n  },\n  stepNumberContainer: {\n    width: 40,\n    height: 40,\n    borderRadius: 20,\n    backgroundColor: '#be185d',\n    alignItems: 'center',\n    justifyContent: 'center',\n    marginRight: 16,\n  },\n  stepNumber: {\n    fontSize: 18,\n    fontWeight: '700',\n    color: '#ffffff',\n  },\n  stepTitleContainer: {\n    flex: 1,\n  },\n  stepTitle: {\n    fontSize: 18,\n    fontWeight: '700',\n    color: '#831843',\n    marginBottom: 4,\n  },\n  stepTime: {\n    fontSize: 14,\n    fontWeight: '500',\n    color: '#9f1239',\n  },\n  stepDescription: {\n    fontSize: 16,\n    color: '#4b5563',\n    lineHeight: 24,\n    marginBottom: 16,\n  },\n  toolsSection: {\n    backgroundColor: '#f3f4f6',\n    padding: 16,\n    borderRadius: 16,\n    marginBottom: 16,\n  },\n  toolsTitle: {\n    fontSize: 14,\n    fontWeight: '700',\n    color: '#374151',\n    marginBottom: 8,\n  },\n  toolItem: {\n    fontSize: 14,\n    color: '#6b7280',\n    marginBottom: 4,\n    paddingLeft: 8,\n  },\n  stepSafetyNote: {\n    flexDirection: 'row',\n    alignItems: 'flex-start',\n    backgroundColor: '#fef3c7',\n    padding: 12,\n    borderRadius: 12,\n    marginBottom: 16,\n  },\n  stepSafetyText: {\n    fontSize: 14,\n    fontWeight: '500',\n    color: '#92400e',\n    marginLeft: 8,\n    flex: 1,\n  },\n  mediaSection: {\n    marginBottom: 16,\n  },\n  mediaContainer: {\n    marginBottom: 12,\n  },\n  instructionImage: {\n    width: '100%',\n    height: 200,\n    borderRadius: 16,\n    backgroundColor: '#f3f4f6',\n  },\n  mediaCaption: {\n    fontSize: 12,\n    color: '#6b7280',\n    fontStyle: 'italic',\n    marginTop: 8,\n    textAlign: 'center',\n  },\n  stepCompletion: {\n    alignItems: 'center',\n  },\n  completeButton: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    backgroundColor: '#be185d',\n    paddingHorizontal: 24,\n    paddingVertical: 12,\n    borderRadius: 20,\n  },\n  completeText: {\n    fontSize: 16,\n    fontWeight: '600',\n    color: '#ffffff',\n    marginLeft: 8,\n  },\n  uncompleteButton: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    backgroundColor: '#f0fdf4',\n    paddingHorizontal: 24,\n    paddingVertical: 12,\n    borderRadius: 20,\n    borderWidth: 2,\n    borderColor: '#10b981',\n  },\n  uncompleteText: {\n    fontSize: 16,\n    fontWeight: '600',\n    color: '#10b981',\n    marginLeft: 8,\n  },\n  navigation: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    justifyContent: 'space-between',\n    paddingHorizontal: 20,\n    paddingVertical: 16,\n    backgroundColor: '#ffffff',\n    borderTopWidth: 1,\n    borderTopColor: '#f9a8d4',\n  },\n  navButton: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    paddingHorizontal: 16,\n    paddingVertical: 8,\n  },\n  navButtonDisabled: {\n    opacity: 0.5,\n  },\n  navText: {\n    fontSize: 16,\n    fontWeight: '600',\n    color: '#be185d',\n    marginHorizontal: 4,\n  },\n  navTextDisabled: {\n    color: '#d1d5db',\n  },\n  stepIndicators: {\n    flexDirection: 'row',\n    alignItems: 'center',\n  },\n  stepIndicator: {\n    width: 32,\n    height: 32,\n    borderRadius: 16,\n    backgroundColor: '#f3f4f6',\n    alignItems: 'center',\n    justifyContent: 'center',\n    marginHorizontal: 2,\n  },\n  stepIndicatorActive: {\n    backgroundColor: '#be185d',\n  },\n  stepIndicatorCompleted: {\n    backgroundColor: '#10b981',\n  },\n  stepIndicatorText: {\n    fontSize: 12,\n    fontWeight: '600',\n    color: '#6b7280',\n  },\n  stepIndicatorTextActive: {\n    color: '#ffffff',\n  },\n});\n\nexport default InstructionViewer;"
+import { AdvancedChoreCard, InstructionSet, AgeGroup } from '../../types';
+
+interface Props {
+  advancedCard: AdvancedChoreCard;
+  userAge?: number;
+  visible: boolean;
+  onClose: () => void;
+  onStepComplete: (stepId: string) => void;
+}
+
+const InstructionViewer: React.FC<Props> = ({
+  advancedCard,
+  userAge,
+  visible,
+  onClose,
+  onStepComplete
+}) => {
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
+  const [instructions, setInstructions] = useState<InstructionSet | null>(null);
+
+  useEffect(() => {
+    if (visible && advancedCard.instructions) {
+      // Determine age group
+      const ageGroup: AgeGroup = userAge && userAge <= 8 ? 'child' : 
+                                 userAge && userAge <= 12 ? 'teen' : 'adult';
+      
+      // Get appropriate instructions
+      const instructionSet = advancedCard.instructions[ageGroup] ||
+                            advancedCard.instructions.adult ||
+                            advancedCard.instructions.teen ||
+                            advancedCard.instructions.child;
+      
+      setInstructions(instructionSet);
+      setCurrentStepIndex(0);
+      setCompletedSteps(new Set());
+    }
+  }, [visible, advancedCard, userAge]);
+
+  const handleStepComplete = (stepId: string) => {
+    const newCompleted = new Set(completedSteps);
+    newCompleted.add(stepId);
+    setCompletedSteps(newCompleted);
+    onStepComplete(stepId);
+
+    // Auto-advance to next step
+    if (instructions && currentStepIndex < instructions.steps.length - 1) {
+      setCurrentStepIndex(currentStepIndex + 1);
+    }
+  };
+
+  const handleStepUncomplete = (stepId: string) => {
+    const newCompleted = new Set(completedSteps);
+    newCompleted.delete(stepId);
+    setCompletedSteps(newCompleted);
+  };
+
+  const goToStep = (index: number) => {
+    setCurrentStepIndex(index);
+  };
+
+  const getSafetyIcon = (level: string) => {
+    switch (level) {
+      case 'caution': return { icon: 'warning-outline', color: '#f59e0b' };
+      case 'warning': return { icon: 'alert-circle-outline', color: '#ef4444' };
+      case 'danger': return { icon: 'skull-outline', color: '#dc2626' };
+      default: return { icon: 'information-circle-outline', color: '#6b7280' };
+    }
+  };
+
+  if (!instructions) {
+    return null;
+  }
+
+  const currentStep = instructions.steps[currentStepIndex];
+  const progress = (completedSteps.size / instructions.steps.length) * 100;
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Ionicons name="close" size={24} color="#831843" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Step-by-Step Instructions</Text>
+          <View style={styles.placeholder} />
+        </View>
+
+        {/* Progress Bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBarBackground}>
+            <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
+          </View>
+          <Text style={styles.progressText}>
+            {completedSteps.size} of {instructions.steps.length} steps completed
+          </Text>
+        </View>
+
+        {/* Safety Warnings */}
+        {instructions.safetyWarnings.length > 0 && (
+          <View style={styles.safetySection}>
+            <Text style={styles.safetyTitle}>⚠️ Safety Information</Text>
+            {instructions.safetyWarnings.map((warning, index) => {
+              const { icon, color } = getSafetyIcon(warning.level);
+              return (
+                <View key={index} style={[styles.safetyWarning, { borderLeftColor: color }]}>
+                  <Ionicons name={icon as any} size={16} color={color} />
+                  <Text style={[styles.safetyText, { color }]}>{warning.message}</Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Step Content */}
+        <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+          {currentStep && (
+            <View style={styles.stepContainer}>
+              {/* Step Header */}
+              <View style={styles.stepHeader}>
+                <View style={styles.stepNumberContainer}>
+                  <Text style={styles.stepNumber}>{currentStep.stepNumber}</Text>
+                </View>
+                <View style={styles.stepTitleContainer}>
+                  <Text style={styles.stepTitle}>{currentStep.title}</Text>
+                  {currentStep.estimatedMinutes && (
+                    <Text style={styles.stepTime}>~{currentStep.estimatedMinutes} min</Text>
+                  )}
+                </View>
+              </View>
+
+              {/* Step Description */}
+              <Text style={styles.stepDescription}>{currentStep.description}</Text>
+
+              {/* Required Tools */}
+              {currentStep.requiredTools && currentStep.requiredTools.length > 0 && (
+                <View style={styles.toolsSection}>
+                  <Text style={styles.toolsTitle}>🛠️ Tools Needed:</Text>
+                  {currentStep.requiredTools.map((tool, index) => (
+                    <Text key={index} style={styles.toolItem}>• {tool}</Text>
+                  ))}
+                </View>
+              )}
+
+              {/* Safety Note */}
+              {currentStep.safetyNote && (
+                <View style={styles.stepSafetyNote}>
+                  <Ionicons name="shield-checkmark" size={16} color="#f59e0b" />
+                  <Text style={styles.stepSafetyText}>{currentStep.safetyNote}</Text>
+                </View>
+              )}
+
+              {/* Media Assets */}
+              {currentStep.mediaAssets && currentStep.mediaAssets.length > 0 && (
+                <View style={styles.mediaSection}>
+                  {currentStep.mediaAssets.map((asset, index) => (
+                    <View key={index} style={styles.mediaContainer}>
+                      {asset.type === 'image' && (
+                        <Image source={{ uri: asset.url }} style={styles.instructionImage} />
+                      )}
+                      {asset.caption && (
+                        <Text style={styles.mediaCaption}>{asset.caption}</Text>
+                      )}
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Step Completion */}
+              <View style={styles.stepCompletion}>
+                {completedSteps.has(currentStep.id) ? (
+                  <TouchableOpacity 
+                    style={styles.uncompleteButton}
+                    onPress={() => handleStepUncomplete(currentStep.id)}
+                  >
+                    <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+                    <Text style={styles.uncompleteText}>Step Completed</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity 
+                    style={styles.completeButton}
+                    onPress={() => handleStepComplete(currentStep.id)}
+                  >
+                    <Ionicons name="checkmark-circle-outline" size={20} color="#ffffff" />
+                    <Text style={styles.completeText}>Mark as Complete</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Navigation */}
+        <View style={styles.navigation}>
+          <TouchableOpacity 
+            style={[styles.navButton, currentStepIndex === 0 && styles.navButtonDisabled]}
+            onPress={() => goToStep(Math.max(0, currentStepIndex - 1))}
+            disabled={currentStepIndex === 0}
+          >
+            <Ionicons name="chevron-back" size={20} color={currentStepIndex === 0 ? "#d1d5db" : "#be185d"} />
+            <Text style={[styles.navText, currentStepIndex === 0 && styles.navTextDisabled]}>Previous</Text>
+          </TouchableOpacity>
+
+          <View style={styles.stepIndicators}>
+            {instructions.steps.map((_, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.stepIndicator,
+                  index === currentStepIndex && styles.stepIndicatorActive,
+                  completedSteps.has(instructions.steps[index].id) && styles.stepIndicatorCompleted
+                ]}
+                onPress={() => goToStep(index)}
+              >
+                {completedSteps.has(instructions.steps[index].id) ? (
+                  <Ionicons name="checkmark" size={12} color="#ffffff" />
+                ) : (
+                  <Text style={[
+                    styles.stepIndicatorText,
+                    index === currentStepIndex && styles.stepIndicatorTextActive
+                  ]}>
+                    {index + 1}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TouchableOpacity 
+            style={[
+              styles.navButton, 
+              currentStepIndex === instructions.steps.length - 1 && styles.navButtonDisabled
+            ]}
+            onPress={() => goToStep(Math.min(instructions.steps.length - 1, currentStepIndex + 1))}
+            disabled={currentStepIndex === instructions.steps.length - 1}
+          >
+            <Text style={[
+              styles.navText, 
+              currentStepIndex === instructions.steps.length - 1 && styles.navTextDisabled
+            ]}>Next</Text>
+            <Ionicons 
+              name="chevron-forward" 
+              size={20} 
+              color={currentStepIndex === instructions.steps.length - 1 ? "#d1d5db" : "#be185d"} 
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fdf2f8',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f9a8d4',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#831843',
+  },
+  placeholder: {
+    width: 40,
+  },
+  progressContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#ffffff',
+  },
+  progressBarBackground: {
+    height: 6,
+    backgroundColor: '#f9a8d4',
+    borderRadius: 3,
+    marginBottom: 8,
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#be185d',
+    borderRadius: 3,
+  },
+  progressText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#831843',
+    textAlign: 'center',
+  },
+  safetySection: {
+    backgroundColor: '#ffffff',
+    marginHorizontal: 20,
+    marginVertical: 8,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+  },
+  safetyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#92400e',
+    marginBottom: 12,
+  },
+  safetyWarning: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingLeft: 12,
+    borderLeftWidth: 3,
+    marginBottom: 8,
+  },
+  safetyText: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
+    flex: 1,
+  },
+  stepContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  stepContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 20,
+    marginVertical: 8,
+  },
+  stepHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  stepNumberContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#be185d',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  stepNumber: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  stepTitleContainer: {
+    flex: 1,
+  },
+  stepTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#831843',
+    marginBottom: 4,
+  },
+  stepTime: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#9f1239',
+  },
+  stepDescription: {
+    fontSize: 16,
+    color: '#4b5563',
+    lineHeight: 24,
+    marginBottom: 16,
+  },
+  toolsSection: {
+    backgroundColor: '#f3f4f6',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  toolsTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  toolItem: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 4,
+    paddingLeft: 8,
+  },
+  stepSafetyNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#fef3c7',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  stepSafetyText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#92400e',
+    marginLeft: 8,
+    flex: 1,
+  },
+  mediaSection: {
+    marginBottom: 16,
+  },
+  mediaContainer: {
+    marginBottom: 12,
+  },
+  instructionImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 16,
+    backgroundColor: '#f3f4f6',
+  },
+  mediaCaption: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontStyle: 'italic',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  stepCompletion: {
+    alignItems: 'center',
+  },
+  completeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#be185d',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+  },
+  completeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginLeft: 8,
+  },
+  uncompleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#10b981',
+  },
+  uncompleteText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#10b981',
+    marginLeft: 8,
+  },
+  navigation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#f9a8d4',
+  },
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  navButtonDisabled: {
+    opacity: 0.5,
+  },
+  navText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#be185d',
+    marginHorizontal: 4,
+  },
+  navTextDisabled: {
+    color: '#d1d5db',
+  },
+  stepIndicators: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stepIndicator: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 2,
+  },
+  stepIndicatorActive: {
+    backgroundColor: '#be185d',
+  },
+  stepIndicatorCompleted: {
+    backgroundColor: '#10b981',
+  },
+  stepIndicatorText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  stepIndicatorTextActive: {
+    color: '#ffffff',
+  },
+});
+
+export default InstructionViewer;

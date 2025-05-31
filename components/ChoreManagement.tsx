@@ -40,6 +40,14 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   const [upgradingChoreId, setUpgradingChoreId] = useState<string | null>(null);
   const [showAdvancedUpgradeModal, setShowAdvancedUpgradeModal] = useState(false);
   const [choreToUpgrade, setChorToUpgrade] = useState<Chore | null>(null);
+  
+  // Advanced card features toggles
+  const [enableAdvancedCard, setEnableAdvancedCard] = useState(false);
+  const [enableInstructions, setEnableInstructions] = useState(false);
+  const [enableEducationalContent, setEnableEducationalContent] = useState(false);
+  const [enableGamification, setEnableGamification] = useState(false);
+  const [enableCertification, setEnableCertification] = useState(false);
+  const [enableQualityRating, setEnableQualityRating] = useState(false);
   const [chores, setChores] = useState<Chore[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingChore, setEditingChore] = useState<Chore | null>(null);
@@ -143,6 +151,14 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
     setEditingChore(null);
     setShowForm(false);
     resetValidation();
+    
+    // Reset advanced card toggles
+    setEnableAdvancedCard(false);
+    setEnableInstructions(false);
+    setEnableEducationalContent(false);
+    setEnableGamification(false);
+    setEnableCertification(false);
+    setEnableQualityRating(false);
   };
 
   const handleSaveChore = async () => {
@@ -196,6 +212,8 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
         }
       }
 
+      let newChoreId: string | undefined;
+
       if (editingChore) {
         await updateChore(editingChore.id!, choreData);
         Toast.success('Chore updated successfully');
@@ -204,14 +222,24 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
         if (choreType === 'room' && selectedRoomId) {
           const selectedRoom = rooms.find(room => room.id === selectedRoomId);
           if (selectedRoom) {
-            await createRoomChore(choreData, selectedRoom.id!, selectedRoom.name, selectedRoom.type);
+            newChoreId = await createRoomChore(choreData, selectedRoom.id!, selectedRoom.name, selectedRoom.type);
           } else {
-            await createChore(choreData);
+            newChoreId = await createChore(choreData);
           }
         } else {
-          await createChore(choreData);
+          newChoreId = await createChore(choreData);
         }
         Toast.success('Chore created successfully');
+        
+        // Create advanced card if enabled and we have a new chore ID
+        if (enableAdvancedCard && newChoreId) {
+          try {
+            await createAdvancedChoreCard(newChoreId, choreData);
+          } catch (advancedError) {
+            console.error('Error creating advanced chore card:', advancedError);
+            Toast.error('Chore created but failed to add advanced features');
+          }
+        }
       }
 
       resetForm();
@@ -222,6 +250,172 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
     } finally {
       setSavingChore(false);
     }
+  };
+
+  const createAdvancedChoreCard = async (choreId: string, choreData: any) => {
+    if (!family?.id) return;
+
+    const advancedCard = {
+      choreId,
+      familyId: family.id,
+      isActive: true,
+      
+      // Only include features that are enabled
+      ...(enableInstructions && {
+        instructions: {
+          child: {
+            title: `${choreData.title} - For Kids`,
+            description: `Simple steps to complete ${choreData.title}`,
+            steps: [
+              {
+                id: 'step1',
+                stepNumber: 1,
+                title: 'Get Ready',
+                description: 'Gather everything you need first',
+                estimatedMinutes: 2,
+                safetyNote: 'Ask an adult if you need help'
+              },
+              {
+                id: 'step2',
+                stepNumber: 2,
+                title: 'Do the Task',
+                description: 'Follow the steps carefully',
+                estimatedMinutes: Math.max(5, 10),
+              },
+              {
+                id: 'step3',
+                stepNumber: 3,
+                title: 'Clean Up',
+                description: 'Put everything back where it belongs',
+                estimatedMinutes: 3,
+              }
+            ],
+            safetyWarnings: [
+              { level: 'caution', message: 'Ask for help with anything you\'re unsure about' }
+            ]
+          },
+          teen: {
+            title: `${choreData.title} - For Teens`,
+            description: `Complete guide for ${choreData.title}`,
+            steps: [
+              {
+                id: 'step1',
+                stepNumber: 1,
+                title: 'Preparation',
+                description: 'Set up your workspace and gather materials',
+                estimatedMinutes: 3,
+              },
+              {
+                id: 'step2',
+                stepNumber: 2,
+                title: 'Execute Task',
+                description: 'Complete the main task efficiently',
+                estimatedMinutes: 15,
+              },
+              {
+                id: 'step3',
+                stepNumber: 3,
+                title: 'Quality Check',
+                description: 'Review your work and make improvements',
+                estimatedMinutes: 5,
+              }
+            ],
+            safetyWarnings: choreData.difficulty === 'hard' ? [
+              { level: 'warning', message: 'Check safety requirements first' }
+            ] : []
+          },
+          adult: {
+            title: `${choreData.title} - Expert Level`,
+            description: `Professional approach to ${choreData.title}`,
+            steps: [
+              {
+                id: 'step1',
+                stepNumber: 1,
+                title: 'Strategic Planning',
+                description: 'Plan the most efficient approach',
+                estimatedMinutes: 2,
+              },
+              {
+                id: 'step2',
+                stepNumber: 2,
+                title: 'Implementation',
+                description: 'Execute with focus on quality and efficiency',
+                estimatedMinutes: 20,
+              },
+              {
+                id: 'step3',
+                stepNumber: 3,
+                title: 'Optimization',
+                description: 'Identify improvements for next time',
+                estimatedMinutes: 3,
+              }
+            ],
+            safetyWarnings: []
+          }
+        }
+      }),
+      
+      ...(enableEducationalContent && {
+        educationalContent: {
+          facts: [
+            {
+              id: 'fact1',
+              content: `Did you know? ${choreData.title} helps maintain a healthy home environment!`,
+              category: 'health',
+              seasonal: false
+            }
+          ],
+          quotes: [
+            {
+              id: 'quote1',
+              text: 'A job well done gives you satisfaction and pride!',
+              author: 'Family Wisdom',
+              mood: 'encouraging',
+              themes: ['motivation', 'pride']
+            }
+          ]
+        }
+      }),
+      
+      ...(enableGamification && {
+        gamification: {
+          specialAchievements: [`${choreData.title.toLowerCase().replace(/\s+/g, '_')}_expert`],
+          qualityMultipliers: {
+            incomplete: 0,
+            partial: 0.5,
+            complete: 1.0,
+            excellent: choreData.difficulty === 'hard' ? 1.5 : 1.2
+          },
+          learningRewards: {
+            instructionCompleted: 5,
+            factEngagement: 2,
+            certificationProgress: 10
+          }
+        }
+      }),
+      
+      ...(enableCertification && {
+        certification: {
+          required: true,
+          level: choreData.difficulty === 'hard' ? 'advanced' : choreData.difficulty === 'medium' ? 'intermediate' : 'basic',
+          skills: [`${choreData.title} technique`, 'Quality standards', 'Safety awareness']
+        }
+      }),
+      
+      ...(enableQualityRating && {
+        qualityRating: {
+          enabled: true,
+          criteria: [
+            'Task completion',
+            'Attention to detail',
+            'Cleanup and organization'
+          ]
+        }
+      })
+    };
+
+    await choreCardService.createAdvancedCard(advancedCard);
+    Toast.success(`Advanced chore card created with ${Object.keys(advancedCard).length - 3} features!`);
   };
 
   const handleDeleteChore = (chore: Chore) => {
@@ -479,6 +673,127 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
     return lockedUntil > new Date();
   };
 
+  // Dropdown component
+  const DropdownSelector = ({ 
+    label, 
+    value, 
+    options, 
+    onSelect, 
+    placeholder = "Select option...",
+    error,
+    hint 
+  }: {
+    label: string;
+    value: string;
+    options: { label: string; value: string; color?: string }[];
+    onSelect: (value: string) => void;
+    placeholder?: string;
+    error?: string;
+    hint?: string;
+  }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const selectedOption = options.find(opt => opt.value === value);
+
+    return (
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>{label}</Text>
+        <TouchableOpacity
+          style={[
+            styles.dropdownButton,
+            error && styles.dropdownButtonError,
+            isOpen && styles.dropdownButtonOpen
+          ]}
+          onPress={() => setIsOpen(!isOpen)}
+        >
+          <Text style={[
+            styles.dropdownButtonText,
+            selectedOption && { color: selectedOption.color || '#831843' },
+            !selectedOption && styles.dropdownPlaceholder
+          ]}>
+            {selectedOption ? selectedOption.label : placeholder}
+          </Text>
+          <WebIcon 
+            name={isOpen ? "chevron-up" : "chevron-down"} 
+            size={20} 
+            color="#be185d" 
+          />
+        </TouchableOpacity>
+        {isOpen && (
+          <View style={styles.dropdownMenu}>
+            {options.map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.dropdownOption,
+                  value === option.value && styles.dropdownOptionSelected
+                ]}
+                onPress={() => {
+                  onSelect(option.value);
+                  setIsOpen(false);
+                }}
+              >
+                <Text style={[
+                  styles.dropdownOptionText,
+                  { color: option.color || '#831843' },
+                  value === option.value && styles.dropdownOptionTextSelected
+                ]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+        {error && <Text style={styles.errorText}>{error}</Text>}
+        {hint && !error && <Text style={styles.hintText}>{hint}</Text>}
+      </View>
+    );
+  };
+
+  // Toggle switch component
+  const ToggleSwitch = ({ 
+    label, 
+    value, 
+    onToggle, 
+    description,
+    disabled = false 
+  }: {
+    label: string;
+    value: boolean;
+    onToggle: (value: boolean) => void;
+    description?: string;
+    disabled?: boolean;
+  }) => (
+    <View style={styles.toggleContainer}>
+      <TouchableOpacity
+        style={[styles.toggleRow, disabled && styles.toggleDisabled]}
+        onPress={() => !disabled && onToggle(!value)}
+        disabled={disabled}
+      >
+        <View style={styles.toggleInfo}>
+          <Text style={[styles.toggleLabel, disabled && styles.toggleLabelDisabled]}>
+            {label}
+          </Text>
+          {description && (
+            <Text style={[styles.toggleDescription, disabled && styles.toggleDescriptionDisabled]}>
+              {description}
+            </Text>
+          )}
+        </View>
+        <View style={[
+          styles.toggleSwitch,
+          value && styles.toggleSwitchOn,
+          disabled && styles.toggleSwitchDisabled
+        ]}>
+          <View style={[
+            styles.toggleThumb,
+            value && styles.toggleThumbOn,
+            disabled && styles.toggleThumbDisabled
+          ]} />
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+
   if (!canManageChores) {
     return (
       <Modal
@@ -596,57 +911,33 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 hint="Add details about what this chore involves"
               />
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Type</Text>
-                <View style={styles.buttonGroup}>
-                  {(['individual', 'family', 'pet', 'shared'] as ChoreType[]).map((type) => (
-                    <TouchableOpacity
-                      key={type}
-                      style={[
-                        styles.typeButton,
-                        choreType === type && styles.typeButtonSelected,
-                        { borderColor: getTypeColor(type) }
-                      ]}
-                      onPress={() => setChoreType(type)}
-                    >
-                      <Text
-                        style={[
-                          styles.typeButtonText,
-                          choreType === type && { color: getTypeColor(type) }
-                        ]}
-                      >
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
+              <DropdownSelector
+                label="Chore Type"
+                value={choreType}
+                options={[
+                  { label: 'Individual', value: 'individual', color: getTypeColor('individual') },
+                  { label: 'Family', value: 'family', color: getTypeColor('family') },
+                  { label: 'Pet Care', value: 'pet', color: getTypeColor('pet') },
+                  { label: 'Shared', value: 'shared', color: getTypeColor('shared') },
+                  { label: 'Room-based', value: 'room', color: getTypeColor('room') }
+                ]}
+                onSelect={(value) => setChoreType(value as ChoreType)}
+                placeholder="Select chore type..."
+                hint="Choose how this chore should be categorized"
+              />
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Difficulty</Text>
-                <View style={styles.buttonGroup}>
-                  {(['easy', 'medium', 'hard'] as ChoreDifficulty[]).map((diff) => (
-                    <TouchableOpacity
-                      key={diff}
-                      style={[
-                        styles.diffButton,
-                        difficulty === diff && styles.diffButtonSelected,
-                        { borderColor: getDifficultyColor(diff) }
-                      ]}
-                      onPress={() => setDifficulty(diff)}
-                    >
-                      <Text
-                        style={[
-                          styles.diffButtonText,
-                          difficulty === diff && { color: getDifficultyColor(diff) }
-                        ]}
-                      >
-                        {diff.charAt(0).toUpperCase() + diff.slice(1)}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
+              <DropdownSelector
+                label="Difficulty Level"
+                value={difficulty}
+                options={[
+                  { label: 'Easy (Quick & Simple)', value: 'easy', color: getDifficultyColor('easy') },
+                  { label: 'Medium (Regular Task)', value: 'medium', color: getDifficultyColor('medium') },
+                  { label: 'Hard (Complex/Time-consuming)', value: 'hard', color: getDifficultyColor('hard') }
+                ]}
+                onSelect={(value) => setDifficulty(value as ChoreDifficulty)}
+                placeholder="Select difficulty level..."
+                hint="How challenging is this chore to complete?"
+              />
 
               {/* Room Selection - only show for room chores */}
               {choreType === 'room' && (
@@ -708,29 +999,20 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 hint="Points awarded for completing this chore (1-100)"
               />
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Assign To</Text>
-                <View style={styles.memberSelect}>
-                  <TouchableOpacity
-                    style={[styles.memberOption, !assignedTo && styles.memberOptionSelected]}
-                    onPress={() => setAssignedTo('')}
-                  >
-                    <Text style={styles.memberOptionText}>Unassigned</Text>
-                  </TouchableOpacity>
-                  {family?.members.map((member) => (
-                    <TouchableOpacity
-                      key={member.uid}
-                      style={[
-                        styles.memberOption,
-                        assignedTo === member.uid && styles.memberOptionSelected
-                      ]}
-                      onPress={() => setAssignedTo(member.uid)}
-                    >
-                      <Text style={styles.memberOptionText}>{member.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
+              <DropdownSelector
+                label="Assign To"
+                value={assignedTo}
+                options={[
+                  { label: 'Unassigned (Anyone can take)', value: '' },
+                  ...(family?.members.map(member => ({
+                    label: member.name,
+                    value: member.uid
+                  })) || [])
+                ]}
+                onSelect={setAssignedTo}
+                placeholder="Select family member..."
+                hint="Who should be responsible for this chore?"
+              />
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Due Date</Text>
@@ -806,6 +1088,96 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 hint="Hours before chore can be completed again"
               />
 
+              {/* Advanced Chore Card Features */}
+              <View style={styles.advancedFeaturesSection}>
+                <Text style={styles.sectionTitle}>
+                  🚀 Advanced Chore Features
+                </Text>
+                <Text style={styles.sectionSubtitle}>
+                  Transform this into a smart, interactive chore card with enhanced features
+                </Text>
+                
+                <ToggleSwitch
+                  label="Enable Advanced Chore Card"
+                  value={enableAdvancedCard}
+                  onToggle={setEnableAdvancedCard}
+                  description="Add interactive features to make this chore more engaging and educational"
+                />
+
+                {enableAdvancedCard && (
+                  <View style={styles.advancedOptionsContainer}>
+                    <ToggleSwitch
+                      label="Step-by-Step Instructions"
+                      value={enableInstructions}
+                      onToggle={setEnableInstructions}
+                      description="Age-appropriate instructions for kids, teens, and adults"
+                    />
+
+                    <ToggleSwitch
+                      label="Educational Content"
+                      value={enableEducationalContent}
+                      onToggle={setEnableEducationalContent}
+                      description="Fun facts, tips, and learning opportunities"
+                    />
+
+                    <ToggleSwitch
+                      label="Quality Rating System"
+                      value={enableQualityRating}
+                      onToggle={setEnableQualityRating}
+                      description="Rate completion quality (incomplete, partial, complete, excellent)"
+                    />
+
+                    <ToggleSwitch
+                      label="Enhanced Gamification"
+                      value={enableGamification}
+                      onToggle={setEnableGamification}
+                      description="Special achievements, streak bonuses, and quality multipliers"
+                    />
+
+                    <ToggleSwitch
+                      label="Certification System"
+                      value={enableCertification}
+                      onToggle={setEnableCertification}
+                      description="Progressive skill certification from basic to advanced levels"
+                      disabled={!enableInstructions}
+                    />
+
+                    {(enableInstructions || enableEducationalContent || enableQualityRating || enableGamification || enableCertification) && (
+                      <View style={styles.advancedPreview}>
+                        <Text style={styles.advancedPreviewTitle}>
+                          ✨ Your chore will include:
+                        </Text>
+                        {enableInstructions && (
+                          <Text style={styles.advancedPreviewItem}>
+                            📋 Interactive step-by-step guides
+                          </Text>
+                        )}
+                        {enableEducationalContent && (
+                          <Text style={styles.advancedPreviewItem}>
+                            🧠 Educational facts and tips
+                          </Text>
+                        )}
+                        {enableQualityRating && (
+                          <Text style={styles.advancedPreviewItem}>
+                            ⭐ Quality rating and feedback system
+                          </Text>
+                        )}
+                        {enableGamification && (
+                          <Text style={styles.advancedPreviewItem}>
+                            🎮 Enhanced rewards and achievements
+                          </Text>
+                        )}
+                        {enableCertification && (
+                          <Text style={styles.advancedPreviewItem}>
+                            🏆 Progressive skill certification
+                          </Text>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
+
               <View style={styles.formActions}>
                 <TouchableOpacity
                   style={[styles.actionButton, styles.cancelButton]}
@@ -868,27 +1240,14 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                         <Text style={styles.choreTitle}>{chore.title}</Text>
                         <View style={styles.choreActions}>
                           <TouchableOpacity
-                            style={styles.choreActionButton}
+                            style={[styles.choreActionButton, styles.editButton]}
                             onPress={() => handleEditChore(chore)}
                           >
+                            <WebIcon name="pencil" size={14} color="#be185d" style={{ marginRight: 4 }} />
                             <Text style={styles.editText}>Edit</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
-                            style={[styles.choreActionButton, styles.upgradeButton]}
-                            onPress={() => handleUpgradeToAdvanced(chore)}
-                            disabled={upgradingChoreId === chore.id}
-                          >
-                            {upgradingChoreId === chore.id ? (
-                              <LoadingSpinner size="small" />
-                            ) : (
-                              <>
-                                <WebIcon name="star" size={14} color="#9333ea" style={{ marginRight: 4 }} />
-                                <Text style={styles.upgradeText}>Upgrade</Text>
-                              </>
-                            )}
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={styles.choreActionButton}
+                            style={[styles.choreActionButton, styles.deleteButton]}
                             onPress={() => {
                               console.log('TouchableOpacity onPress triggered');
                               handleDeleteChore(chore);
@@ -898,7 +1257,10 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                             {deletingChoreId === chore.id ? (
                               <LoadingSpinner size="small" />
                             ) : (
-                              <Text style={styles.deleteText}>Delete</Text>
+                              <>
+                                <WebIcon name="trash" size={14} color="#ef4444" style={{ marginRight: 4 }} />
+                                <Text style={styles.deleteText}>Delete</Text>
+                              </>
                             )}
                           </TouchableOpacity>
                         </View>
@@ -1107,31 +1469,32 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   choreActionButton: {
-    padding: 8,
-    minWidth: 50,
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 4,
+    padding: 8,
+    minWidth: 60,
+    borderRadius: 8,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#f9a8d4',
+  },
+  editButton: {
+    borderColor: '#be185d',
+    backgroundColor: '#fef7ff',
   },
   editText: {
     color: '#be185d',
-    fontSize: 14,
-  },
-  upgradeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f3e8ff',
-    borderWidth: 1,
-    borderColor: '#c4b5fd',
-  },
-  upgradeText: {
-    color: '#9333ea',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
+  },
+  deleteButton: {
+    borderColor: '#ef4444',
+    backgroundColor: '#fef2f2',
   },
   deleteText: {
     color: '#ef4444',
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '600',
   },
   choreDescription: {
     fontSize: 14,
@@ -1377,6 +1740,189 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#fcd34d',
+  },
+  
+  // Dropdown Styles
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 2,
+    borderColor: '#f9a8d4',
+    borderRadius: 12,
+    padding: 12,
+    backgroundColor: '#ffffff',
+    minHeight: 48,
+  },
+  dropdownButtonError: {
+    borderColor: '#ef4444',
+  },
+  dropdownButtonOpen: {
+    borderColor: '#be185d',
+    backgroundColor: '#fdf2f8',
+  },
+  dropdownButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    flex: 1,
+  },
+  dropdownPlaceholder: {
+    color: '#9f1239',
+    opacity: 0.7,
+  },
+  dropdownMenu: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#f9a8d4',
+    borderRadius: 8,
+    marginTop: 4,
+    maxHeight: 200,
+    shadowColor: '#be185d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dropdownOption: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#fdf2f8',
+  },
+  dropdownOptionSelected: {
+    backgroundColor: '#fdf2f8',
+  },
+  dropdownOptionText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  dropdownOptionTextSelected: {
+    fontWeight: '700',
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#ef4444',
+    marginTop: 4,
+  },
+  hintText: {
+    fontSize: 12,
+    color: '#9f1239',
+    marginTop: 4,
+    opacity: 0.8,
+  },
+  
+  // Toggle Switch Styles
+  toggleContainer: {
+    marginBottom: 16,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  toggleDisabled: {
+    opacity: 0.5,
+  },
+  toggleInfo: {
+    flex: 1,
+    marginRight: 16,
+  },
+  toggleLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#831843',
+    marginBottom: 2,
+  },
+  toggleLabelDisabled: {
+    color: '#9f1239',
+  },
+  toggleDescription: {
+    fontSize: 13,
+    color: '#9f1239',
+    lineHeight: 18,
+  },
+  toggleDescriptionDisabled: {
+    color: '#d1d5db',
+  },
+  toggleSwitch: {
+    width: 50,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#d1d5db',
+    justifyContent: 'center',
+    padding: 2,
+  },
+  toggleSwitchOn: {
+    backgroundColor: '#be185d',
+  },
+  toggleSwitchDisabled: {
+    backgroundColor: '#f3f4f6',
+  },
+  toggleThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  toggleThumbOn: {
+    transform: [{ translateX: 20 }],
+  },
+  toggleThumbDisabled: {
+    backgroundColor: '#e5e7eb',
+  },
+  
+  // Advanced Features Styles
+  advancedFeaturesSection: {
+    marginTop: 32,
+    marginBottom: 24,
+    padding: 20,
+    backgroundColor: '#fefbff',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#e879f9',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#831843',
+    marginBottom: 8,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#9f1239',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  advancedOptionsContainer: {
+    marginTop: 16,
+    paddingLeft: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: '#f9a8d4',
+  },
+  advancedPreview: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#f0fdf4',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  advancedPreviewTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#166534',
+    marginBottom: 12,
+  },
+  advancedPreviewItem: {
+    fontSize: 14,
+    color: '#15803d',
+    marginBottom: 4,
+    paddingLeft: 8,
   },
 });
 

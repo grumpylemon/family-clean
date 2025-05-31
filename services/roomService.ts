@@ -9,7 +9,8 @@ import {
   query, 
   where, 
   orderBy,
-  Timestamp 
+  Timestamp,
+  deleteField 
 } from 'firebase/firestore';
 import { auth, safeCollection } from '../config/firebase';
 import { 
@@ -211,10 +212,19 @@ export const assignMemberToRoom = async (
 
     // Update room's assigned members list
     const updatedAssignedMembers = [...(room.assignedMembers || []), userId];
-    await updateRoom(roomId, { 
-      assignedMembers: updatedAssignedMembers,
-      primaryAssignee: isPrimary ? userId : room.primaryAssignee
-    });
+    const updateData: Partial<Room> = { 
+      assignedMembers: updatedAssignedMembers
+    };
+    
+    // Only update primaryAssignee if we're setting a new primary or if there's an existing one
+    if (isPrimary) {
+      updateData.primaryAssignee = userId;
+    } else if (room.primaryAssignee) {
+      updateData.primaryAssignee = room.primaryAssignee;
+    }
+    // If isPrimary is false and no existing primaryAssignee, don't include the field
+    
+    await updateRoom(roomId, updateData);
 
     return {
       ...assignment,
@@ -246,9 +256,9 @@ export const removeMemberFromRoom = async (roomId: string, userId: string): Prom
         assignedMembers: updatedAssignedMembers 
       };
 
-      // If removing primary assignee, clear it
+      // If removing primary assignee, delete the field
       if (room.primaryAssignee === userId) {
-        updateData.primaryAssignee = undefined;
+        updateData.primaryAssignee = deleteField() as any;
       }
 
       await updateRoom(roomId, updateData);

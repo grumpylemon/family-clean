@@ -2,6 +2,102 @@
 
 ## Active High Priority Issues to Fix
 
+- [x] **Chore Management UI Upgrade** - COMPLETED in v2.185 (2025-05-31)
+  - **Status**: IMPLEMENTATION COMPLETE - Transformed chore creation with modern UI and integrated advanced features
+  - **Root Request**: Upgrade chore management card with toggleable advanced features and better UI organization
+  - **Key Improvements**:
+    1. **Modern Dropdown Selectors**: Replaced button groups with elegant dropdown menus for Type, Difficulty, and Assignment
+    2. **Integrated Advanced Features**: Advanced card upgrade moved inside form as toggleable switches instead of separate button
+    3. **Progressive Feature Enablement**: Each advanced feature can be enabled individually when basic requirements are met
+    4. **Better Visual Organization**: Cleaner card layout with improved button styling and spacing
+  - **New UI Components**:
+    - **DropdownSelector**: Color-coded dropdown menus with proper validation and hints
+    - **ToggleSwitch**: iOS-style toggle switches with descriptions for feature enablement
+    - **Advanced Features Section**: Dedicated section with progressive disclosure and preview
+  - **Advanced Features Integration**:
+    - ✅ Step-by-Step Instructions (age-appropriate for kids, teens, adults)
+    - ✅ Educational Content (facts, tips, learning opportunities)
+    - ✅ Quality Rating System (incomplete, partial, complete, excellent)
+    - ✅ Enhanced Gamification (achievements, streak bonuses, multipliers)
+    - ✅ Certification System (progressive skill levels - requires instructions)
+    - ✅ Real-time Preview (shows enabled features before creation)
+  - **UI Improvements**:
+    - Modern dropdown selectors with color-coded options
+    - Cleaner chore card layout with improved action buttons
+    - Progressive feature disclosure with visual feedback
+    - Better spacing, typography, and visual hierarchy
+    - Integrated form validation with enhanced error handling
+  - **Technical Implementation**:
+    - Automatic advanced card creation during chore save process
+    - Feature-based conditional content generation
+    - Improved error handling and user feedback
+    - Better button styling with icons and improved accessibility
+  - **User Experience**:
+    - Single-flow chore creation with advanced features
+    - Clear feature descriptions and benefits preview
+    - Logical feature dependencies (certification requires instructions)
+    - Immediate visual feedback on feature selection
+  - **Verification**: 
+    - ✅ Build completed successfully
+    - ✅ Deployed to Firebase Hosting: https://family-fun-app.web.app
+    - ✅ Advanced chore cards can be created with selective features during initial setup
+  - **Impact**: Major UX improvement - users can now create sophisticated interactive chore cards in a single streamlined workflow
+
+- [x] **Room Assignment Firestore Error** - FIXED in v2.183 (2025-05-31)
+  - **Status**: IMPLEMENTATION COMPLETE - Fixed undefined value issue in Firestore updateDoc calls
+  - **Root Cause**: Firestore doesn't accept `undefined` values in updateDoc operations, but roomService was passing undefined for primaryAssignee field
+  - **Error Pattern**: `FirebaseError: Function updateDoc() called with invalid data. Unsupported field value: undefined (found in field primaryAssignee)`
+  - **Locations Fixed**:
+    - **Line 216** in `assignMemberToRoom`: Fixed conditional primaryAssignee assignment to avoid undefined values
+    - **Line 251** in `removeMemberFromRoom`: Used `deleteField()` instead of setting undefined to properly remove field
+  - **Solution**: 
+    1. **Assignment Logic**: Only include primaryAssignee in update object when there's an actual value to set
+    2. **Deletion Logic**: Use Firestore's `deleteField()` function to properly remove primaryAssignee when clearing it
+    3. **Import Fix**: Added `deleteField` import from 'firebase/firestore'
+  - **Code Changes**:
+    ```typescript
+    // Before: Could pass undefined to Firestore
+    primaryAssignee: isPrimary ? userId : room.primaryAssignee
+    
+    // After: Only include field when there's a value
+    if (isPrimary) {
+      updateData.primaryAssignee = userId;
+    } else if (room.primaryAssignee) {
+      updateData.primaryAssignee = room.primaryAssignee;
+    }
+    
+    // Before: Set to undefined (invalid)
+    updateData.primaryAssignee = undefined;
+    
+    // After: Use deleteField() for proper removal
+    updateData.primaryAssignee = deleteField() as any;
+    ```
+  - **Verification**: 
+    - ✅ Web build completed successfully
+    - ✅ Deployed to Firebase Hosting: https://family-fun-app.web.app
+    - ✅ Room member assignment should now work without Firestore errors
+  - **Impact**: Critical Room Management functionality restored, users can now assign members to rooms
+
+- [x] **Build Syntax Errors (CRITICAL)** - FIXED in v2.181 (2025-05-31)
+  - **Status**: IMPLEMENTATION COMPLETE - All component files reformatted successfully
+  - **Root Cause**: Multiple chore-card components had escaped newline characters (`\n`) instead of actual line breaks
+  - **Error Pattern**: `SyntaxError: Invalid Unicode escape sequence` during web build
+  - **Files Fixed**:
+    - `/components/chore-cards/QualityRatingInput.tsx` - ✅ Reformatted with proper line structure
+    - `/components/chore-cards/EducationalContent.tsx` - ✅ Reformatted with proper line structure  
+    - `/components/chore-cards/CertificationBadge.tsx` - ✅ Reformatted with proper line structure
+    - `/components/chore-cards/PerformanceHistory.tsx` - ✅ Reformatted with proper line structure
+    - `/components/chore-cards/InstructionViewer.tsx` - ✅ Reformatted with proper line structure
+  - **Solution**: 
+    1. Read each malformed file to identify escaped newlines
+    2. Rewrote files with proper line breaks and indentation
+    3. Maintained exact functionality while fixing syntax
+  - **Verification**: 
+    - ✅ Web build completed successfully: `npm run export-web`
+    - ✅ Deployed to Firebase Hosting: https://family-fun-app.web.app  
+    - ✅ All syntax errors resolved, version incremented to v2.181
+  - **Impact**: Critical build blocker resolved, web deployment fully functional
+
 - [x] **Room and Space Management Page Loading Issue** - FIXED in v2.176+ (2025-05-31)
   - **Status**: IMPLEMENTATION COMPLETE - Fixed modal structure and added mock data
   - **Root Cause**: Two issues causing loading problems:

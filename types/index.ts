@@ -120,6 +120,35 @@ export interface User {
   lastNotificationAt?: string;
   createdAt: Date | string;
   updatedAt: Date | string;
+  
+  // ====== ADVANCED USER PROFILE CARDS SYSTEM ======
+  
+  // Birthday system
+  birthday?: string; // ISO date string
+  birthdayCountdown?: {
+    daysUntil: number;
+    nextBirthday: string;
+    zodiacSign?: string;
+  };
+  age?: number; // Auto-calculated from birthday
+  
+  // Enhanced identity options
+  identity?: UserIdentity;
+  pronouns?: string; // Custom pronouns support
+  
+  // Avatar system
+  avatar?: UserAvatar;
+  
+  // Questionnaire system
+  questionnaire?: UserQuestionnaire;
+  questionnaireUnlocked?: boolean;
+  questionnaireCompletedAt?: string;
+  
+  // Privacy controls
+  birthdayVisibility?: VisibilityLevel;
+  identityVisibility?: VisibilityLevel;
+  avatarVisibility?: VisibilityLevel;
+  questionnaireVisibility?: VisibilityLevel;
 }
 
 export interface FamilyMember {
@@ -1524,4 +1553,166 @@ export interface ChoreCardAnalytics {
     suggestions: string[]; // Improvement recommendations
   };
   lastUpdated: Date | string;
+}
+
+// ====== ADVANCED USER PROFILE CARDS - TYPE DEFINITIONS ======
+
+// Privacy visibility levels
+export type VisibilityLevel = 'family' | 'admins' | 'private';
+
+// Identity system types
+export type IdentityOption = 
+  | 'Boy' 
+  | 'Girl' 
+  | 'Man' 
+  | 'Woman' 
+  | 'Non Binary' 
+  | 'Genderfluid' 
+  | 'Agender' 
+  | 'Demigender' 
+  | 'Two Spirit' 
+  | 'Questioning' 
+  | 'Prefer Not to Say' 
+  | 'Other';
+
+export interface UserIdentity {
+  primaryIdentity: IdentityOption;
+  customIdentity?: string; // For "Other" or custom entries
+  ageCategory: 'child' | 'teen' | 'adult'; // Auto-calculated from birthday
+}
+
+// Avatar system types
+export interface UserAvatar {
+  type: 'generated' | 'uploaded';
+  
+  // For generated avatars (DiceBear/Avataaars)
+  generatedConfig?: {
+    provider: 'dicebear' | 'avataaars';
+    style: string; // e.g., 'personas', 'avataaars', 'bottts'
+    seed: string; // Unique seed for consistent generation
+    options: AvatarOptions; // Customization options
+    url: string; // Generated avatar URL
+  };
+  
+  // For uploaded avatars (Google Drive)
+  uploadedConfig?: {
+    googleDriveUrl: string; // Original Google Drive link
+    processedUrl: string; // Processed/cached image URL
+    uploadedAt: string; // ISO timestamp
+    validated: boolean; // Whether link was successfully validated
+  };
+  
+  // Common properties
+  lastUpdated: string;
+  fallbackUrl?: string; // Backup avatar if primary fails
+}
+
+export interface AvatarOptions {
+  // DiceBear/Avataaars customization options
+  backgroundColor?: string[];
+  clothingColor?: string[];
+  eyeColor?: string[];
+  hairColor?: string[];
+  skinColor?: string[];
+  accessoriesChance?: number;
+  facialHairChance?: number;
+  // Additional customization based on chosen provider
+  [key: string]: any;
+}
+
+// Questionnaire system types
+export type QuestionCategory = 
+  | 'interests' 
+  | 'personality' 
+  | 'preferences' 
+  | 'goals' 
+  | 'family_dynamics' 
+  | 'learning_style'
+  | 'motivation'
+  | 'communication'
+  | 'activities'
+  | 'values';
+
+export type AgeGroupQuestionnaire = 'child' | 'teen' | 'adult';
+
+export interface UserQuestionnaire {
+  responses: QuestionnaireResponse[];
+  personalityProfile?: PersonalityProfile;
+  preferences?: UserPreferencesProfile;
+  completedAt: string;
+  version: number; // For questionnaire updates
+}
+
+export interface QuestionnaireResponse {
+  questionId: string;
+  questionText: string;
+  answer: string | number | string[];
+  category: QuestionCategory;
+}
+
+export interface QuestionnaireQuestion {
+  id: string;
+  category: QuestionCategory;
+  ageGroups: AgeGroupQuestionnaire[]; // ['child', 'teen', 'adult']
+  questionText: string;
+  answerType: 'multipleChoice' | 'scale' | 'openText' | 'multiSelect';
+  options?: string[]; // For multiple choice
+  scaleRange?: { min: number; max: number; labels: string[] };
+  required: boolean;
+  order: number;
+}
+
+export interface PersonalityProfile {
+  traits: {
+    [key: string]: number; // Trait scores 0-100
+  };
+  motivationStyle: 'competitive' | 'collaborative' | 'independent' | 'supportive';
+  communicationStyle: 'direct' | 'encouraging' | 'detailed' | 'visual';
+  learningStyle: 'visual' | 'auditory' | 'kinesthetic' | 'mixed';
+  goalOrientation: 'short_term' | 'long_term' | 'mixed';
+}
+
+export interface UserPreferencesProfile {
+  favoriteActivities: string[];
+  preferredRewardTypes: string[];
+  preferredWorkingTimes: string[];
+  collaborationPreference: 'solo' | 'partner' | 'group' | 'varies';
+  challengeLevel: 'easy' | 'moderate' | 'difficult' | 'mixed';
+  feedbackStyle: 'immediate' | 'detailed' | 'public' | 'private';
+}
+
+// Zodiac sign calculation
+export type ZodiacSign = 
+  | 'Aries' | 'Taurus' | 'Gemini' | 'Cancer' 
+  | 'Leo' | 'Virgo' | 'Libra' | 'Scorpio' 
+  | 'Sagittarius' | 'Capricorn' | 'Aquarius' | 'Pisces';
+
+// Birthday countdown interface
+export interface BirthdayCountdown {
+  daysUntil: number;
+  nextBirthday: string; // ISO date string
+  zodiacSign: ZodiacSign;
+  isToday: boolean;
+  isThisWeek: boolean;
+  isThisMonth: boolean;
+}
+
+// Enhanced Family Member interface with profile features
+export interface EnhancedFamilyMember extends FamilyMember {
+  // Profile enhancements
+  birthday?: string;
+  birthdayCountdown?: BirthdayCountdown;
+  age?: number;
+  identity?: UserIdentity;
+  pronouns?: string;
+  avatar?: UserAvatar;
+  questionnaire?: UserQuestionnaire;
+  questionnaireUnlocked?: boolean;
+  questionnaireCompletedAt?: string;
+  
+  // Privacy settings
+  birthdayVisibility?: VisibilityLevel;
+  identityVisibility?: VisibilityLevel;
+  avatarVisibility?: VisibilityLevel;
+  questionnaireVisibility?: VisibilityLevel;
 }
