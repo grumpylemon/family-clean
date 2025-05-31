@@ -12,6 +12,7 @@ import {
 import { WebIcon } from './ui/WebIcon';
 import { useAccessControl } from '../hooks/useAccessControl';
 import { useFamily } from '../hooks/useZustandHooks';
+import { useTheme } from '../contexts/ThemeContext';
 import RoomManagement from './RoomManagement';
 import ChoreManagement from './ChoreManagement';
 import ManageMembers from './ManageMembers';
@@ -19,6 +20,10 @@ import RewardManagement from './RewardManagement';
 import FamilySettings from './FamilySettings';
 import { ZustandAdminPanel } from './ZustandAdminPanel';
 import { ErrorMonitoringPanel } from './admin/ErrorMonitoringPanel';
+import { ValidationControlsPanel } from './admin/ValidationControlsPanel';
+import { TemplateLibrary } from './TemplateLibrary';
+import { AIIntegrationPanel } from './admin/AIIntegrationPanel';
+import RotationManagement from './admin/RotationManagement';
 
 interface AdminSettingsProps {
   visible: boolean;
@@ -39,6 +44,173 @@ interface AdminMenuItem {
 export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
   const { canManageFamily, canManageChores, canManageRewards } = useAccessControl();
   const { family } = useFamily();
+  const { colors, theme } = useTheme();
+  
+  // Create dynamic styles based on theme
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      backgroundColor: colors.cardBackground,
+      borderBottomWidth: 0.5,
+      borderBottomColor: colors.divider,
+    },
+    backButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    backText: {
+      fontSize: 16,
+      color: theme === 'dark' ? colors.accent : colors.primary,
+      marginLeft: 4,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      textAlign: 'center',
+      flex: 1,
+    },
+    headerSpacer: {
+      flex: 1,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    section: {
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    sectionHeader: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: 12,
+    },
+    adminCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.cardBackground,
+      borderRadius: 12,
+      padding: 16,
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    adminIcon: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: theme === 'dark' ? colors.surface : colors.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 16,
+    },
+    adminInfo: {
+      flex: 1,
+    },
+    adminTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    adminSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    settingsGroup: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 12,
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    settingItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      borderBottomWidth: 0.5,
+      borderBottomColor: colors.divider,
+    },
+    settingItemLast: {
+      borderBottomWidth: 0,
+    },
+    settingItemContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    settingIcon: {
+      marginRight: 12,
+    },
+    settingTextContainer: {
+      flex: 1,
+    },
+    settingTitle: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    settingDescription: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    settingValue: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginRight: 8,
+    },
+    accessItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 8,
+    },
+    accessText: {
+      fontSize: 16,
+      color: colors.text,
+      marginLeft: 12,
+    },
+    modalHeader: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      padding: 20,
+      zIndex: 1000,
+    },
+    modalCloseButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: theme === 'dark' ? colors.surface : colors.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.15,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    backButtonText: {
+      fontSize: 16,
+      color: theme === 'dark' ? colors.text : colors.primaryDark,
+      marginLeft: 8,
+    },
+  });
   
   // Modal states for each admin function
   const [showRoomManagement, setShowRoomManagement] = useState(false);
@@ -48,6 +220,10 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
   const [showFamilySettings, setShowFamilySettings] = useState(false);
   const [showZustandAdmin, setShowZustandAdmin] = useState(false);
   const [showErrorMonitoring, setShowErrorMonitoring] = useState(false);
+  const [showValidationControls, setShowValidationControls] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
+  const [showAIIntegration, setShowAIIntegration] = useState(false);
+  const [showRotationManagement, setShowRotationManagement] = useState(false);
 
   // Admin menu items in iOS Settings style
   const adminMenuItems: AdminMenuItem[] = [
@@ -92,6 +268,16 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
       hasChevron: true,
     },
     {
+      id: 'rotation-management',
+      title: 'Rotation Management',
+      description: 'Configure intelligent chore rotation system',
+      icon: 'sync',
+      color: '#be185d',
+      onPress: () => setShowRotationManagement(true),
+      enabled: canManageFamily,
+      hasChevron: true,
+    },
+    {
       id: 'family-settings',
       title: 'Family Settings',
       description: 'Configure family preferences and settings',
@@ -102,12 +288,42 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
       hasChevron: true,
     },
     {
+      id: 'validation-controls',
+      title: 'Validation Controls',
+      description: 'Customize form validation rules and behavior',
+      icon: 'checkmark-done',
+      color: '#059669',
+      onPress: () => setShowValidationControls(true),
+      enabled: canManageFamily,
+      hasChevron: true,
+    },
+    {
+      id: 'template-library',
+      title: 'Template Library',
+      description: 'Browse and apply household routine templates',
+      icon: 'library',
+      color: '#7c2d12',
+      onPress: () => setShowTemplateLibrary(true),
+      enabled: canManageFamily,
+      hasChevron: true,
+    },
+    {
       id: 'zustand-admin',
       title: 'Zustand Remote Admin',
       description: 'Advanced store management and offline controls',
       icon: 'server',
       color: '#7c3aed',
       onPress: () => setShowZustandAdmin(true),
+      enabled: canManageFamily,
+      hasChevron: true,
+    },
+    {
+      id: 'ai-integration',
+      title: 'AI Integration',
+      description: 'Configure Google Gemini API and AI features',
+      icon: 'sparkles',
+      color: '#8b5cf6',
+      onPress: () => setShowAIIntegration(true),
       enabled: canManageFamily,
       hasChevron: true,
     },
@@ -156,12 +372,12 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
       onRequestClose={onClose}
     >
       <SafeAreaView style={styles.container}>
-        <StatusBar backgroundColor="#fdf2f8" barStyle="dark-content" />
+        <StatusBar backgroundColor={colors.background} barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} />
         
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.backButton}>
-            <WebIcon name="chevron-back" size={24} color="#be185d" />
+            <WebIcon name="chevron-back" size={24} color={theme === 'dark' ? colors.accent : colors.primary} />
             <Text style={styles.backText}>Settings</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Admin</Text>
@@ -173,7 +389,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
           <View style={styles.section}>
             <View style={styles.adminCard}>
               <View style={styles.adminIcon}>
-                <WebIcon name="shield-checkmark" size={32} color="#be185d" />
+                <WebIcon name="shield-checkmark" size={32} color={theme === 'dark' ? colors.accent : colors.primary} />
               </View>
               <View style={styles.adminInfo}>
                 <Text style={styles.adminTitle}>Administrator</Text>
@@ -248,7 +464,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
                     <WebIcon 
                       name="chevron-forward" 
                       size={18} 
-                      color={item.enabled ? "#be185d" : "#9ca3af"} 
+                      color={item.enabled ? (theme === 'dark' ? colors.accent : colors.primary) : colors.textMuted} 
                     />
                   )}
                 </TouchableOpacity>
@@ -301,7 +517,7 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
               onPress={() => setShowRoomManagement(false)}
               style={styles.modalCloseButton}
             >
-              <WebIcon name="close" size={24} color="#831843" />
+              <WebIcon name="close" size={24} color={theme === 'dark' ? colors.text : colors.primaryDark} />
             </TouchableOpacity>
           </View>
         </Modal>
@@ -345,194 +561,51 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
                 onPress={() => setShowErrorMonitoring(false)}
                 style={styles.backButton}
               >
-                <WebIcon name="arrow-back" size={24} color="#831843" />
+                <WebIcon name="arrow-back" size={24} color={theme === 'dark' ? colors.text : colors.primaryDark} />
                 <Text style={styles.backButtonText}>Admin Panel</Text>
               </TouchableOpacity>
             </View>
             <ErrorMonitoringPanel />
           </SafeAreaView>
         </Modal>
+        
+        {/* Validation Controls Panel */}
+        <Modal
+          visible={showValidationControls}
+          transparent={false}
+          animationType="slide"
+          onRequestClose={() => setShowValidationControls(false)}
+        >
+          <SafeAreaView style={styles.container}>
+            <ValidationControlsPanel onClose={() => setShowValidationControls(false)} />
+          </SafeAreaView>
+        </Modal>
+        
+        {/* Template Library */}
+        <TemplateLibrary
+          visible={showTemplateLibrary}
+          onClose={() => setShowTemplateLibrary(false)}
+          onTemplateApplied={(templateId, choreCount) => {
+            // Could add additional handling here
+            console.log(`Applied template ${templateId}, created ${choreCount} chores`);
+          }}
+        />
+        
+        {/* AI Integration Panel */}
+        <AIIntegrationPanel
+          visible={showAIIntegration}
+          onClose={() => setShowAIIntegration(false)}
+        />
+        
+        {/* Rotation Management */}
+        <RotationManagement
+          visible={showRotationManagement}
+          onClose={() => setShowRotationManagement(false)}
+        />
       </SafeAreaView>
     </Modal>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#fdf2f8',
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#f1f5f9',
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  backText: {
-    fontSize: 16,
-    color: '#be185d',
-    marginLeft: 4,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#831843',
-    textAlign: 'center',
-    flex: 1,
-  },
-  headerSpacer: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionHeader: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6b7280',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    marginHorizontal: 20,
-  },
-  adminCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    marginHorizontal: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 16,
-    shadowColor: '#be185d',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  adminIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#fdf2f8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  adminInfo: {
-    flex: 1,
-  },
-  adminTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#831843',
-    marginBottom: 2,
-  },
-  adminSubtitle: {
-    fontSize: 14,
-    color: '#9f1239',
-  },
-  settingsGroup: {
-    backgroundColor: '#ffffff',
-    marginHorizontal: 20,
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#be185d',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#f1f5f9',
-  },
-  settingItemLast: {
-    borderBottomWidth: 0,
-  },
-  settingItemDisabled: {
-    opacity: 0.5,
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  settingIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  settingTextContainer: {
-    flex: 1,
-  },
-  settingTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1f2937',
-    marginBottom: 2,
-  },
-  settingTitleDisabled: {
-    color: '#9ca3af',
-  },
-  settingDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  settingDescriptionDisabled: {
-    color: '#d1d5db',
-  },
-  settingValue: {
-    fontSize: 16,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  accessItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  accessText: {
-    fontSize: 16,
-    color: '#1f2937',
-    fontWeight: '500',
-  },
-  modalHeader: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
-    zIndex: 1000,
-  },
-  modalCloseButton: {
-    padding: 8,
-    backgroundColor: '#f9a8d4',
-    borderRadius: 20,
-    shadowColor: '#be185d',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-});
 
 export default AdminSettings;

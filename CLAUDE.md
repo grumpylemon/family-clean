@@ -175,6 +175,7 @@ The app now uses Zustand for offline-first state management with React Context c
 - `hooks/useFamilyZustand.ts` - Drop-in replacement for useFamily hook
 - `services/firestore.ts` - All database operations (v9 modular syntax)
 - `services/gamification.ts` - XP calculation, achievements, and level progression
+- `services/rotationAdminService.ts` - Admin functions for rotation system configuration and analytics
 - `types/index.ts` - TypeScript type definitions with gamification types
 
 ### UI Components & Screens
@@ -189,6 +190,15 @@ The app now uses Zustand for offline-first state management with React Context c
 - `app/(tabs)/dashboard.tsx` - Modern dashboard with cards and stats
 - `app/(tabs)/chores.tsx` - Chore list with completion flow and rewards
 
+### Admin Panel Components (Added May 30, 2025)
+- `components/admin/RotationManagement.tsx` - Main rotation admin interface with tab navigation
+- `components/admin/RotationStrategyConfig.tsx` - Strategy configuration with 7 rotation strategies
+- `components/admin/FairnessEngineDashboard.tsx` - Real-time fairness metrics and workload visualization
+- `components/admin/MemberPreferencesManager.tsx` - Member preferences, skills, and capacity management
+- `components/admin/ScheduleIntelligencePanel.tsx` - Calendar integration and schedule controls
+- `components/admin/RotationAnalytics.tsx` - Performance metrics and strategy effectiveness tracking
+- `components/admin/RotationTestingTools.tsx` - Strategy testing and preview functionality
+
 ### Reusable UI Components (Added May 28, 2025)
 - `components/ui/LoadingSpinner.tsx` - Themed loading states with pink styling
 - `components/ui/ErrorBoundary.tsx` - Error handling with graceful fallback UI
@@ -196,6 +206,7 @@ The app now uses Zustand for offline-first state management with React Context c
 - `components/ui/ConfirmDialog.tsx` - Confirmation dialogs for destructive actions
 - `components/ui/ValidatedInput.tsx` - Form inputs with real-time validation
 - `components/ui/Avatar.tsx` - Member avatars with photoURL support and status indicators
+- `components/ui/StrategySelector.tsx` - Reusable rotation strategy selection component
 
 ### Hooks & Utilities
 - `hooks/useFormValidation.ts` - Reusable form validation logic with common rules
@@ -305,6 +316,55 @@ The app includes a comprehensive gamification system to encourage family partici
    - Shows points earned, XP gained, new achievements
    - Level-up notifications with progress bars
    - Pink-themed design matching app aesthetics
+
+## Rotation System Admin Panel (Added May 30, 2025)
+
+The app includes a comprehensive admin panel for managing the intelligent chore rotation system, accessible through Settings → Admin Panel → Rotation Management.
+
+1. **7-Strategy Rotation System** (`components/admin/RotationStrategyConfig.tsx`):
+   - **Round Robin**: Simple turn-based rotation for equal distribution
+   - **Workload Balance**: Dynamic assignment based on current capacity and workload
+   - **Skill-Based**: Assigns chores based on member certifications and abilities
+   - **Calendar-Aware**: Considers member availability and schedule conflicts
+   - **Random Fair**: Random assignment with fairness constraints and balance monitoring
+   - **Preference-Based**: Prioritizes member preferences while maintaining equity
+   - **Mixed Strategy**: Combines multiple strategies with customizable weights (must sum to 100%)
+
+2. **Real-Time Fairness Engine** (`components/admin/FairnessEngineDashboard.tsx`):
+   - Live fairness scoring (0-100) with configurable thresholds
+   - Member workload visualization with capacity utilization tracking
+   - Workload variance monitoring with automatic rebalancing recommendations
+   - Preference respect rate tracking and optimization suggestions
+   - Historical fairness trends with 7-day, monthly, and quarterly views
+   - Actionable recommendations with one-click implementation
+
+3. **Member Preferences Management** (`components/admin/MemberPreferencesManager.tsx`):
+   - Chore preference scale (-2 to +2) for all chore types (individual, family, shared, pet, room)
+   - Skill certification system with 10+ predefined skills (Cooking, Cleaning, Pet Care, etc.)
+   - Capacity limits configuration (max daily chores, weekly points, preferred time slots)
+   - Special settings (skip weekends, requires supervision, can take over chores, prefer group tasks)
+   - Bulk preference updates and preference impact analysis
+
+4. **Admin Controls & Testing** (`services/rotationAdminService.ts`):
+   - Strategy testing and preview without applying changes
+   - Emergency override system with automatic reversion
+   - Force rebalancing with impact prediction
+   - Configuration backup and restore functionality
+   - Complete audit trail of all administrative actions
+
+5. **Analytics & Performance Tracking** (`components/admin/RotationAnalytics.tsx`):
+   - Strategy effectiveness metrics (fairness scores, conflict rates, member satisfaction)
+   - Historical performance comparison between different strategies
+   - Family collaboration scoring and improvement tracking
+   - System health monitoring (response times, automation success rates)
+   - Exportable reports in multiple formats (CSV, PDF, visual summaries)
+
+6. **Integration Features**:
+   - Seamless integration with existing chore system and member management
+   - Real-time sync across all family member devices
+   - Offline support with action queuing when connectivity is restored
+   - Beautiful pink-themed UI with accessibility support and responsive design
+   - Comprehensive TypeScript interfaces and full test coverage (25 passing tests)
 
 ## Member Management Features
 
@@ -429,3 +489,10 @@ The app now includes a comprehensive set of reusable UI components for professio
    - Visual indicators: orange banner when in mock mode, debug panel in development
    - New `getMockModeReason()` function for debugging
    - Test script: `node scripts/test-mock-detection-v2119.js`
+
+9. **Rotation Admin Panel Access**: Added v2.165
+   - Settings → Admin Panel → Rotation Management
+   - Requires family admin permissions for configuration access
+   - Regular members can view fairness metrics and their own preferences
+   - Enable/disable rotation system with toggle in header
+   - Test rotation strategies without applying changes using preview mode
