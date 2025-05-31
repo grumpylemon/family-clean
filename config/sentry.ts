@@ -30,15 +30,10 @@ const shouldEnableSentry = (): boolean => {
     return false;
   }
 
-  // Enable Sentry for iOS production builds - disabled for Expo Go only
+  // TEMPORARILY DISABLE Sentry for iOS to prevent crashes during debugging
   if (Platform.OS === 'ios') {
-    // Check if running in Expo Go (which has limitations)
-    const isExpoGo = typeof __DEV__ !== 'undefined' && __DEV__;
-    if (isExpoGo) {
-      console.log('Sentry disabled: iOS Expo Go (development)');
-      return false;
-    }
-    console.log('Sentry enabled: iOS production build');
+    console.log('Sentry disabled: iOS temporarily disabled for crash debugging');
+    return false;
   }
 
   // Check for production domains
@@ -122,12 +117,18 @@ const beforeSend = (event: any, hint: any): any => {
 
 // Initialize Sentry based on platform
 export const initializeSentry = async (): Promise<void> => {
+  console.log('=== SENTRY INITIALIZATION STARTING ===');
+  console.log('Platform.OS for Sentry:', Platform.OS);
+  console.log('__DEV__ for Sentry:', __DEV__);
+  
   if (!shouldEnableSentry()) {
-    console.log('Sentry initialization skipped');
+    console.log('Sentry initialization skipped - shouldEnableSentry returned false');
     return;
   }
 
+  console.log('Sentry should be enabled, checking DSN...');
   const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+  console.log('Sentry DSN found:', dsn ? 'YES' : 'NO');
   
   if (!dsn) {
     console.warn('Sentry DSN not found in environment variables');
@@ -144,8 +145,12 @@ export const initializeSentry = async (): Promise<void> => {
     beforeSend,
   };
 
+  console.log('Sentry config created:', config);
+  console.log('About to initialize Sentry for platform:', Platform.OS);
+  
   try {
     if (Platform.OS === 'web') {
+      console.log('Initializing Sentry for web platform...');
       // Use React SDK for web
       SentryReact.init({
         dsn: config.dsn,
@@ -165,7 +170,9 @@ export const initializeSentry = async (): Promise<void> => {
         autoSessionTracking: true,
         sessionTrackingIntervalMillis: 30000,
       });
+      console.log('Sentry web initialization completed');
     } else {
+      console.log('Initializing Sentry for React Native platform...');
       // Use React Native SDK for mobile - simplified config to avoid crashes
       Sentry.init({
         dsn: config.dsn,
@@ -185,11 +192,19 @@ export const initializeSentry = async (): Promise<void> => {
         enableNativeCrashHandling: false, // Disable to prevent conflicts
         enableAutoPerformanceTracking: false, // Disable to prevent conflicts
       });
+      console.log('Sentry React Native initialization completed');
     }
     
-    console.log(`Sentry initialized successfully for ${Platform.OS} in ${config.environment} environment`);
+    console.log(`=== SENTRY INITIALIZED SUCCESSFULLY ===`);
+    console.log(`Platform: ${Platform.OS}`);
+    console.log(`Environment: ${config.environment}`);
+    console.log(`Debug: ${config.debug}`);
   } catch (error) {
+    console.error('=== SENTRY INITIALIZATION FAILED ===');
     console.error('Failed to initialize Sentry:', error);
+    console.error('Sentry error type:', typeof error);
+    console.error('Sentry error stack:', error?.stack);
+    console.error('Sentry error message:', error?.message);
   }
 };
 

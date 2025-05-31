@@ -11,13 +11,18 @@ interface StoreProviderProps {
 }
 
 export function StoreProvider({ children }: StoreProviderProps) {
+  console.log('=== STORE PROVIDER COMPONENT MOUNTING ===');
+  console.log('Platform.OS:', Platform.OS);
+  
   useEffect(() => {
+    console.log('=== STORE PROVIDER EFFECT STARTING ===');
     // Check if store was already initialized
     if (Platform.OS === 'web' && typeof window !== 'undefined' && (window as any).__storeInitialized) {
       console.log('🏪 StoreProvider: Store already initialized, skipping');
       return;
     }
     
+    console.log('🏪 StoreProvider: Marking store as initialized');
     // Mark store as initialized
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       (window as any).__storeInitialized = true;

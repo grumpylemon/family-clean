@@ -221,6 +221,7 @@ export interface FamilySettings {
   defaultChoreCooldownHours: number;
   allowPointTransfers: boolean;
   weekStartDay: number; // 0-6, Sunday to Saturday
+  enableAdvancedChoreCards?: boolean; // Enable advanced chore card features
   theme?: {
     primaryColor?: string;
     secondaryColor?: string;

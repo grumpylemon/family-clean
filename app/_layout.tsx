@@ -56,24 +56,47 @@ console.log("App Layout version: v6 - Zustand Integration");
 const USE_ZUSTAND_ONLY = true; // Using Zustand exclusively to prevent duplicate context initialization
 
 export default function RootLayout() {
+  console.log('=== FAMILY COMPASS STARTUP - ROOTLAYOUT BEGIN ===');
+  console.log('Platform.OS:', Platform.OS);
+  console.log('__DEV__:', __DEV__);
+  console.log('Environment variables check:', {
+    EXPO_PUBLIC_USE_MOCK: process.env.EXPO_PUBLIC_USE_MOCK,
+    NODE_ENV: process.env.NODE_ENV
+  });
+
   const colorScheme = useColorScheme();
+  console.log('Color scheme initialized:', colorScheme);
+  
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  console.log('Fonts loaded:', loaded);
+  
   const [firebaseInitialized, setFirebaseInitialized] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  
+  console.log('State initialized - firebaseInitialized:', firebaseInitialized, 'isClient:', isClient);
 
   // Initialize client-side state to prevent hydration mismatch
   useEffect(() => {
+    console.log('=== CLIENT INITIALIZATION EFFECT STARTED ===');
     setIsClient(true);
+    console.log('Client state set to true');
     
     // Initialize Sentry first (if in production) - wrapped in try/catch for safety
+    console.log('Starting Sentry initialization...');
     try {
-      initializeSentry().catch(error => {
-        console.warn('Failed to initialize Sentry:', error);
-      });
+      initializeSentry()
+        .then(() => {
+          console.log('Sentry initialization completed successfully');
+        })
+        .catch(error => {
+          console.warn('Failed to initialize Sentry:', error);
+          console.warn('Sentry error stack:', error?.stack);
+        });
     } catch (error) {
-      console.warn('Sentry initialization error:', error);
+      console.warn('Sentry initialization synchronous error:', error);
+      console.warn('Sentry sync error stack:', error?.stack);
     }
     
     // Set up global error handlers for unhandled promises
@@ -113,13 +136,22 @@ export default function RootLayout() {
 
   // Initialize Firebase on app start (only on client side)
   useEffect(() => {
-    if (!isClient) return;
+    console.log('=== FIREBASE INITIALIZATION EFFECT STARTED ===');
+    console.log('isClient status:', isClient);
+    if (!isClient) {
+      console.log('Skipping Firebase init - not client side yet');
+      return;
+    }
     
     const initFirebase = async () => {
+      console.log('=== FIREBASE ASYNC INITIALIZATION STARTING ===');
       try {
+        console.log('About to call initializeFirebase()...');
         // Initialize Firebase - this will handle mock mode detection
         await initializeFirebase();
+        console.log('Firebase initialization completed, setting state...');
         setFirebaseInitialized(true);
+        console.log('Firebase state set to true');
         
         // Log platform and mock status for debugging
         console.log(`App running on platform: ${Platform.OS}`);
@@ -154,65 +186,117 @@ export default function RootLayout() {
         // We'll initialize this when user is authenticated (in auth slice)
         console.log('App layout initialized, notification service ready for auth');
       } catch (error) {
-        console.error('Firebase initialization failed:', error);
+        console.error('=== FIREBASE INITIALIZATION FAILED ===');
+        console.error('Firebase error:', error);
+        console.error('Firebase error type:', typeof error);
+        console.error('Firebase error stack:', error?.stack);
+        console.error('Firebase error message:', error?.message);
+        console.error('Firebase error code:', error?.code);
         // Try to initialize notifications anyway for fallback
         console.log('Attempting notification service initialization despite Firebase error');
       }
     };
     
+    console.log('About to call initFirebase() function...');
     initFirebase().catch(error => {
+      console.error('=== UNHANDLED FIREBASE INIT ERROR ===');
       console.error('Unhandled Firebase init error:', error);
+      console.error('Unhandled error stack:', error?.stack);
     });
   }, [isClient]);
 
   if (!loaded) {
+    console.log('Fonts not loaded yet, showing loading state');
     // Async font loading only occurs in development.
     return null;
   }
 
   // Prevent hydration mismatch by not rendering until client-side
   if (!isClient) {
+    console.log('Not client-side yet, showing loading state');
     return null;
   }
 
-  // Create the app content
-  const appContent = (
-    <ToastProvider>
-      <RootLayoutNav firebaseStatus={firebaseInitialized} />
-      <StatusBar style="auto" />
-      {/* Mock Mode Indicator - appears when using mock Firebase */}
-      <MockModeIndicator position="top" />
-      {/* Environment Debug Info - development only */}
-      {__DEV__ && <EnvironmentInfo />}
-    </ToastProvider>
-  );
+  console.log('=== RENDERING APP CONTENT ===');
+  console.log('Fonts loaded:', loaded);
+  console.log('Client ready:', isClient);
+  console.log('Firebase initialized:', firebaseInitialized);
+
+  // Create the app content with enhanced error protection
+  let appContent;
+  try {
+    console.log('Creating app content components...');
+    appContent = (
+      <ToastProvider>
+        <RootLayoutNav firebaseStatus={firebaseInitialized} />
+        <StatusBar style="auto" />
+        {/* Mock Mode Indicator - appears when using mock Firebase */}
+        <MockModeIndicator position="top" />
+        {/* Environment Debug Info - development only */}
+        {__DEV__ && <EnvironmentInfo />}
+      </ToastProvider>
+    );
+    console.log('App content created successfully');
+  } catch (error) {
+    console.error('=== FAILED TO CREATE APP CONTENT ===');
+    console.error('App content creation error:', error);
+    console.error('Error stack:', error?.stack);
+    // Fallback to minimal content
+    appContent = (
+      <ToastProvider>
+        <RootLayoutNav firebaseStatus={firebaseInitialized} />
+        <StatusBar style="auto" />
+      </ToastProvider>
+    );
+  }
 
   // Conditionally wrap with context providers based on feature flag
-  const wrappedContent = USE_ZUSTAND_ONLY ? (
-    appContent
-  ) : (
-    <AuthProvider>
-      <FamilyProvider>
-        {appContent}
-      </FamilyProvider>
-    </AuthProvider>
-  );
+  let wrappedContent;
+  try {
+    console.log('Wrapping content with providers...');
+    wrappedContent = USE_ZUSTAND_ONLY ? (
+      appContent
+    ) : (
+      <AuthProvider>
+        <FamilyProvider>
+          {appContent}
+        </FamilyProvider>
+      </AuthProvider>
+    );
+    console.log('Content wrapped successfully');
+  } catch (error) {
+    console.error('=== FAILED TO WRAP CONTENT ===');
+    console.error('Content wrapping error:', error);
+    console.error('Error stack:', error?.stack);
+    wrappedContent = appContent; // Fallback to unwrapped content
+  }
 
-  return (
-    <ErrorBoundary onError={(error, errorInfo) => {
-      console.error('App crashed with error:', error);
-      console.error('Error stack:', error.stack);
-      console.error('Component stack:', errorInfo.componentStack);
-    }}>
-      <StoreProvider>
-        <CustomThemeProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            {wrappedContent}
-          </ThemeProvider>
-        </CustomThemeProvider>
-      </StoreProvider>
-    </ErrorBoundary>
-  );
+  try {
+    console.log('=== RETURNING FINAL APP COMPONENT ===');
+    return (
+      <ErrorBoundary onError={(error, errorInfo) => {
+        console.error('=== APP CRASHED IN ERROR BOUNDARY ===');
+        console.error('App crashed with error:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Component stack:', errorInfo.componentStack);
+        console.error('==========================================');
+      }}>
+        <StoreProvider>
+          <CustomThemeProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              {wrappedContent}
+            </ThemeProvider>
+          </CustomThemeProvider>
+        </StoreProvider>
+      </ErrorBoundary>
+    );
+  } catch (error) {
+    console.error('=== CRITICAL: FAILED TO RETURN APP COMPONENT ===');
+    console.error('Final return error:', error);
+    console.error('Error stack:', error?.stack);
+    // This should never happen, but provide absolute fallback
+    return null;
+  }
 }
 
 function RootLayoutNav({ firebaseStatus }: { firebaseStatus: boolean }) {

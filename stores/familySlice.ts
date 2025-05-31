@@ -148,7 +148,8 @@ function createFamilySliceFactory() {
             defaultChorePoints: 10,
             defaultChoreCooldownHours: 24,
             allowPointTransfers: false,
-            weekStartDay: 0
+            weekStartDay: 0,
+            enableAdvancedChoreCards: false // Default disabled, can be enabled in settings
           }
         };
         

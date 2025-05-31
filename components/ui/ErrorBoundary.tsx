@@ -39,11 +39,16 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log the error to console in development
-    if (__DEV__) {
-      console.error('Error caught by ErrorBoundary:', error);
-      console.error('Error info:', errorInfo);
-    }
+    // Enhanced logging for iOS crash debugging
+    console.error('=== ERROR BOUNDARY CAUGHT ERROR ===');
+    console.error('Error name:', error?.name);
+    console.error('Error message:', error?.message);
+    console.error('Error stack:', error?.stack);
+    console.error('Component stack:', errorInfo?.componentStack);
+    console.error('Error toString:', error?.toString());
+    console.error('Platform:', Platform.OS);
+    console.error('__DEV__:', __DEV__);
+    console.error('=====================================');
 
     // Capture error in Sentry with context
     let errorId: string | null = null;

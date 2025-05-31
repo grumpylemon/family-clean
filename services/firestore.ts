@@ -1254,7 +1254,8 @@ const mockFamily: Family = {
     defaultChorePoints: 10,
     defaultChoreCooldownHours: 24,
     allowPointTransfers: false,
-    weekStartDay: 0
+    weekStartDay: 0,
+    enableAdvancedChoreCards: true // Enable by default in demo to show features
   }
 };
 

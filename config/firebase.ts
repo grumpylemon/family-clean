@@ -42,12 +42,12 @@ import {
   persistentMultipleTabManager
 } from 'firebase/firestore';
 
-console.log('--- FIREBASE DEBUG ---');
+console.log('=== FIREBASE CONFIG FILE LOADING ===');
 try {
   // Platform might not be available before import, so wrap in try/catch
   // If you get an error, move this after the imports
   // eslint-disable-next-line no-undef
-  console.log('Platform.OS:', typeof Platform !== 'undefined' ? Platform.OS : 'undefined');
+  console.log('Platform.OS during config load:', typeof Platform !== 'undefined' ? Platform.OS : 'undefined');
 } catch (e) {
   console.log('Platform.OS: (error)', e);
 }
@@ -347,12 +347,13 @@ console.log('🎯 FINAL DECISION: _isUsingMock =', _isUsingMock);
 // Function to determine if we should use mock implementation
 // SIMPLIFIED LOGIC (v2.119): Clear priority order to prevent production mock mode issues
 export const shouldUseMock = (): boolean => {
-  console.log('=== FIREBASE MOCK DETECTION v2.119 ===');
-  console.log('Platform.OS:', Platform.OS);
-  console.log('__DEV__:', __DEV__);
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-  console.log('EXPO_PUBLIC_USE_MOCK:', process.env.EXPO_PUBLIC_USE_MOCK);
-  console.log('EXPO_PUBLIC_FORCE_PRODUCTION:', process.env.EXPO_PUBLIC_FORCE_PRODUCTION);
+  try {
+    console.log('=== FIREBASE MOCK DETECTION v2.119 ===');
+    console.log('Platform.OS:', Platform.OS);
+    console.log('__DEV__:', __DEV__);
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('EXPO_PUBLIC_USE_MOCK:', process.env.EXPO_PUBLIC_USE_MOCK);
+    console.log('EXPO_PUBLIC_FORCE_PRODUCTION:', process.env.EXPO_PUBLIC_FORCE_PRODUCTION);
   
   // 🚨 PRIORITY 1: Production Domain Detection (Web)
   if (Platform.OS === 'web') {
@@ -434,34 +435,56 @@ export const shouldUseMock = (): boolean => {
     return false;
   }
   
-  // 🚨 FALLBACK: Development with incomplete config
-  console.log('⚠️  FALLBACK: Development with incomplete config - USING MOCK');
-  return true;
+    // 🚨 FALLBACK: Development with incomplete config
+    console.log('⚠️  FALLBACK: Development with incomplete config - USING MOCK');
+    return true;
+  } catch (error) {
+    console.error('=== ERROR IN SHOULDUSEMOCK FUNCTION ===');
+    console.error('shouldUseMock error:', error);
+    console.error('Error stack:', error?.stack);
+    console.error('Falling back to mock mode for safety');
+    return true; // Default to mock mode on error
+  }
 };
 
 // Function to initialize Firebase (real or mock)
 export const initializeFirebase = async () => {
+  console.log('=== INITIALIZE FIREBASE FUNCTION CALLED ===');
+  console.log('_firebaseInitialized status:', _firebaseInitialized);
+  
   // Skip if already initialized
   if (_firebaseInitialized) {
     console.log("Firebase already initialized, skipping");
     return;
   }
   
+  console.log('Calling shouldUseMock()...');
   // Determine if we should use mock
   _isUsingMock = shouldUseMock();
+  console.log('shouldUseMock() returned:', _isUsingMock);
   
   // CRITICAL: Log the decision clearly
   console.log('=== FIREBASE INITIALIZATION DECISION ===');
   console.log('Using Mock Firebase:', _isUsingMock);
   console.log('Build Type:', __DEV__ ? 'Development' : 'Production');
   console.log('Platform:', Platform.OS);
+  console.log('Environment variables check:', {
+    USE_MOCK: process.env.EXPO_PUBLIC_USE_MOCK,
+    API_KEY: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ? 'SET' : 'MISSING'
+  });
   console.log('=======================================');
   
   if (_isUsingMock) {
-    console.log("Initializing mock Firebase implementation");
-    initializeMockData();
-    _firebaseInitialized = true;
-    return;
+    console.log("=== INITIALIZING MOCK FIREBASE ===");
+    try {
+      initializeMockData();
+      _firebaseInitialized = true;
+      console.log("Mock Firebase initialized successfully");
+      return;
+    } catch (error) {
+      console.error("Mock Firebase initialization failed:", error);
+      throw error;
+    }
   }
   
   // Validate Firebase configuration before initializing
