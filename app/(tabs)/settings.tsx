@@ -212,7 +212,7 @@ export default function SettingsScreen() {
     changeAvatarButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.primaryLight,
+      backgroundColor: colors.primary,
       paddingHorizontal: 20,
       paddingVertical: 10,
       borderRadius: 20,
@@ -221,7 +221,7 @@ export default function SettingsScreen() {
     changeAvatarText: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.text,
+      color: theme === 'dark' ? colors.buttonText || '#ffffff' : '#ffffff',
     },
     section: {
       marginBottom: 24,
@@ -423,6 +423,53 @@ export default function SettingsScreen() {
       fontSize: 14,
       color: colors.textSecondary,
     },
+    profileCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 16,
+      padding: 20,
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.04,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    profileForm: {
+      paddingTop: 16,
+    },
+    fieldLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    textInput: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: colors.text,
+      marginBottom: 16,
+    },
+    updateButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 24,
+      alignItems: 'center',
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+    updateButtonText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: theme === 'dark' ? colors.buttonText || '#ffffff' : '#ffffff',
+    },
   });
 
   return (
@@ -455,7 +502,7 @@ export default function SettingsScreen() {
                   )}
                 </View>
                 <TouchableOpacity style={styles.changeAvatarButton} onPress={handleChangeAvatar}>
-                  <WebIcon name="camera" size={16} color={colors.primary} />
+                  <WebIcon name="camera" size={16} color={theme === 'dark' ? colors.buttonText || '#ffffff' : '#ffffff'} />
                   <Text style={styles.changeAvatarText}>Change Avatar</Text>
                 </TouchableOpacity>
               </View>
@@ -492,12 +539,12 @@ export default function SettingsScreen() {
                 <View style={styles.adminLeft}>
                   <View style={[
                     styles.adminIcon, 
-                    { backgroundColor: canManageFamily ? '#fdf2f8' : '#f9fafb' }
+                    { backgroundColor: canManageFamily ? (theme === 'dark' ? colors.surface : '#fdf2f8') : (theme === 'dark' ? colors.background : '#f9fafb') }
                   ]}>
                     <WebIcon 
                       name="shield-checkmark" 
                       size={24} 
-                      color={canManageFamily ? '#be185d' : '#9ca3af'} 
+                      color={canManageFamily ? (theme === 'dark' ? colors.accent : colors.primary) : colors.textMuted} 
                     />
                   </View>
                   <View style={styles.adminTextContainer}>
@@ -521,7 +568,7 @@ export default function SettingsScreen() {
                 <WebIcon 
                   name="chevron-forward" 
                   size={20} 
-                  color={canManageFamily ? "#be185d" : "#9ca3af"} 
+                  color={canManageFamily ? (theme === 'dark' ? colors.accent : colors.primary) : colors.textMuted} 
                 />
               </TouchableOpacity>
             </View>
@@ -537,7 +584,7 @@ export default function SettingsScreen() {
                     <WebIcon 
                       name={theme === 'dark' ? "moon" : "sunny"} 
                       size={20} 
-                      color={colors.primary}
+                      color={theme === 'dark' ? colors.accent : colors.primary}
                     />
                   </View>
                   <View>
@@ -551,21 +598,21 @@ export default function SettingsScreen() {
                   style={[styles.themeOption, themeMode === 'light' && styles.themeOptionActive]}
                   onPress={() => handleToggleDarkMode('light')}
                 >
-                  <WebIcon name="sunny" size={20} color={themeMode === 'light' ? colors.primary : colors.textMuted} />
+                  <WebIcon name="sunny" size={20} color={themeMode === 'light' ? (theme === 'dark' ? colors.accent : colors.primary) : colors.textMuted} />
                   <Text style={[styles.themeOptionText, themeMode === 'light' && styles.themeOptionTextActive]}>Light</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.themeOption, themeMode === 'dark' && styles.themeOptionActive]}
                   onPress={() => handleToggleDarkMode('dark')}
                 >
-                  <WebIcon name="moon" size={20} color={themeMode === 'dark' ? colors.primary : colors.textMuted} />
+                  <WebIcon name="moon" size={20} color={themeMode === 'dark' ? (theme === 'dark' ? colors.accent : colors.primary) : colors.textMuted} />
                   <Text style={[styles.themeOptionText, themeMode === 'dark' && styles.themeOptionTextActive]}>Dark</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.themeOption, themeMode === 'system' && styles.themeOptionActive]}
                   onPress={() => handleToggleDarkMode('system')}
                 >
-                  <WebIcon name="phone-portrait" size={20} color={themeMode === 'system' ? colors.primary : colors.textMuted} />
+                  <WebIcon name="phone-portrait" size={20} color={themeMode === 'system' ? (theme === 'dark' ? colors.accent : colors.primary) : colors.textMuted} />
                   <Text style={[styles.themeOptionText, themeMode === 'system' && styles.themeOptionTextActive]}>System</Text>
                 </TouchableOpacity>
               </View>
@@ -585,7 +632,7 @@ export default function SettingsScreen() {
                     <WebIcon 
                       name="notifications" 
                       size={24} 
-                      color={colors.primary} 
+                      color={theme === 'dark' ? colors.accent : colors.primary} 
                     />
                   </View>
                   <View style={styles.adminTextContainer}>
@@ -600,7 +647,7 @@ export default function SettingsScreen() {
                 <WebIcon 
                   name="chevron-forward" 
                   size={20} 
-                  color={colors.primary} 
+                  color={theme === 'dark' ? colors.accent : colors.primary} 
                 />
               </TouchableOpacity>
             </View>
@@ -644,7 +691,7 @@ export default function SettingsScreen() {
                 style={{ padding: 8, borderRadius: 20, backgroundColor: '#f9a8d4' }}
                 onPress={() => setShowNotificationSettings(false)}
               >
-                <WebIcon name="close" size={24} color={colors.text} />
+                <WebIcon name="close" size={24} color={theme === 'dark' ? '#ffffff' : colors.text} />
               </TouchableOpacity>
             </View>
             <NotificationSettings />

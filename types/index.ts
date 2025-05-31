@@ -160,6 +160,9 @@ export interface FamilyMember {
     dailyTakeoverCount: number;
     dailyTakeoverResetAt: string;
   };
+  // Enhanced rotation preferences
+  rotationPreferences?: import('./rotation').MemberRotationPreferences;
+  capacityLimits?: import('./rotation').MemberCapacityLimits;
 }
 
 export interface Family {
@@ -178,6 +181,10 @@ export interface Family {
   roomAssignments?: RoomAssignment[];
   // Collaboration features
   collaborationSettings?: CollaborationSettings;
+  // Enhanced rotation system
+  rotationSettings?: import('./rotation').FamilyRotationSettings;
+  fairnessMetrics?: import('./rotation').FamilyFairnessMetrics;
+  rotationAnalytics?: import('./rotation').RotationAnalytics;
 }
 
 export interface FamilySettings {
@@ -212,6 +219,7 @@ export interface Chore {
   completedAt?: Date | string;
   dueDate: Date | string;
   createdAt: Date | string;
+  updatedAt?: Date | string;
   createdBy: string;
   familyId: string;
   status: ChoreStatus;
@@ -245,6 +253,15 @@ export interface Chore {
   isTakenOver?: boolean;
   takeoverBonusPoints?: number;
   takeoverBonusXP?: number;
+  // Enhanced rotation system
+  rotationConfig?: import('./rotation').ChoreRotationConfig;
+  rotationHistory?: import('./rotation').RotationAssignment[];
+  lastRotationStrategy?: import('./rotation').RotationStrategy;
+  lastRotationScore?: number;
+  nextRotationDate?: string;
+  estimatedDuration?: number; // Minutes
+  // Advanced Chore Cards System
+  advancedCard?: AdvancedChoreCard;
 }
 
 // Reward Types
@@ -327,6 +344,16 @@ export interface ChoreCompletionRecord {
   bonusMultiplier?: number;
   achievementsUnlocked?: string[];
   familyId: string;
+  enhancedStreaks?: {
+    activeStreaks?: number;
+    milestonesAchieved?: string[];
+    categoryStreaks?: Record<string, number>;
+    overallStreak?: number;
+    categoryStreak?: number;
+    perfectDayStreak?: number;
+    earlyBirdStreak?: number;
+    compoundMultiplier?: number;
+  };
 }
 
 // New types for enhanced gamification
@@ -363,6 +390,9 @@ export interface CompletionReward {
     newLevel: number;
     title: string;
   };
+  compoundStreakMultiplier?: number;
+  milestonesAchieved?: any[];
+  enhancedStreaks?: any;
 }
 
 export interface Notification {
@@ -406,6 +436,10 @@ export interface PointTransaction {
     streakBonus?: number;
     milestoneLevel?: number;
     adminNote?: string;
+    basePoints?: number;
+    compoundMultiplier?: number;
+    milestoneBonus?: number;
+    achievedMilestones?: string[];
   };
   createdAt: Date | string;
 }
@@ -1188,4 +1222,299 @@ export interface ExportSettings {
   includeCharts: boolean;
   format: 'csv' | 'pdf' | 'both';
   lastGeneratedAt?: string;
+}
+
+// ====== ADVANCED CHORE CARDS SYSTEM ======
+
+// Age groups for instruction targeting
+export type AgeGroup = 'child' | 'teen' | 'adult'; // 5-8, 9-12, 13+
+export type QualityRating = 'incomplete' | 'partial' | 'complete' | 'excellent';
+export type CertificationLevel = 'basic' | 'intermediate' | 'advanced';
+
+// Instruction System
+export interface InstructionStep {
+  id: string;
+  stepNumber: number;
+  title: string;
+  description: string;
+  safetyNote?: string;
+  estimatedMinutes?: number;
+  requiredTools?: string[];
+  mediaAssets?: MediaAsset[];
+  isOptional?: boolean;
+}
+
+export interface InstructionSet {
+  id: string;
+  ageGroup: AgeGroup;
+  steps: InstructionStep[];
+  prerequisites: string[];
+  totalEstimatedMinutes: number;
+  safetyWarnings: SafetyWarning[];
+  tips: string[];
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface SafetyWarning {
+  id: string;
+  level: 'caution' | 'warning' | 'danger';
+  message: string;
+  icon: string;
+  applicableSteps?: number[]; // Step numbers this applies to
+}
+
+export interface MediaAsset {
+  id: string;
+  type: 'image' | 'video' | 'audio';
+  url: string;
+  alt?: string;
+  caption?: string;
+  duration?: number; // for video/audio
+}
+
+// Certification System
+export interface ChoreCardCertification {
+  required: boolean;
+  level: CertificationLevel;
+  skills: string[];
+  trainingModules: string[];
+  expiryDays?: number;
+  renewalRequired?: boolean;
+}
+
+export interface UserCertificationStatus {
+  choreId: string;
+  userId: string;
+  status: 'not_started' | 'in_progress' | 'certified' | 'expired' | 'probation';
+  level: CertificationLevel;
+  certifiedAt?: Date | string;
+  expiresAt?: Date | string;
+  trainerId?: string;
+  trainerName?: string;
+  assessmentResults?: AssessmentResult[];
+  probationCount?: number;
+  notes?: string;
+}
+
+export interface AssessmentResult {
+  id: string;
+  assessorId: string;
+  assessorName: string;
+  assessedAt: Date | string;
+  score: number; // 0-100
+  passed: boolean;
+  criteria: AssessmentCriteria[];
+  comments?: string;
+}
+
+export interface AssessmentCriteria {
+  skill: string;
+  score: number;
+  maxScore: number;
+  passed: boolean;
+  notes?: string;
+}
+
+// Performance Tracking
+export interface ChoreCompletionHistory {
+  id: string;
+  choreId: string;
+  userId: string;
+  completedAt: Date | string;
+  qualityRating: QualityRating;
+  satisfactionRating: number; // 1-5 emoji scale
+  timeToComplete: number; // minutes
+  comments?: string;
+  photos?: string[];
+  instructionRating?: number; // 1-5 how helpful were instructions
+  certificationEarned?: string;
+  learningAchievements?: string[];
+  pointsEarned: number;
+  xpEarned: number;
+  bonusMultipliers?: {
+    quality: number;
+    speed: number;
+    certification: number;
+  };
+}
+
+export interface UserChorePreference {
+  userId: string;
+  choreId: string;
+  satisfactionRating: number; // 1-5 emoji scale (😤=1, 😐=3, 😊=5)
+  preferenceNotes?: string;
+  lastUpdated: Date | string;
+  seasonalVariations?: {
+    spring?: number;
+    summer?: number;
+    fall?: number;
+    winter?: number;
+  };
+  timePreferences?: {
+    morning?: boolean;
+    afternoon?: boolean;
+    evening?: boolean;
+  };
+}
+
+export interface PerformanceMetrics {
+  userId: string;
+  choreId: string;
+  totalCompletions: number;
+  averageQualityRating: number;
+  averageSatisfactionRating: number;
+  averageCompletionTime: number;
+  excellentCount: number;
+  incompleteCount: number;
+  improvementTrend: 'improving' | 'declining' | 'stable';
+  lastCompletedAt?: Date | string;
+  personalBestTime?: number;
+  qualityStreak: number; // consecutive excellent ratings
+  certificationProgress?: number; // 0-100%
+}
+
+// Educational Content
+export interface EducationalFact {
+  id: string;
+  content: string;
+  ageGroups: AgeGroup[];
+  category: string;
+  choreTypes?: ChoreType[];
+  sources: string[];
+  verifiedAt: Date | string;
+  lastShown?: Date | string;
+  engagementScore?: number; // how often users interact with this fact
+  seasonal?: boolean;
+  culturalContext?: string;
+}
+
+export interface InspirationalQuote {
+  id: string;
+  text: string;
+  author?: string;
+  ageGroups: AgeGroup[];
+  themes: string[]; // 'motivation', 'teamwork', 'responsibility', etc.
+  choreTypes?: ChoreType[];
+  mood?: 'encouraging' | 'empowering' | 'fun' | 'thoughtful';
+  lastShown?: Date | string;
+  userRating?: number; // average user rating
+}
+
+export interface LearningObjective {
+  id: string;
+  title: string;
+  description: string;
+  skills: string[];
+  ageGroups: AgeGroup[];
+  assessmentCriteria?: string[];
+  relatedFacts?: string[]; // IDs of related educational facts
+  completionRewards?: {
+    points?: number;
+    xp?: number;
+    badges?: string[];
+  };
+}
+
+// Smart Assignment
+export interface BounceLogic {
+  algorithm: 'rotation' | 'preference' | 'skill' | 'availability' | 'mixed';
+  exclusionRules: AssignmentRule[];
+  emergencyFallback: boolean;
+  fairnessWeight: number; // 0-1
+  preferenceWeight: number; // 0-1
+  skillWeight: number; // 0-1
+  availabilityWeight: number; // 0-1
+}
+
+export interface AssignmentRule {
+  id: string;
+  condition: 'user_unavailable' | 'lacks_certification' | 'low_satisfaction' | 'overloaded';
+  action: 'skip' | 'require_approval' | 'apply_bonus' | 'suggest_alternative';
+  parameters?: Record<string, any>;
+}
+
+// Advanced Chore Card Container
+export interface AdvancedChoreCard {
+  id: string;
+  choreId: string;
+  // Instruction System
+  instructions: {
+    child?: InstructionSet;
+    teen?: InstructionSet;
+    adult?: InstructionSet;
+  };
+  // Certification Requirements
+  certification?: ChoreCardCertification;
+  // Educational Content
+  educationalContent: {
+    facts: string[]; // IDs of educational facts
+    quotes: string[]; // IDs of inspirational quotes
+    learningObjectives: string[]; // IDs of learning objectives
+    seasonalContent?: {
+      spring?: string[];
+      summer?: string[];
+      fall?: string[];
+      winter?: string[];
+    };
+  };
+  // Gamification Enhancements
+  gamification: {
+    specialAchievements: string[]; // Achievement IDs
+    qualityMultipliers: {
+      incomplete: number; // 0
+      partial: number; // 0.5
+      complete: number; // 1.0
+      excellent: number; // 1.1-1.5
+    };
+    learningRewards: {
+      instructionCompleted: number; // XP for completing instructions
+      factEngagement: number; // XP for reading facts
+      certificationProgress: number; // XP for certification steps
+    };
+    certificationBonuses: {
+      basic: number;
+      intermediate: number;
+      advanced: number;
+    };
+  };
+  // Smart Assignment
+  bounceLogic?: BounceLogic;
+  // Metadata
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  createdBy: string;
+  familyId: string;
+  isActive: boolean;
+  version: number;
+}
+
+// Advanced Card Analytics
+export interface ChoreCardAnalytics {
+  choreId: string;
+  familyId: string;
+  period: {
+    start: Date | string;
+    end: Date | string;
+  };
+  metrics: {
+    totalCompletions: number;
+    averageQualityRating: number;
+    averageSatisfactionRating: number;
+    instructionEngagement: number; // % who used instructions
+    certificationProgress: number; // % who are certified
+    educationalEngagement: number; // % who read facts/quotes
+    improvementRate: number; // % showing quality improvement
+  };
+  topPerformers: {
+    quality: { userId: string; rating: number }[];
+    satisfaction: { userId: string; rating: number }[];
+    speed: { userId: string; time: number }[];
+  };
+  insights: {
+    needsAttention: string[]; // User IDs who need help
+    excelling: string[]; // User IDs doing great
+    suggestions: string[]; // Improvement recommendations
+  };
+  lastUpdated: Date | string;
 }

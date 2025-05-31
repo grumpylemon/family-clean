@@ -89,6 +89,12 @@ The app uses a hybrid Firebase implementation to support both web and mobile pla
    - `UserAchievement`: Tracks when achievements were earned
    - `LevelConfig`: Defines XP requirements and titles for each level
    - `CompletionReward`: Reward data returned after completing a chore
+   - `AdvancedChoreCard`: Enhanced chore with instructions, certification, educational content, and gamification
+   - `InstructionSet`: Age-appropriate step-by-step guidance with safety warnings and media assets
+   - `ChoreCompletionHistory`: Detailed completion tracking with quality ratings and satisfaction scores
+   - `UserChorePreference`: Personal satisfaction tracking for smart assignment algorithms
+   - `EducationalFact`: "Did You Know" content with age-group targeting and engagement analytics
+   - `InspirationalQuote`: Motivational content with mood and theme categorization
 
 3. **Navigation Structure**:
    - Uses Expo Router file-based routing
@@ -189,6 +195,16 @@ The app now uses Zustand for offline-first state management with React Context c
 - `app/(tabs)/index.tsx` - Home screen with family dashboard and avatars
 - `app/(tabs)/dashboard.tsx` - Modern dashboard with cards and stats
 - `app/(tabs)/chores.tsx` - Chore list with completion flow and rewards
+
+### Advanced Chore Cards System (Added May 30, 2025)
+- `services/choreCardService.ts` - Advanced chore card management with instructions, performance tracking, and smart assignment
+- `services/educationalContentService.ts` - Educational facts, inspirational quotes, and learning objectives management
+- `components/chore-cards/AdvancedChoreCard.tsx` - Main advanced card component with expandable content and interactive features
+- `components/chore-cards/InstructionViewer.tsx` - Step-by-step instruction modal with progress tracking and safety warnings
+- `components/chore-cards/EducationalContent.tsx` - Educational facts and quotes display with engagement tracking
+- `components/chore-cards/QualityRatingInput.tsx` - Completion quality assessment with satisfaction tracking
+- `components/chore-cards/CertificationBadge.tsx` - Certification status display and training workflow management
+- `components/chore-cards/PerformanceHistory.tsx` - Personal performance analytics and completion history
 
 ### Admin Panel Components (Added May 30, 2025)
 - `components/admin/RotationManagement.tsx` - Main rotation admin interface with tab navigation

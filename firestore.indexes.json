@@ -85,6 +85,38 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "choreTemplates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isOfficial",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "category",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "popularity",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "choreTemplates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isOfficial",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "popularity",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

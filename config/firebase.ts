@@ -507,8 +507,7 @@ export const initializeFirebase = async () => {
             localCache: persistentLocalCache({
               tabManager: persistentMultipleTabManager()
             }),
-            experimentalForceLongPolling: true,
-            useFetchStreams: false
+            experimentalForceLongPolling: true
           });
           
           // Set up error handlers for Firestore network operations
@@ -522,8 +521,7 @@ export const initializeFirebase = async () => {
           try {
             const { initializeFirestore } = await import('firebase/firestore');
             _firestoreDb = initializeFirestore(app, {
-              experimentalForceLongPolling: true,
-              useFetchStreams: false
+              experimentalForceLongPolling: true
             });
           } catch (fallbackError) {
             console.warn("Long polling initialization failed, using standard Firestore:", fallbackError);

@@ -40,24 +40,24 @@ const lightColors = {
   cardShadow: 'rgba(190, 24, 93, 0.08)',
 };
 
-// Dark mode colors (new pink-themed dark palette)
+// Dark mode colors (WCAG 2.1 AA compliant pink-themed dark palette)
 const darkColors = {
   // Background colors
   background: '#1a0a0f', // Very dark with pink tint
   surface: '#2d1520', // Dark surface with pink undertone
   
   // Primary pink colors
-  primary: '#f9a8d4', // Lighter pink for dark mode
-  primaryLight: '#fbcfe8',
-  primaryDark: '#be185d',
+  primary: '#be185d', // Medium pink for better contrast on buttons
+  primaryLight: '#831843', // Darker pink for button backgrounds
+  primaryDark: '#9f1239', // Darkest pink for pressed states
   
   // Text colors
-  text: '#fbcfe8', // Light pink text
-  textSecondary: '#f9a8d4',
-  textMuted: '#9f7086',
+  text: '#ffffff', // Pure white for maximum contrast
+  textSecondary: '#f1f5f9', // Light gray for secondary text
+  textMuted: '#94a3b8', // Higher contrast muted text
   
   // Accent colors
-  accent: '#be185d',
+  accent: '#f9a8d4', // Light pink for accents and highlights
   success: '#10b981',
   warning: '#f59e0b',
   error: '#ef4444',
@@ -68,13 +68,17 @@ const darkColors = {
   divider: '#3d1a2b',
   
   // Tab bar
-  tabIconDefault: '#9f7086',
+  tabIconDefault: '#94a3b8',
   tabIconSelected: '#f9a8d4',
   tabBarBackground: '#2d1520',
   
   // Cards and surfaces
   cardBackground: '#2d1520',
   cardShadow: 'rgba(0, 0, 0, 0.5)',
+  
+  // Button-specific colors for better contrast
+  buttonText: '#ffffff', // White text for all colored buttons
+  buttonTextSecondary: '#f1f5f9', // Light gray for secondary buttons
 };
 
 export const Colors = {

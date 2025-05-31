@@ -1,7 +1,7 @@
  For this new "Integration" follow the following steps and rules:
 
 ## 1 Deep Thinking & Impact Analysis (⟨no code yet⟩)
-Check @docs/Coding/development_task_list.md if a similar interation task is already listed and incorporate that in your thinking and evaluation.
+Check @docs/Coding/Project_Management.md if a similar interation task is already listed and incorporate that in your thinking and evaluation.
 
 #Create a **concise deep-dive documement filename_plan.md with filename being the integration headline inside. Put document into @docs/Features** covering:
 
@@ -45,8 +45,8 @@ Follow this disciplined cycle **for each logical chunk** (commit):
 4. **Run static checks**  
 
 ## 3 Document Updates
-1. Append a dated changelog entry under “Integrated Features” in @docs/Coding/development_task_list.md and mark any new integration checked off. If integration or features are not in document yet, add them and check-off.
-2. Add future update or expansion ideas within the same section into @docs/Coding/development_task_list.md
+1. Append a dated changelog entry under “Integrated Features” in @docs/Coding/Project_Management.md and mark any new integration checked off. If integration or features are not in document yet, add them and check-off.
+2. Add future update or expansion ideas within the same section into @docs/Coding/Project_Management.md
 2. Update any affected ADRs, README snippets, or API docs
 
 ## 4 Updates
@@ -55,4 +55,4 @@ Follow this disciplined cycle **for each logical chunk** (commit):
 3. Run Webserver and check for any errors
 
 ## 5 Recommend next steps to user
-1.Based on the updated @@docs/development_task_list.md doc, propose list of 1-5 next improvements to takle prioritised by user impact, technical risk, or debt reduction. 
+1.Based on the updated @docs/Coding/Project_Management.md doc, propose list of 1-5 next improvements to takle prioritised by user impact, technical risk, or debt reduction. 

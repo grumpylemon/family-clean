@@ -42,9 +42,21 @@ export default function LoginScreen() {
   
   // Redirect to home if already logged in
   useEffect(() => {
+    console.log('🔍 LOGIN REDIRECT CHECK:', {
+      hasUser: !!user,
+      userEmail: user?.email,
+      userFamilyId: user?.familyId,
+      loading,
+      isAuthenticated: !!user
+    });
+    
     if (user && !loading) {
       // Add a small delay to ensure router is ready
-      console.log("User is logged in, redirecting to dashboard...");
+      console.log("✅ User is logged in, redirecting to dashboard...", {
+        uid: user.uid,
+        email: user.email,
+        familyId: user.familyId
+      });
       const timer = setTimeout(() => {
         router.replace('/(tabs)/dashboard');
       }, 100);
@@ -219,6 +231,38 @@ export default function LoginScreen() {
       fontSize: 12,
       color: colors.textMuted,
     },
+    iconBackground: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
+    },
+    googleIcon: {
+      width: 20,
+      height: 20,
+    },
+    platformNote: {
+      fontSize: 14,
+      color: colors.textMuted,
+      textAlign: 'center',
+      marginTop: 8,
+    },
+    refreshButton: {
+      marginTop: 12,
+      backgroundColor: colors.primary,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 16,
+      alignItems: 'center',
+    },
+    refreshButtonText: {
+      color: '#ffffff',
+      fontSize: 14,
+      fontWeight: '600',
+    },
   });
 
   if (loading) {
@@ -240,7 +284,7 @@ export default function LoginScreen() {
         {/* Logo/Icon */}
         <View style={styles.logoContainer}>
           <View style={styles.iconBackground}>
-            <WebIcon name="home" size={50} color="#ffffff" />
+            <WebIcon name="home" size={50} color={colors.primary} />
           </View>
           <Text style={styles.appTitle}>Family Compass</Text>
           <Text style={styles.tagline}>Guide your family to success</Text>
@@ -249,25 +293,22 @@ export default function LoginScreen() {
         {/* Login Buttons */}
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
-            style={styles.googleButton}
+            style={[styles.button, styles.googleButton]}
             onPress={handleGoogleSignIn}
             disabled={loading}
           >
-            <Image 
-              source={{ uri: 'https://www.google.com/favicon.ico' }} 
-              style={styles.googleIcon}
-            />
+            <WebIcon name="logo-google" size={20} color="#ffffff" />
             <Text style={styles.googleButtonText}>
               Continue with Google
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.guestButton}
+            style={[styles.button, styles.guestButton]}
             onPress={handleGuestSignIn}
             disabled={loading}
           >
-            <WebIcon name="person-outline" size={20} color="#6b7280" />
+            <WebIcon name="person-outline" size={20} color={colors.primary} />
             <Text style={styles.guestButtonText}>
               Continue as Guest
             </Text>

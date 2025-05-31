@@ -337,6 +337,67 @@ notes: formData.notes.trim() || undefined
 
 ---
 
+## Template Database Missing Index Error (v2.173)
+
+**Date**: May 30, 2025  
+**Error Type**: Firestore Index Error + Missing Data  
+**Status**: FIXED
+
+**Issue**: FirebaseError: The query requires an index + empty template library  
+**Root Cause**: Template queries combined filters and ordering without required composite indexes, plus empty choreTemplates collection  
+**Solution**: Added Firestore composite indexes and created template population scripts  
+
+**Technical Details**:
+- Added two composite indexes to firestore.indexes.json for choreTemplates queries
+- Index 1: isOfficial + category + popularity (for filtered browsing)
+- Index 2: isOfficial + popularity (for general browsing)
+- Deployed indexes via `firebase deploy --only firestore:indexes`
+- Created multiple template population scripts for different deployment scenarios
+
+**Files Modified**:
+- `/firestore.indexes.json` - Added choreTemplates composite indexes
+- `/scripts/populate-template-database.js` - Node.js template population script
+- `/scripts/populate-templates-web.js` - Browser-based population tool
+- `/scripts/add-single-template.js` - Firebase Admin SDK approach
+- `package.json` - Added firebase-admin dev dependency
+
+**Template Database Content**:
+- 10+ standard household chore templates created
+- Categories: daily_routines, weekly_maintenance, seasonal_tasks, lifestyle
+- Templates include: Morning Routine, Kitchen Clean, Bathroom Maintenance, Quick Pickup
+- Each template contains 2-4 chores with proper metadata and point values
+
+**Impact**: Template Library fully functional with browsable templates, category filtering, and template application
+
+**Prevention**: Always deploy indexes before code that uses new query patterns, include sample data in development
+
+---
+
+## Template Library Initialization Error (v2.170)
+
+**Date**: May 30, 2025  
+**Error Type**: JavaScript Reference Error  
+**Status**: FIXED
+
+**Issue**: ReferenceError: Cannot access 'loadTemplatesAndRecommendations' before initialization  
+**Root Cause**: JavaScript hoisting issue where useCallback functions were referenced in useEffect dependency arrays before being defined  
+**Solution**: Moved useCallback function definitions before useEffect hooks in TemplateLibrary component  
+
+**Technical Details**:
+- Fixed function hoisting issue by reordering useCallback definitions
+- Moved `loadTemplatesAndRecommendations` and `applyFilters` before their usage in useEffect
+- Maintained all functionality while fixing initialization order
+- No changes needed to external dependencies or services
+
+**Files Modified**:
+- `/components/TemplateLibrary.tsx` - Reordered function definitions to fix hoisting issue
+
+**Impact**: Admin panel now opens successfully, template library functionality fully restored
+
+**Prevention**: Add ESLint rule to detect useCallback after useEffect patterns, document hook ordering requirements
+
+---
+
 ## Future Error Prevention Guidelines
 
 1. **Always use UniversalIcon** instead of direct Ionicons imports (enforced by ESLint)
@@ -348,3 +409,4 @@ notes: formData.notes.trim() || undefined
 7. **Add null safety checks** for async loaded data
 8. **Use conditional spreading** for optional Firestore fields
 9. **Always handle loading states** in components
+10. **Define useCallback functions before useEffect hooks** to prevent hoisting issues

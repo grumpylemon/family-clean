@@ -67,26 +67,34 @@ export function useAuth() {
     shallow
   );
 
-  // Debug logging only in development to prevent infinite renders
-  // Removed dependency on signInWithGoogle to prevent loops
+  // Debug logging with user state tracking
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-      // Only log once on mount to prevent console spam
-      const hasLogged = (window as any).__authLogged;
-      if (!hasLogged) {
-        console.log('[useAuth] Initial mount - authData:', authData);
-        console.log('[useAuth] signInWithGoogle type:', typeof authData.signInWithGoogle);
-        (window as any).__authLogged = true;
-        
-        // Additional debugging for production
-        if (typeof authData.signInWithGoogle === 'undefined') {
-          console.error('[useAuth] ERROR: signInWithGoogle is undefined!');
-          console.log('[useAuth] Full store state:', useFamilyStore.getState());
-          console.log('[useAuth] Auth slice:', useFamilyStore.getState().auth);
-        }
+    if (typeof window !== 'undefined') {
+      // Track user state changes for debugging auth loops
+      const currentUser = authData.user;
+      const timestamp = new Date().toISOString().slice(11, 23); // HH:MM:SS.mmm
+      
+      console.log(`[useAuth] ${timestamp} - User state:`, {
+        hasUser: !!currentUser,
+        userEmail: currentUser?.email,
+        userId: currentUser?.uid,
+        familyId: currentUser?.familyId,
+        isAuthenticated: authData.isAuthenticated,
+        isLoading: authData.isLoading,
+        error: authData.error
+      });
+      
+      // Only log function availability once
+      if (!(window as any).__authFunctionsLogged) {
+        console.log('[useAuth] Function availability:', {
+          signInWithGoogle: typeof authData.signInWithGoogle,
+          signInAsGuest: typeof authData.signInAsGuest,
+          logout: typeof authData.logout
+        });
+        (window as any).__authFunctionsLogged = true;
       }
     }
-  }, []); // Empty dependency array - only run once on mount
+  }, [authData.user, authData.isAuthenticated, authData.isLoading]); // Track important state changes
 
   // Note: checkAuthState is handled by AuthContext, not here
   // This prevents circular updates between context and store

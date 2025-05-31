@@ -13,7 +13,8 @@ import {
   Pet,
   PetChore,
   PetCareRecord,
-  EnhancedStreak
+  EnhancedStreak,
+  RoomType
 } from '../types';
 import { 
   processChoreCompletion, 
@@ -759,6 +760,9 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
 // Helper function to handle chore rotation logic
 const handleChoreRotation = async (chore: Chore, family: Family, lockedUntil: Date) => {
   try {
+    // Import the new rotation service
+    const { rotationService } = await import('./rotationService');
+    
     // Check if this chore was taken over - if so, return it to the original assignee
     if (chore.originalAssignee && chore.originalAssignee !== chore.assignedTo) {
       // Ensure the original assignee is still active
@@ -770,18 +774,116 @@ const handleChoreRotation = async (chore: Chore, family: Family, lockedUntil: Da
           status: 'open',
           lockedUntil: lockedUntil.toISOString(),
           // Clear takeover fields since we're returning to original
-          takenOverBy: null,
-          takenOverByName: null,
-          takenOverAt: null,
-          takeoverReason: null,
+          takenOverBy: undefined,
+          takenOverByName: undefined,
+          takenOverAt: undefined,
+          takeoverReason: undefined,
         });
         console.log(`Chore ${chore.id} returned to original assignee ${originalMember.name}`);
         return;
       }
     }
 
-    // Regular rotation logic
-    // Find eligible members (active, not excluded)
+    // Use enhanced rotation logic if family has rotation settings
+    const hasAdvancedRotation = family.rotationSettings && family.rotationSettings.defaultStrategy;
+    
+    if (hasAdvancedRotation) {
+      // Use new comprehensive rotation system
+      const activeMembers = family.members.filter(m => m.isActive);
+      
+      if (activeMembers.length === 0) {
+        await updateChore(chore.id!, {
+          assignedTo: '',
+          assignedToName: '',
+          status: 'open',
+          lockedUntil: lockedUntil.toISOString(),
+        });
+        console.warn('No active members for rotation. Chore left unassigned.');
+        return;
+      }
+
+      const rotationContext = {
+        familyId: family.id!,
+        choreId: chore.id!,
+        currentAssignee: chore.assignedTo,
+        availableMembers: activeMembers,
+        familySettings: family.rotationSettings || {
+          defaultStrategy: 'round_robin' as any,
+          fairnessWeight: 0.7,
+          preferenceWeight: 0.5,
+          availabilityWeight: 0.8,
+          enableIntelligentScheduling: false,
+          maxChoresPerMember: 10,
+          rotationCooldownHours: 24,
+          seasonalAdjustments: false,
+          autoRebalancingEnabled: false,
+          emergencyFallbackEnabled: true,
+          strategyConfigs: {
+            'round_robin': { strategy: 'round_robin' as any, parameters: {}, enabled: true },
+            'workload_balance': { strategy: 'workload_balance' as any, parameters: {}, enabled: false },
+            'skill_based': { strategy: 'skill_based' as any, parameters: {}, enabled: false },
+            'calendar_aware': { strategy: 'calendar_aware' as any, parameters: {}, enabled: false },
+            'random_fair': { strategy: 'random_fair' as any, parameters: {}, enabled: false },
+            'preference_based': { strategy: 'preference_based' as any, parameters: {}, enabled: false },
+            'mixed_strategy': { strategy: 'mixed_strategy' as any, parameters: {}, enabled: false }
+          }
+        },
+        currentWorkloads: [], // Will be calculated by rotation service
+        scheduleConstraints: [],
+        emergencyMode: false
+      };
+
+      const rotationResult = await rotationService.determineNextAssignee(
+        chore,
+        family,
+        rotationContext
+      );
+
+      if (rotationResult.success && rotationResult.assignedMemberId) {
+        // Apply the rotation assignment
+        await updateChore(chore.id!, {
+          assignedTo: rotationResult.assignedMemberId,
+          assignedToName: rotationResult.assignedMemberName || '',
+          status: 'open',
+          lockedUntil: lockedUntil.toISOString(),
+          // Clear any takeover fields since this is a new rotation assignment
+          originalAssignee: undefined,
+          originalAssigneeName: undefined,
+          takenOverBy: undefined,
+          takenOverByName: undefined,
+          takenOverAt: undefined,
+          takeoverReason: undefined,
+          missedBy: undefined,
+          // Store rotation metadata
+          lastRotationStrategy: rotationResult.strategy,
+          lastRotationScore: rotationResult.fairnessScore,
+        });
+
+        // Log rotation decision for analytics
+        console.log(`Enhanced rotation: ${chore.title} assigned to ${rotationResult.assignedMemberName} using ${rotationResult.strategy} strategy (score: ${rotationResult.fairnessScore})`);
+        
+        // Update family rotation analytics if available
+        if (family.rotationAnalytics) {
+          const updatedAnalytics = {
+            ...family.rotationAnalytics,
+            totalRotations: (family.rotationAnalytics.totalRotations || 0) + 1,
+            lastRotationAt: new Date().toISOString()
+          };
+          
+          await updateFamily(family.id!, {
+            rotationAnalytics: updatedAnalytics
+          });
+        }
+        
+        return;
+        
+      } else {
+        console.warn(`Enhanced rotation failed: ${rotationResult.errorMessage}. Falling back to basic rotation.`);
+        // Fall through to basic rotation logic
+      }
+    }
+
+    // Fallback to basic rotation logic (existing implementation)
     const rotationOrder = family.memberRotationOrder || family.members.filter(m => m.isActive).map(m => m.uid);
     let nextIndex = typeof family.nextFamilyChoreAssigneeIndex === 'number' ? family.nextFamilyChoreAssigneeIndex : 0;
     
@@ -823,13 +925,13 @@ const handleChoreRotation = async (chore: Chore, family: Family, lockedUntil: Da
           status: 'open',
           lockedUntil: lockedUntil.toISOString(),
           // Clear any takeover fields since this is a new rotation assignment
-          originalAssignee: null,
-          originalAssigneeName: null,
-          takenOverBy: null,
-          takenOverByName: null,
-          takenOverAt: null,
-          takeoverReason: null,
-          missedBy: null,
+          originalAssignee: undefined,
+          originalAssigneeName: undefined,
+          takenOverBy: undefined,
+          takenOverByName: undefined,
+          takenOverAt: undefined,
+          takeoverReason: undefined,
+          missedBy: undefined,
         });
         
         // Update family rotation index
@@ -1185,7 +1287,13 @@ export const getUserFamily = async (userId: string) => {
   
   try {
     // Use default family ID for the demo
-    // const familyId = getDefaultFamilyId(...); // DISABLED: Use actual familyId
+    const familyId = getDefaultFamilyId(userId); // Re-enabled with userId parameter
+    
+    // Check if familyId is null (function is disabled)
+    if (!familyId) {
+      console.log('getDefaultFamilyId returned null - falling back to mock family');
+      return mockFamily;
+    }
     
     // For demo purposes, just get the family directly
     return await getFamily(familyId);
@@ -1462,7 +1570,7 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
           email: 'mock@example.com',
           displayName: 'Mock User',
           photoURL: null,
-          familyId: null, // Explicitly showing this is null
+          familyId: undefined, // Explicitly showing this is undefined
           createdAt: new Date(),
           updatedAt: new Date()
         };
@@ -1474,7 +1582,7 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
           email: 'mock@example.com',
           displayName: 'Mock User',
           photoURL: null,
-          familyId: null, // Explicitly showing this is null
+          familyId: undefined, // Explicitly showing this is undefined
           createdAt: new Date(),
           updatedAt: new Date()
         };
@@ -1584,7 +1692,7 @@ const mockRewards: Reward[] = [
 // ==================== REWARD FUNCTIONS ====================
 
 // Get all rewards for a family
-export const getRewards = async (_familyId: string): Promise<Reward[]> => {
+export const getRewards = async (familyId: string): Promise<Reward[]> => {
   if (shouldReturnMockImmediately()) {
     console.log('Immediately returning mock rewards data for iOS');
     return mockRewards;
@@ -1923,7 +2031,7 @@ export const getUserRedemptions = async (userId: string, familyId: string): Prom
 };
 
 // Get all redemptions for a family (admin view)
-export const getFamilyRedemptions = async (_familyId: string): Promise<RewardRedemption[]> => {
+export const getFamilyRedemptions = async (familyId: string): Promise<RewardRedemption[]> => {
   if (shouldReturnMockImmediately()) {
     return [];
   }
@@ -2441,10 +2549,13 @@ export const getChoresByRoom = async (familyId: string, roomId: string): Promise
     );
 
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Chore[];
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data() as any;
+      return {
+        id: doc.id,
+        ...data
+      };
+    }) as Chore[];
   } catch (error) {
     console.error('Error getting chores by room:', error);
     return [];
@@ -2476,10 +2587,13 @@ export const getChoresByRoomType = async (familyId: string, roomType: string): P
     );
 
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Chore[];
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data() as any;
+      return {
+        id: doc.id,
+        ...data
+      };
+    }) as Chore[];
   } catch (error) {
     console.error('Error getting chores by room type:', error);
     return [];
@@ -2535,7 +2649,7 @@ export const createRoomChore = async (
   chore: Omit<Chore, 'id'>,
   roomId: string,
   roomName: string,
-  roomType: string
+  roomType: RoomType
 ): Promise<string> => {
   const roomChore: Omit<Chore, 'id'> = {
     ...chore,
@@ -2557,6 +2671,64 @@ export const getUserAssignedRooms = async (userId: string, familyId: string): Pr
     return [];
   } catch (error) {
     console.error('Error getting user assigned rooms:', error);
+    return [];
+  }
+};
+
+// Get family completion records for fairness calculations
+export const getFamilyCompletionRecords = async (familyId: string, daysBack: number = 30): Promise<ChoreCompletionRecord[]> => {
+  if (shouldReturnMockImmediately()) {
+    return [];
+  }
+  
+  try {
+    if (isMockImplementation()) {
+      console.log(`Mock get family completion records for: ${familyId}, ${daysBack} days`);
+      // Return mock completion records for testing
+      return [
+        {
+          choreId: 'mock-chore-1',
+          userId: 'member-1',
+          completedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+          pointsEarned: 15,
+          xpEarned: 20,
+          streakDay: 3,
+          familyId
+        },
+        {
+          choreId: 'mock-chore-2',
+          userId: 'member-2',
+          completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+          pointsEarned: 20,
+          xpEarned: 25,
+          streakDay: 1,
+          familyId
+        }
+      ] as ChoreCompletionRecord[];
+    }
+    
+    const db = getFirestore();
+    if (!db) {
+      return [];
+    }
+    
+    // Calculate the date threshold
+    const dateThreshold = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
+    
+    const completionsRef = collection(db, 'choreCompletions');
+    const q = query(
+      completionsRef,
+      where('familyId', '==', familyId),
+      where('completedAt', '>=', dateThreshold.toISOString())
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as unknown as ChoreCompletionRecord[];
+  } catch (error) {
+    console.error('Error getting family completion records:', error);
     return [];
   }
 }; 

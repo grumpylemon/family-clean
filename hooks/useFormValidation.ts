@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useValidationConfig } from './useValidationConfig';
+import { FamilyValidationConfig, ValidationRuleConfig } from '../types/validationConfig';
 
 interface ValidationRule {
   validate: (value: any, allValues?: any) => boolean;
@@ -33,11 +35,19 @@ interface FormValidationOptions {
 }
 
 export const useFormValidation = (rules: ValidationRules, options?: FormValidationOptions) => {
+  const { config } = useValidationConfig();
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [warnings, setWarnings] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
   const [isValidating, setIsValidating] = useState(false);
   const [debounceTimers, setDebounceTimers] = useState<{ [key: string]: any }>({});
+
+  // Get effective debounce time from config or options
+  const getDebounceMs = useCallback(() => {
+    if (options?.debounceMs !== undefined) return options.debounceMs;
+    if (config?.globalSettings?.debounceMs !== undefined) return config.globalSettings.debounceMs;
+    return 300;
+  }, [config?.globalSettings?.debounceMs, options?.debounceMs]);
 
   const validateField = useCallback((fieldName: string, value: any, allValues?: any): string | null => {
     const fieldRules = rules[fieldName];
@@ -76,7 +86,7 @@ export const useFormValidation = (rules: ValidationRules, options?: FormValidati
       clearTimeout(debounceTimers[fieldName]);
     }
 
-    const debounceMs = options?.debounceMs || 300;
+    const debounceMs = getDebounceMs();
     
     // Set new debounce timer
     const timer = setTimeout(() => {
@@ -102,7 +112,7 @@ export const useFormValidation = (rules: ValidationRules, options?: FormValidati
     }, debounceMs);
 
     setDebounceTimers(prev => ({ ...prev, [fieldName]: timer }));
-  }, [touched, validateField, validateCrossFields, options?.debounceMs, options?.crossFieldValidations, debounceTimers]);
+  }, [touched, validateField, validateCrossFields, getDebounceMs, options?.crossFieldValidations, debounceTimers]);
 
   const handleFieldBlur = useCallback((fieldName: string, value: any, allValues?: any) => {
     setTouched(prev => new Set(prev).add(fieldName));
@@ -294,6 +304,103 @@ export const validationRules = {
     message,
   }),
 };
+
+/**
+ * Create custom validation rules based on family configuration
+ */
+export function createCustomValidationRules(config: FamilyValidationConfig | null) {
+  if (!config) return validationRules;
+
+  const customRules = { ...validationRules };
+
+  // Helper to create custom rule from config
+  const createCustomRule = (
+    ruleConfig: ValidationRuleConfig,
+    defaultRule: ValidationRule,
+    customMessage?: string
+  ): ValidationRule => {
+    if (!ruleConfig.enabled) {
+      return { validate: () => true, message: '' }; // Always pass if disabled
+    }
+
+    return {
+      validate: (value: any, allValues?: any) => {
+        // Apply custom min/max/required logic
+        if (ruleConfig.required && (!value || (typeof value === 'string' && !value.trim()))) {
+          return false;
+        }
+        if (!ruleConfig.required && (!value || value === '')) {
+          return true; // Optional field, empty is valid
+        }
+        if (ruleConfig.minLength && typeof value === 'string' && value.length < ruleConfig.minLength) {
+          return false;
+        }
+        if (ruleConfig.maxLength && typeof value === 'string' && value.length > ruleConfig.maxLength) {
+          return false;
+        }
+        if (ruleConfig.min !== undefined) {
+          const num = typeof value === 'string' ? parseFloat(value) : value;
+          if (!isNaN(num) && num < ruleConfig.min) return false;
+        }
+        if (ruleConfig.max !== undefined) {
+          const num = typeof value === 'string' ? parseFloat(value) : value;
+          if (!isNaN(num) && num > ruleConfig.max) return false;
+        }
+
+        // Fall back to default validation
+        return defaultRule.validate(value, allValues);
+      },
+      message: customMessage || ruleConfig.customMessage || defaultRule.message
+    };
+  };
+
+  // Customize chore validation rules
+  if (config.choreRules) {
+    customRules.choreTitle = () => createCustomRule(
+      config.choreRules.title,
+      validationRules.choreTitle(),
+      config.customMessages.choreTitle
+    );
+
+    customRules.chorePoints = () => createCustomRule(
+      config.choreRules.points,
+      validationRules.chorePoints(),
+      config.customMessages.chorePoints
+    );
+  }
+
+  // Customize member validation rules
+  if (config.memberRules) {
+    customRules.displayName = () => createCustomRule(
+      config.memberRules.displayName,
+      validationRules.displayName(),
+      config.customMessages.displayName
+    );
+
+    customRules.email = () => createCustomRule(
+      config.memberRules.email,
+      validationRules.email(),
+      config.customMessages.email
+    );
+  }
+
+  // Customize reward validation rules
+  if (config.rewardRules) {
+    customRules.rewardName = () => createCustomRule(
+      config.rewardRules.name,
+      validationRules.rewardName(),
+      config.customMessages.rewardName
+    );
+
+    customRules.rewardCost = () => createCustomRule(
+      config.rewardRules.pointsCost,
+      validationRules.rewardCost(),
+      config.customMessages.rewardCost
+    );
+  }
+
+  return customRules;
+}
 
 // Cross-field validation helpers
 export const crossFieldValidations = {
