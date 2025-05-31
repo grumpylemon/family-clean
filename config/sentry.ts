@@ -30,10 +30,15 @@ const shouldEnableSentry = (): boolean => {
     return false;
   }
 
-  // TEMPORARY: Disable Sentry for iOS to fix TestFlight crash
+  // Enable Sentry for iOS production builds - disabled for Expo Go only
   if (Platform.OS === 'ios') {
-    console.log('Sentry disabled: iOS platform (preventing crashes)');
-    return false;
+    // Check if running in Expo Go (which has limitations)
+    const isExpoGo = typeof __DEV__ !== 'undefined' && __DEV__;
+    if (isExpoGo) {
+      console.log('Sentry disabled: iOS Expo Go (development)');
+      return false;
+    }
+    console.log('Sentry enabled: iOS production build');
   }
 
   // Check for production domains

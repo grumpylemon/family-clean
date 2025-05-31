@@ -1,5 +1,5 @@
 import { isMockImplementation } from '../config/firebase';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useZustandHooks';
 import { addChore, Chore, getChores, getDefaultFamilyId } from '../services/firestore';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, TextInput, TouchableOpacity } from 'react-native';

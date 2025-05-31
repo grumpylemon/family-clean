@@ -11,7 +11,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import UniversalIcon from './ui/UniversalIcon';
-import { useFamily } from '../contexts/FamilyContext';
+import { useFamily } from '../hooks/useZustandHooks';
 import { useAccessControl } from '../hooks/useAccessControl';
 import {
   createRoom,

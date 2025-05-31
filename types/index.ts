@@ -393,6 +393,13 @@ export interface CompletionReward {
   compoundStreakMultiplier?: number;
   milestonesAchieved?: any[];
   enhancedStreaks?: any;
+  // Quality rating fields for enhanced completion flow
+  qualityRating?: QualityRating;
+  satisfactionRating?: number;
+  comments?: string;
+  photos?: string[];
+  qualityMultiplier?: number;
+  qualityBonus?: number;
 }
 
 export interface Notification {

@@ -59,8 +59,8 @@
       [
         "@sentry/react-native/expo",
         {
-          "organization": "family-compass",
-          "project": "family-compass-app"
+          "organization": "grumpy-lemon",
+          "project": "apple-ios"
         }
       ]
     ],

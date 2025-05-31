@@ -64,6 +64,67 @@ export const CompletionRewardModal: React.FC<CompletionRewardModalProps> = ({
               </View>
             </View>
 
+            {/* Quality Rating */}
+            {reward.qualityRating && (
+              <View style={styles.rewardItem}>
+                <View style={styles.rewardIcon}>
+                  <UniversalIcon 
+                    name={reward.qualityRating === 'excellent' ? 'star' : 
+                          reward.qualityRating === 'complete' ? 'checkmark-circle' : 
+                          reward.qualityRating === 'partial' ? 'remove-circle' : 'close-circle'} 
+                    size={24} 
+                    color={reward.qualityRating === 'excellent' ? '#be185d' : 
+                           reward.qualityRating === 'complete' ? '#10b981' : 
+                           reward.qualityRating === 'partial' ? '#f59e0b' : '#ef4444'} 
+                  />
+                </View>
+                <View style={styles.rewardContent}>
+                  <Text style={styles.rewardLabel}>Quality Rating</Text>
+                  <Text style={[styles.rewardValue, { 
+                    color: reward.qualityRating === 'excellent' ? '#be185d' : 
+                           reward.qualityRating === 'complete' ? '#10b981' : 
+                           reward.qualityRating === 'partial' ? '#f59e0b' : '#ef4444'
+                  }]}>
+                    {reward.qualityRating.charAt(0).toUpperCase() + reward.qualityRating.slice(1)}
+                    {reward.qualityMultiplier && reward.qualityMultiplier !== 1 && (
+                      <Text style={styles.multiplierText}> ×{reward.qualityMultiplier}</Text>
+                    )}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Satisfaction Rating */}
+            {reward.satisfactionRating && (
+              <View style={styles.rewardItem}>
+                <View style={styles.rewardIcon}>
+                  <Text style={styles.satisfactionEmoji}>
+                    {reward.satisfactionRating === 5 ? '😊' :
+                     reward.satisfactionRating === 4 ? '🙂' :
+                     reward.satisfactionRating === 3 ? '😐' :
+                     reward.satisfactionRating === 2 ? '😕' : '😤'}
+                  </Text>
+                </View>
+                <View style={styles.rewardContent}>
+                  <Text style={styles.rewardLabel}>How you felt</Text>
+                  <Text style={styles.rewardValue}>
+                    {reward.satisfactionRating === 5 ? 'Loved it!' :
+                     reward.satisfactionRating === 4 ? 'Liked it' :
+                     reward.satisfactionRating === 3 ? 'Neutral' :
+                     reward.satisfactionRating === 2 ? 'Disliked' : 'Hated it'}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Comments */}
+            {reward.comments && reward.comments.trim() && (
+              <View style={styles.commentsSection}>
+                <Text style={styles.commentsTitle}>Your notes:</Text>
+                <Text style={styles.commentsText}>"{reward.comments}"</Text>
+              </View>
+            )}
+
             {/* Streak Bonus */}
             {reward.streakBonus && reward.streakBonus > 1 && (
               <View style={styles.rewardItem}>

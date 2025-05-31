@@ -6,9 +6,9 @@ import ChoreTakeoverModal from '../../components/ChoreTakeoverModal';
 import { UniversalIcon } from '../../components/ui/UniversalIcon';
 import { createHelpRequest, createTradeProposal } from '../../services/collaborationService';
 import { useFamilyStore } from '../../stores/familyStore';
-// Temporarily disabled advanced chore cards due to build issues
-// import AdvancedChoreCard from '../../components/chore-cards/AdvancedChoreCard';
-// import { choreCardService } from '../../services/choreCardService';
+import AdvancedChoreCard from '../../components/chore-cards/AdvancedChoreCard';
+import ChoreDetailModal from '../../components/chore-cards/ChoreDetailModal';
+import { choreCardService } from '../../services/choreCardService';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -42,6 +42,8 @@ export default function ChoresScreen() {
   const [showTakeoverModal, setShowTakeoverModal] = useState(false);
   const [selectedChoreForTakeover, setSelectedChoreForTakeover] = useState<Chore | null>(null);
   const [completingChoreId, setCompletingChoreId] = useState<string | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedChoreForDetail, setSelectedChoreForDetail] = useState<Chore | null>(null);
   
   const { checkTakeoverEligibility } = useFamilyStore((state) => state.chores);
 
@@ -97,6 +99,11 @@ export default function ChoresScreen() {
     return lockedUntil > new Date();
   };
 
+  const handleChoreCardClick = (chore: Chore) => {
+    setSelectedChoreForDetail(chore);
+    setShowDetailModal(true);
+  };
+
   const handleCompleteChore = async (choreId: string) => {
     const advancedCard = advancedCards.get(choreId);
     
@@ -106,6 +113,69 @@ export default function ChoresScreen() {
     } else {
       // Handle basic chore completion
       await completeBasicChore(choreId);
+    }
+  };
+
+  const handleCompleteChoreFromModal = async (choreId: string, qualityData?: {
+    qualityRating: any;
+    satisfactionRating: number;
+    comments?: string;
+    photos?: string[];
+  }) => {
+    try {
+      const chore = chores.find(c => c.id === choreId);
+      if (!chore) return;
+
+      const result = await completeChore(choreId);
+      
+      if (result.success && result.reward) {
+        // Update chores list
+        setChores(prevChores => 
+          prevChores.map(c => 
+            c.id === choreId 
+              ? { ...c, status: 'completed' as ChoreStatus, completedBy: user?.uid, completedAt: new Date().toISOString() }
+              : c
+          )
+        );
+
+        // Show reward modal with quality data if available
+        setCompletedChoreTitle(chore.title);
+        const enhancedReward = qualityData ? {
+          ...result.reward,
+          qualityRating: qualityData.qualityRating,
+          satisfactionRating: qualityData.satisfactionRating,
+          comments: qualityData.comments
+        } : result.reward;
+        
+        setCompletionReward(enhancedReward);
+        setShowRewardModal(true);
+
+        // Close detail modal
+        setShowDetailModal(false);
+        setSelectedChoreForDetail(null);
+
+        // Reload chores and refresh family data to update points
+        setTimeout(async () => {
+          await loadChores();
+          await refreshFamily();
+          console.log('[ChoresScreen] Refreshed family data after chore completion');
+        }, 2000);
+      } else if (!result.success && result.error) {
+        // Show error message
+        if (Platform.OS === 'android') {
+          ToastAndroid.show(result.error, ToastAndroid.LONG);
+        } else {
+          Alert.alert('Cannot Complete Chore', result.error);
+        }
+      }
+    } catch (error) {
+      console.error('Error completing chore:', error);
+      const errorMessage = 'Failed to complete chore. Please try again.';
+      if (Platform.OS === 'android') {
+        ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Error', errorMessage);
+      }
     }
   };
 
@@ -514,7 +584,12 @@ export default function ChoresScreen() {
                 
                 // Fallback to basic chore card
                 return (
-                  <View key={chore.id} style={styles.choreCard}>
+                  <TouchableOpacity 
+                    key={chore.id} 
+                    style={styles.choreCard}
+                    onPress={() => handleChoreCardClick(chore)}
+                    activeOpacity={0.7}
+                  >
                     <View style={styles.choreHeader}>
                       <View style={styles.choreTypeIcon}>
                         <UniversalIcon 
@@ -656,7 +731,7 @@ export default function ChoresScreen() {
                         ) : null}
                       </View>
                     )}
-                  </View>
+                  </TouchableOpacity>
                 );
               })
             )}
@@ -720,6 +795,23 @@ export default function ChoresScreen() {
           setSelectedChoreForTakeover(null);
         }}
         onTakeover={handleTakeoverComplete}
+      />
+      
+      {/* Chore Detail Modal */}
+      <ChoreDetailModal
+        visible={showDetailModal}
+        chore={selectedChoreForDetail}
+        currentUserId={user?.uid || ''}
+        userAge={currentMember?.age}
+        onClose={() => {
+          setShowDetailModal(false);
+          setSelectedChoreForDetail(null);
+        }}
+        onComplete={handleCompleteChoreFromModal}
+        onClaim={handleClaimChore}
+        onTakeover={handleTakeoverChore}
+        onRequestHelp={handleRequestHelp}
+        onProposeTrade={handleProposeTradeFor}
       />
     </SafeAreaView>
   );
