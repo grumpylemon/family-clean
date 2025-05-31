@@ -228,7 +228,7 @@ export const addBreadcrumb = (breadcrumb: {
   SentryLib.addBreadcrumb(breadcrumb);
 };
 
-// Helper to set user context
+// Helper to set user context safely (delayed to prevent auth interference)
 export const setUserContext = (user: {
   id: string;
   familyId?: string;
@@ -236,21 +236,55 @@ export const setUserContext = (user: {
 }): void => {
   if (!shouldEnableSentry()) return;
 
-  const SentryLib = Platform.OS === 'web' ? SentryReact : Sentry;
-  SentryLib.setUser({
-    id: user.id,
-    // Add custom attributes
-    familyId: user.familyId,
-    role: user.role,
-  });
+  // Delay Sentry context setting to prevent interference with authentication flow
+  setTimeout(() => {
+    try {
+      const SentryLib = Platform.OS === 'web' ? SentryReact : Sentry;
+      SentryLib.setUser({
+        id: user.id,
+        // Add custom attributes
+        familyId: user.familyId,
+        role: user.role,
+      });
+      console.log('[Sentry] User context set safely after auth completion');
+    } catch (error) {
+      console.warn('[Sentry] Failed to set user context (non-blocking):', error);
+    }
+  }, 1000); // 1 second delay to ensure auth flow is complete
 };
 
-// Helper to clear user context (on logout)
+// Helper to set user context immediately (for non-auth flows)
+export const setUserContextImmediate = (user: {
+  id: string;
+  familyId?: string;
+  role?: string;
+}): void => {
+  if (!shouldEnableSentry()) return;
+
+  try {
+    const SentryLib = Platform.OS === 'web' ? SentryReact : Sentry;
+    SentryLib.setUser({
+      id: user.id,
+      familyId: user.familyId,
+      role: user.role,
+    });
+    console.log('[Sentry] User context set immediately');
+  } catch (error) {
+    console.warn('[Sentry] Failed to set user context immediately (non-blocking):', error);
+  }
+};
+
+// Helper to clear user context safely (on logout)
 export const clearUserContext = (): void => {
   if (!shouldEnableSentry()) return;
 
-  const SentryLib = Platform.OS === 'web' ? SentryReact : Sentry;
-  SentryLib.setUser(null);
+  try {
+    const SentryLib = Platform.OS === 'web' ? SentryReact : Sentry;
+    SentryLib.setUser(null);
+    console.log('[Sentry] User context cleared safely');
+  } catch (error) {
+    console.warn('[Sentry] Failed to clear user context (non-blocking):', error);
+  }
 };
 
 // Helper to start a transaction for performance monitoring

@@ -95,6 +95,10 @@ This document contains a comprehensive, reorganized project management roadmap f
   - Add activity indicator badges for active/excluded members with visual status indicators
   - Use confirmation toasts/snackbars with cross-platform toast system
   - Add search/filter bar with real-time search and status filtering
+- [ ] **Advanced User Profile Cards**
+  - [ ] User puts in birthday in stead of age. System auto calculate age display and birthday count down in unique ways.
+  - [ ] Boy, Girl, Man, Woman, Non Binary, and all the other DEI options
+  - Favorite Questionair of 10 questions based around users age group to get to know what they like which can later be used for awards generation. This option will unlock once they reach level 2, but can be set by admin to unlock for imidiate access. Generate questions
 
 ### ✅ Advanced Permissions System - Tested [x] ✅
 - [x] **Fix admin promotion/demotion button functionality** (Completed: 2025-05-28)

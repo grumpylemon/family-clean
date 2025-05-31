@@ -162,7 +162,8 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
               isLoading: verifyState.auth?.isLoading
             });
 
-            // Set Sentry user context
+            console.log('[AuthSlice] Authentication successful, scheduling delayed Sentry context setting');
+            // Set Sentry user context (delayed to prevent auth interference)
             if (user) {
               setUserContext({
                 id: user.uid,
@@ -651,9 +652,6 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
                 if (hasInitialLoad) {
                   console.log('[AuthSlice] Auth state change - User is null after initial load, clearing auth state');
                   
-                  // Clear Sentry user context
-                  clearUserContext();
-                  
                   set((state) => ({
                     auth: {
                       ...state.auth,
@@ -662,6 +660,11 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
                       isLoading: false
                     }
                   }));
+                  
+                  // Clear Sentry user context (delayed to prevent auth interference)
+                  setTimeout(() => {
+                    clearUserContext();
+                  }, 500);
                 } else {
                   console.log('[AuthSlice] Auth state change - Initial null user, skipping auth clear to prevent loop');
                   hasInitialLoad = true; // Mark that we've seen the initial event
