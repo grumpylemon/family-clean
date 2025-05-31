@@ -30,8 +30,8 @@ export interface FamilySlice {
     createFamily: (name: string) => Promise<boolean>;
     createNewFamily: (name: string) => Promise<boolean>; // Alias for createFamily
     joinFamily: (joinCode: string) => Promise<boolean>;
-    fetchFamily: (familyId: string) => Promise<void>;
-    refreshFamily: () => Promise<boolean>;
+    fetchFamily: (familyId: string, forceRefresh?: boolean) => Promise<void>;
+    refreshFamily: (forceRefresh?: boolean) => Promise<boolean>;
     updateFamilySettings: (settings: Partial<Family['settings']>, name?: string) => Promise<boolean>;
     updateMemberRole: (familyId: string, userId: string, role: 'admin' | 'member', familyRole: 'parent' | 'child' | 'other') => Promise<boolean>;
     removeMember: (familyId: string, userId: string) => Promise<boolean>;
@@ -46,8 +46,7 @@ function createFamilySliceFactory() {
     if (typeof set !== 'function' || typeof get !== 'function') {
       console.error('[FamilySlice] Invalid slice creator parameters:', { 
         set: typeof set, 
-        get: typeof get,
-        argsCount: arguments.length 
+        get: typeof get
       });
       throw new Error('Invalid slice creator parameters');
     }
@@ -324,11 +323,12 @@ function createFamilySliceFactory() {
             }
           }));
 
-          // Fetch the updated family data
+          // Fetch the updated family data with force refresh
           try {
             const store = safeGet();
             if (store && store.family && store.family.fetchFamily) {
-              await store.family.fetchFamily(family.id!);
+              console.log('[FamilySlice] Force refreshing family data after join');
+              await store.family.fetchFamily(family.id!, true); // Force refresh
             }
           } catch (error) {
             console.error('[FamilySlice] Error fetching family after join:', error);
@@ -365,7 +365,7 @@ function createFamilySliceFactory() {
       }
     },
 
-    refreshFamily: async () => {
+    refreshFamily: async (forceRefresh: boolean = true) => {
       // Defensive get() call with validation
       const store = safeGet();
       const { auth } = store;
@@ -383,11 +383,11 @@ function createFamilySliceFactory() {
       }
       
       try {
-        console.log('[FamilySlice] Refreshing family:', user.familyId);
+        console.log('[FamilySlice] Refreshing family:', user.familyId, forceRefresh ? '(forced)' : '');
         try {
           const store = safeGet();
           if (store && store.family && store.family.fetchFamily) {
-            await store.family.fetchFamily(user.familyId);
+            await store.family.fetchFamily(user.familyId, forceRefresh);
             return true;
           } else {
             console.error('[FamilySlice] fetchFamily not available in refreshFamily');
@@ -403,7 +403,7 @@ function createFamilySliceFactory() {
       }
     },
 
-    fetchFamily: async (familyId: string) => {
+    fetchFamily: async (familyId: string, forceRefresh: boolean = false) => {
       // Defensive get() call with validation
       const store = safeGet();
       const { auth, family } = store;
@@ -416,29 +416,63 @@ function createFamilySliceFactory() {
       const user = auth.user;
       
       if (!user) {
+        console.log('[FamilySlice] No user found, skipping family fetch');
         return;
       }
 
-      // Prevent duplicate fetches
-      if (family.isLoading) {
-        console.log('[FamilySlice] Already loading family, skipping duplicate fetch');
+      // Improved race condition handling with timeout mechanism
+      if (family.isLoading && !forceRefresh) {
+        console.log('[FamilySlice] Already loading family, will wait for current fetch to complete');
+        
+        // Wait for the current fetch to complete with a timeout
+        let attempts = 0;
+        const maxAttempts = 30; // 3 seconds total (100ms * 30)
+        const checkInterval = 100;
+        
+        while (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, checkInterval));
+          const currentState = safeGet().family;
+          
+          if (!currentState.isLoading) {
+            console.log('[FamilySlice] Previous fetch completed, checking result');
+            // If we have the family data we need, return
+            if (currentState.family?.id === familyId && !currentState.error) {
+              console.log('[FamilySlice] Family data already available from previous fetch');
+              return;
+            }
+            // If there was an error or no data, break and try again
+            break;
+          }
+          attempts++;
+        }
+        
+        // If still loading after timeout, force a refresh
+        if (attempts >= maxAttempts) {
+          console.warn('[FamilySlice] Fetch timeout reached, forcing refresh');
+          forceRefresh = true;
+        }
+      }
+
+      // Check if we already have this family loaded (unless forcing refresh)
+      if (!forceRefresh && family.family?.id === familyId && !family.error && !family.isLoading) {
+        console.log('[FamilySlice] Family already loaded and valid, skipping fetch');
         return;
       }
 
-      // Check if we already have this family loaded
-      // Temporarily disabled to ensure fresh data after point updates
-      // TODO: Add a force refresh parameter instead
-      // if (family.family?.id === familyId && !family.error) {
-      //   console.log('[FamilySlice] Family already loaded, skipping fetch');
-      //   return;
-      // }
+      console.log('[FamilySlice] Starting family fetch for ID:', familyId, forceRefresh ? '(forced)' : '');
 
       set((state) => ({
         family: { ...state.family, isLoading: true, error: null }
       }));
 
       try {
-        const familyData = await getFamily(familyId);
+        // Add timeout to the actual fetch operation
+        const fetchPromise = getFamily(familyId);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Family fetch timeout')), 10000)
+        );
+        
+        const familyData = await Promise.race([fetchPromise, timeoutPromise]) as any;
         
         if (familyData) {
           // Find current member (using uid, not userId) - ensure members array exists
@@ -446,8 +480,8 @@ function createFamilySliceFactory() {
           const currentMember = members.find(m => m.uid === user.uid) || null;
           const isAdmin = currentMember?.role === 'admin' || familyData.adminId === user.uid;
           
-          console.log('[FamilySlice] Fetched family data:', familyData.name);
-          console.log('[FamilySlice] Current member found:', currentMember);
+          console.log('[FamilySlice] Successfully fetched family:', familyData.name);
+          console.log('[FamilySlice] Current member found:', currentMember?.name);
           console.log('[FamilySlice] User is admin:', isAdmin);
 
           set((state) => ({
@@ -474,7 +508,7 @@ function createFamilySliceFactory() {
           throw new Error('Family not found');
         }
       } catch (error) {
-        console.error('Error fetching family:', error);
+        console.error('[FamilySlice] Error fetching family:', error);
         set((state) => ({
           family: {
             ...state.family,

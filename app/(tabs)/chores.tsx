@@ -1,11 +1,14 @@
 import { useAuth, useFamily } from '../../hooks/useZustandHooks';
 import { completeChore, getChores, claimChore, takeoverChore } from '../../services/firestore';
-import { Chore, ChoreStatus, CompletionReward } from '../../types';
+import { Chore, ChoreStatus, CompletionReward, AdvancedChoreCard as AdvancedChoreCardType } from '../../types';
 import { CompletionRewardModal } from '../../components/CompletionRewardModal';
 import ChoreTakeoverModal from '../../components/ChoreTakeoverModal';
 import { UniversalIcon } from '../../components/ui/UniversalIcon';
 import { createHelpRequest, createTradeProposal } from '../../services/collaborationService';
 import { useFamilyStore } from '../../stores/familyStore';
+// Temporarily disabled advanced chore cards due to build issues
+// import AdvancedChoreCard from '../../components/chore-cards/AdvancedChoreCard';
+// import { choreCardService } from '../../services/choreCardService';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -28,6 +31,7 @@ export default function ChoresScreen() {
   const { user } = useAuth();
   const { family, currentMember, refreshFamily } = useFamily();
   const [chores, setChores] = useState<Chore[]>([]);
+  const [advancedCards, setAdvancedCards] = useState<Map<string, AdvancedChoreCardType>>(new Map());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterType>('mine');
@@ -37,6 +41,7 @@ export default function ChoresScreen() {
   const [completedChoreTitle, setCompletedChoreTitle] = useState('');
   const [showTakeoverModal, setShowTakeoverModal] = useState(false);
   const [selectedChoreForTakeover, setSelectedChoreForTakeover] = useState<Chore | null>(null);
+  const [completingChoreId, setCompletingChoreId] = useState<string | null>(null);
   
   const { checkTakeoverEligibility } = useFamilyStore((state) => state.chores);
 
@@ -52,11 +57,37 @@ export default function ChoresScreen() {
     try {
       const familyChores = await getChores(family.id!);
       setChores(familyChores);
+      
+      // Load advanced cards for chores
+      await loadAdvancedCards(familyChores);
     } catch (error) {
       console.error('Error loading chores:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const loadAdvancedCards = async (choresList: Chore[]) => {
+    try {
+      const cardMap = new Map<string, AdvancedChoreCardType>();
+      
+      // Load advanced cards for each chore
+      const cardPromises = choresList.map(async (chore) => {
+        if (chore.id) {
+          const advancedCard = await choreCardService.getAdvancedCard(chore.id);
+          if (advancedCard) {
+            cardMap.set(chore.id, advancedCard);
+          }
+        }
+      });
+      
+      await Promise.all(cardPromises);
+      setAdvancedCards(cardMap);
+      
+      console.log(`Loaded ${cardMap.size} advanced cards out of ${choresList.length} chores`);
+    } catch (error) {
+      console.error('Error loading advanced cards:', error);
     }
   };
 
@@ -67,6 +98,18 @@ export default function ChoresScreen() {
   };
 
   const handleCompleteChore = async (choreId: string) => {
+    const advancedCard = advancedCards.get(choreId);
+    
+    if (advancedCard) {
+      // For advanced cards, show the quality rating interface
+      setCompletingChoreId(choreId);
+    } else {
+      // Handle basic chore completion
+      await completeBasicChore(choreId);
+    }
+  };
+
+  const completeBasicChore = async (choreId: string) => {
     try {
       const chore = chores.find(c => c.id === choreId);
       if (!chore) return;
@@ -89,13 +132,11 @@ export default function ChoresScreen() {
         setShowRewardModal(true);
 
         // Reload chores and refresh family data to update points
-        // Give Firebase time to update before refreshing
         setTimeout(async () => {
           await loadChores();
-          // Force refresh family data to update currentMember points
           await refreshFamily();
           console.log('[ChoresScreen] Refreshed family data after chore completion');
-        }, 2000); // Increased delay to ensure Firebase has updated
+        }, 2000);
       } else if (!result.success && result.error) {
         // Show error message
         if (Platform.OS === 'android') {
@@ -113,6 +154,61 @@ export default function ChoresScreen() {
         Alert.alert('Error', errorMessage);
       }
     }
+  };
+
+  const handleAdvancedChoreComplete = async (qualityRating: any, satisfactionRating: number, comments?: string, photos?: string[]) => {
+    if (!completingChoreId) return;
+    
+    try {
+      const chore = chores.find(c => c.id === completingChoreId);
+      if (!chore) return;
+
+      // Complete the chore with regular system
+      const result = await completeChore(completingChoreId);
+      
+      if (result.success && result.reward) {
+        // Update chores list
+        setChores(prevChores => 
+          prevChores.map(c => 
+            c.id === completingChoreId 
+              ? { ...c, status: 'completed' as ChoreStatus, completedBy: user?.uid, completedAt: new Date().toISOString() }
+              : c
+          )
+        );
+
+        // Show enhanced reward modal
+        setCompletedChoreTitle(chore.title);
+        setCompletionReward({
+          ...result.reward,
+          qualityRating,
+          satisfactionRating,
+          comments
+        });
+        setShowRewardModal(true);
+
+        // Reload chores and refresh family data
+        setTimeout(async () => {
+          await loadChores();
+          await refreshFamily();
+          console.log('[ChoresScreen] Refreshed family data after advanced chore completion');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error completing advanced chore:', error);
+      const errorMessage = 'Failed to complete chore. Please try again.';
+      if (Platform.OS === 'android') {
+        ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Error', errorMessage);
+      }
+    } finally {
+      setCompletingChoreId(null);
+    }
+  };
+
+  const handleAdvancedChorePreferenceUpdate = async (rating: number, notes?: string) => {
+    // Handle preference updates for advanced cards
+    console.log('Preference updated:', rating, notes);
   };
 
   const handleClaimChore = async (choreId: string) => {
@@ -397,6 +493,26 @@ export default function ChoresScreen() {
             ) : (
               filteredChores.map((chore) => {
                 const locked = isChoreLocked(chore);
+                const advancedCard = advancedCards.get(chore.id!);
+                const isCompleting = completingChoreId === chore.id;
+                
+                // Use AdvancedChoreCard if available
+                if (advancedCard) {
+                  return (
+                    <AdvancedChoreCard
+                      key={chore.id}
+                      chore={chore}
+                      currentUserId={user?.uid || ''}
+                      userAge={currentMember?.age}
+                      onComplete={handleAdvancedChoreComplete}
+                      onPreferenceUpdate={handleAdvancedChorePreferenceUpdate}
+                      isCompleting={isCompleting}
+                      showFullCard={false}
+                    />
+                  );
+                }
+                
+                // Fallback to basic chore card
                 return (
                   <View key={chore.id} style={styles.choreCard}>
                     <View style={styles.choreHeader}>

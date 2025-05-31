@@ -78,29 +78,36 @@ export const firebaseAuthBrowser = {
     provider.addScope('profile');
     provider.addScope('email');
     
-    // On web, prefer redirect flow to avoid COOP warnings
-    // This provides a cleaner user experience
-    const { signInWithRedirect, getRedirectResult } = await import('firebase/auth');
-    
+    // Try popup first, fall back to redirect on failure
+    // This provides better UX for desktop users
     try {
-      // First check if we're returning from a redirect
-      const redirectResult = await getRedirectResult(auth);
-      if (redirectResult) {
-        console.log('Redirect authentication successful');
-        return redirectResult;
+      console.log('Attempting Google sign in with popup...');
+      const result = await signInWithPopup(auth, provider);
+      console.log('Popup authentication successful');
+      return result;
+    } catch (popupError: any) {
+      console.log('Popup failed, trying redirect...', popupError?.code);
+      
+      // If popup was blocked or failed, use redirect as fallback
+      const { signInWithRedirect, getRedirectResult } = await import('firebase/auth');
+      
+      try {
+        // First check if we're returning from a redirect
+        const redirectResult = await getRedirectResult(auth);
+        if (redirectResult) {
+          console.log('Redirect authentication successful');
+          return redirectResult;
+        }
+      } catch (error) {
+        // Ignore redirect check errors
       }
-    } catch (error) {
-      // Ignore redirect check errors
+      
+      console.log('Starting Google authentication with redirect...');
+      await signInWithRedirect(auth, provider);
+      
+      // This will never return as the page redirects
+      throw new Error('Redirect initiated');
     }
-    
-    // If popup is available and user prefers it (e.g., desktop)
-    // we could add logic here to detect desktop vs mobile
-    // For now, always use redirect for consistency
-    console.log('Starting Google authentication...');
-    await signInWithRedirect(auth, provider);
-    
-    // This will never return as the page redirects
-    throw new Error('Redirect initiated');
   },
 
   async signInAnonymously(auth: Auth): Promise<UserCredential> {

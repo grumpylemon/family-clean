@@ -55,4 +55,4 @@ Follow this disciplined cycle **for each logical chunk** (commit):
 3. Run Webserver and check for any errors
 
 ## 5 Recommend next steps to user
-1.Based on the updated @docs/Coding/Project_Management.md doc, propose list of 1-5 next improvements to takle prioritised by user impact, technical risk, or debt reduction. 
+1.Based on the updated @docs/Coding/Project_Management.md doc, propose list of 1-5 next improvements to takle prioritised by user impact, technical risk, or debt reduction. Make sure these recommendations get included and added to the @docs/Coding/Project_Management.md doc if they are not already there. 

@@ -22,6 +22,7 @@ export default function HomeScreen() {
   const [showChoreManagement, setShowChoreManagement] = useState(false);
   const [showFamilySettings, setShowFamilySettings] = useState(false);
   const [showRewardManagement, setShowRewardManagement] = useState(false);
+  const [showRewardStore, setShowRewardStore] = useState(false);
   
   // Redirect to login if not authenticated
   useEffect(() => {

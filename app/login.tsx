@@ -27,6 +27,23 @@ export default function LoginScreen() {
   // Get mock status immediately and synchronously
   const [isMock, setIsMock] = useState(isMockImplementation());
   
+  // Debug auth functions availability
+  console.log('🔥 LOGIN SCREEN RENDER - Auth functions check:', {
+    signInWithGoogle: typeof signInWithGoogle,
+    signInAsGuest: typeof signInAsGuest,
+    loading,
+    user: user?.email || 'No user',
+    error,
+    isMock,
+    buttonWillBeDisabled: loading
+  });
+  
+  // Specific warning if button is disabled
+  if (loading) {
+    console.warn('🔥 BUTTON IS DISABLED - loading state is true');
+    console.warn('🔥 This prevents button clicks from working');
+  }
+  
   // Check platform and mock status
   useEffect(() => {
     setIsIOS(Platform.OS === 'ios');
@@ -39,6 +56,21 @@ export default function LoginScreen() {
   console.log("  User:", user?.email || 'No user');
   console.log("  Loading:", loading);
   }, []);
+
+  // Add comprehensive auth function debugging
+  useEffect(() => {
+    console.log('🔥 LOGIN SCREEN RENDER - Auth functions check:', {
+      signInWithGoogle: typeof signInWithGoogle,
+      signInAsGuest: typeof signInAsGuest,
+      loading,
+      user: user?.email || 'No user',
+      isAuthenticated: !!user
+    });
+    
+    if (typeof signInWithGoogle !== 'function') {
+      console.error('🔥 CRITICAL: signInWithGoogle is not a function!');
+    }
+  }, [signInWithGoogle, signInAsGuest, loading, user]);
   
   // Redirect to home if already logged in
   useEffect(() => {
@@ -66,11 +98,35 @@ export default function LoginScreen() {
 
   // Handle Google sign in
   const handleGoogleSignIn = async () => {
+    console.log('🔥 BUTTON CLICKED - handleGoogleSignIn called');
+    console.log('🔥 signInWithGoogle function:', typeof signInWithGoogle);
+    console.log('🔥 loading state:', loading);
+    console.log('🔥 user state:', user);
+    console.log('🔥 Platform:', Platform.OS);
+    
     try {
-      console.log(`Attempting Google sign in on ${Platform.OS}`);
-      await signInWithGoogle();
+      console.log('🔥 About to call signInWithGoogle...');
+      
+      if (typeof signInWithGoogle === 'function') {
+        await signInWithGoogle();
+        console.log('🔥 signInWithGoogle completed successfully');
+      } else {
+        console.log('🔥 signInWithGoogle is not a function, trying store directly...');
+        // Import store directly and call auth function
+        const { useFamilyStore } = await import('../stores/familyStore');
+        const store = useFamilyStore.getState();
+        console.log('🔥 Store auth slice:', store.auth);
+        
+        if (store.auth?.signInWithGoogle) {
+          console.log('🔥 Calling store.auth.signInWithGoogle...');
+          await store.auth.signInWithGoogle();
+          console.log('🔥 Store signInWithGoogle completed successfully');
+        } else {
+          console.error('🔥 No signInWithGoogle function found in store either');
+        }
+      }
     } catch (err) {
-      console.error('Google sign in error in component:', err);
+      console.error('🔥 signInWithGoogle error:', err);
     }
   };
   
@@ -291,11 +347,32 @@ export default function LoginScreen() {
         </View>
 
         {/* Login Buttons */}
-        <View style={styles.buttonsContainer}>
+        <View 
+          style={styles.buttonsContainer}
+          onStartShouldSetResponder={() => {
+            console.log('🔥 ButtonsContainer onStartShouldSetResponder');
+            return false;
+          }}
+        >
           <TouchableOpacity
-            style={[styles.button, styles.googleButton]}
-            onPress={handleGoogleSignIn}
-            disabled={loading}
+            style={[styles.button, styles.googleButton, { 
+              backgroundColor: '#4285f4', // Force visible button
+              opacity: 1,
+              pointerEvents: 'auto' // Force clickable
+            }]}
+            onPress={() => {
+              console.log('🔥 TouchableOpacity onPress fired');
+              console.log('🔥 Button disabled:', loading);
+              console.log('🔥 signInWithGoogle available:', typeof signInWithGoogle);
+              
+              // Always try to call the function regardless of type check
+              console.log('🔥 Attempting to call handleGoogleSignIn...');
+              handleGoogleSignIn();
+            }}
+            disabled={false} // Temporarily disable the disabled state for debugging
+            onPressIn={() => console.log('🔥 TouchableOpacity onPressIn fired')}
+            onPressOut={() => console.log('🔥 TouchableOpacity onPressOut fired')}
+            onLayout={() => console.log('🔥 TouchableOpacity onLayout - Button rendered')}
           >
             <WebIcon name="logo-google" size={20} color="#ffffff" />
             <Text style={styles.googleButtonText}>
@@ -306,7 +383,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={[styles.button, styles.guestButton]}
             onPress={handleGuestSignIn}
-            disabled={loading}
+            disabled={false} // Temporarily disable the disabled state for debugging
           >
             <WebIcon name="person-outline" size={20} color={colors.primary} />
             <Text style={styles.guestButtonText}>

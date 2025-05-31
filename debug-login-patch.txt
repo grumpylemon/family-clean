@@ -1,0 +1,16 @@
+
+// Add this to the handleGoogleSignIn function in login.tsx:
+const handleGoogleSignIn = async () => {
+  console.log('🔥 BUTTON CLICKED - handleGoogleSignIn called');
+  console.log('🔥 signInWithGoogle function:', typeof signInWithGoogle);
+  console.log('🔥 loading state:', loading);
+  console.log('🔥 user state:', user);
+  
+  try {
+    console.log('🔥 About to call signInWithGoogle...');
+    await signInWithGoogle();
+    console.log('🔥 signInWithGoogle completed');
+  } catch (err) {
+    console.error('🔥 signInWithGoogle error:', err);
+  }
+};

@@ -111,9 +111,31 @@ const mockChores: Chore[] = [
   }
 ];
 
-// Immediately return mock data for iOS to avoid any Firebase initialization issues
+// Immediately return mock data for iOS native apps to avoid any Firebase initialization issues
+// But allow web browsers on iOS to use real Firebase
 const shouldReturnMockImmediately = () => {
-  return Platform.OS === 'ios' || isMockImplementation();
+  // If we're on web platform, never use immediate mock regardless of the reported OS
+  if (typeof window !== 'undefined') {
+    console.log('[shouldReturnMockImmediately] Running in web browser, using isMockImplementation() only');
+    return isMockImplementation();
+  }
+  
+  // For native iOS apps, check if it's Expo Go
+  if (Platform.OS === 'ios') {
+    try {
+      const Constants = require('expo-constants').default;
+      const isExpoGo = Constants.appOwnership === 'expo';
+      console.log(`[shouldReturnMockImmediately] iOS native app detected, isExpoGo: ${isExpoGo}`);
+      return isExpoGo || isMockImplementation();
+    } catch (e) {
+      // If Constants check fails, fall back to mock implementation check only
+      console.log('[shouldReturnMockImmediately] Constants check failed, using isMockImplementation() only');
+      return isMockImplementation();
+    }
+  }
+  
+  // For all other platforms, use mock implementation check
+  return isMockImplementation();
 };
 
 // Ensures dates are properly formatted for Firestore
@@ -1485,7 +1507,13 @@ export const findFamilyByJoinCode = async (joinCode: string): Promise<Family | n
 
 // Create or update user profile
 export const createOrUpdateUserProfile = async (userId: string, userData: Partial<User>) => {
+  console.log(`[createOrUpdateUserProfile] Called for userId: ${userId}`);
+  console.log(`[createOrUpdateUserProfile] Platform.OS: ${Platform.OS}`);
+  console.log(`[createOrUpdateUserProfile] typeof window: ${typeof window}`);
+  console.log(`[createOrUpdateUserProfile] isMockImplementation(): ${isMockImplementation()}`);
+  
   if (shouldReturnMockImmediately()) {
+    console.log(`[createOrUpdateUserProfile] shouldReturnMockImmediately() = true, returning without saving to real Firebase`);
     return true;
   }
   
@@ -1504,12 +1532,15 @@ export const createOrUpdateUserProfile = async (userId: string, userData: Partia
       }
     }
     
+    console.log(`[createOrUpdateUserProfile] Creating/updating user profile in real Firebase for userId: ${userId}`);
     const formattedData = formatForFirestore({
       ...userData,
       updatedAt: new Date()
     });
     
+    console.log(`[createOrUpdateUserProfile] Formatted data for Firebase:`, formattedData);
     await setDoc(doc(getUsersCollection(), userId), formattedData, { merge: true });
+    console.log(`[createOrUpdateUserProfile] Successfully saved user profile to real Firebase`);
     return true;
   } catch (error) {
     console.error('Error creating/updating user profile:', error);
@@ -1519,7 +1550,13 @@ export const createOrUpdateUserProfile = async (userId: string, userData: Partia
 
 // Get user profile
 export const getUserProfile = async (userId: string): Promise<User | null> => {
+  console.log(`[getUserProfile] Called for userId: ${userId}`);
+  console.log(`[getUserProfile] Platform.OS: ${Platform.OS}`);
+  console.log(`[getUserProfile] typeof window: ${typeof window}`);
+  console.log(`[getUserProfile] isMockImplementation(): ${isMockImplementation()}`);
+  
   if (shouldReturnMockImmediately()) {
+    console.log(`[getUserProfile] shouldReturnMockImmediately() = true, returning mock user profile`);
     // Return a complete mock user profile for John Smith with family setup
     return {
       uid: userId,
@@ -1589,14 +1626,20 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
       }
     }
     
+    console.log(`[getUserProfile] Looking up user profile in real Firebase for userId: ${userId}`);
     const userDoc = await getDoc(doc(getUsersCollection(), userId));
+    console.log(`[getUserProfile] Firebase query result - userDoc.exists(): ${userDoc.exists()}`);
+    
     if (!userDoc.exists()) {
+      console.log(`[getUserProfile] No user profile found in real Firebase for userId: ${userId}`);
       return null;
     }
     
+    const userData = userDoc.data();
+    console.log(`[getUserProfile] Found user profile in real Firebase:`, userData);
     return {
       uid: userId,
-      ...userDoc.data()
+      ...userData
     } as User;
   } catch (error) {
     console.error('Error getting user profile:', error);

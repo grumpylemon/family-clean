@@ -2,6 +2,7 @@ import { useFamily } from '../hooks/useZustandHooks';
 import { useAccessControl } from '../hooks/useAccessControl';
 import { createChore, deleteChore, getChores, updateChore, createRoomChore } from '../services/firestore';
 import { getFamilyRooms, getRoomTypeDisplayName, getRoomTypeEmoji } from '../services/roomService';
+import { choreCardService } from '../services/choreCardService';
 import { Chore, ChoreDifficulty, ChoreType, Room, RoomType } from '../types';
 import { WebIcon } from './ui/WebIcon';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -36,6 +37,9 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   const [loading, setLoading] = useState(false);
   const [savingChore, setSavingChore] = useState(false);
   const [deletingChoreId, setDeletingChoreId] = useState<string | null>(null);
+  const [upgradingChoreId, setUpgradingChoreId] = useState<string | null>(null);
+  const [showAdvancedUpgradeModal, setShowAdvancedUpgradeModal] = useState(false);
+  const [choreToUpgrade, setChorToUpgrade] = useState<Chore | null>(null);
   const [chores, setChores] = useState<Chore[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingChore, setEditingChore] = useState<Chore | null>(null);
@@ -245,6 +249,191 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
     } finally {
       setDeletingChoreId(null);
       setChoreToDelete(null);
+    }
+  };
+
+  const handleUpgradeToAdvanced = async (chore: Chore) => {
+    if (!family?.id || !canManageChores) {
+      Toast.error(getPermissionErrorMessage('manage chores'));
+      return;
+    }
+
+    // Check if this chore already has advanced features
+    if (!chore.id) {
+      Toast.error('Cannot upgrade chore without ID');
+      return;
+    }
+
+    setUpgradingChoreId(chore.id);
+    
+    try {
+      // Check if advanced card already exists
+      const existingCard = await choreCardService.getAdvancedCard(chore.id);
+      if (existingCard) {
+        Toast.info('This chore already has advanced features');
+        setUpgradingChoreId(null);
+        return;
+      }
+      
+      // Set the chore to upgrade and show modal
+      setChorToUpgrade(chore);
+      setShowAdvancedUpgradeModal(true);
+    } catch (error) {
+      console.error('Error checking for existing advanced card:', error);
+      Toast.error('Failed to check chore upgrade status');
+    } finally {
+      setUpgradingChoreId(null);
+    }
+  };
+
+  const confirmUpgradeToAdvanced = async () => {
+    if (!choreToUpgrade || !family?.id) return;
+    
+    setUpgradingChoreId(choreToUpgrade.id!);
+    
+    try {
+      const advancedCard = {
+        choreId: choreToUpgrade.id!,
+        familyId: family.id,
+        
+        // Multi-level instructions
+        instructions: {
+          child: {
+            title: `${choreToUpgrade.title} - For Kids`,
+            description: `Simple steps to complete ${choreToUpgrade.title}`,
+            steps: [
+              {
+                id: 'step1',
+                title: 'Get Ready',
+                description: 'Gather everything you need first',
+                estimatedTime: 2,
+                safetyWarnings: ['Ask an adult if you need help'],
+                media: []
+              },
+              {
+                id: 'step2', 
+                title: 'Do the Task',
+                description: 'Follow the steps carefully',
+                estimatedTime: Math.max(5, choreToUpgrade.estimatedDuration ? choreToUpgrade.estimatedDuration - 5 : 10),
+                safetyWarnings: [],
+                media: []
+              },
+              {
+                id: 'step3',
+                title: 'Clean Up',
+                description: 'Put everything back where it belongs',
+                estimatedTime: 3,
+                safetyWarnings: [],
+                media: []
+              }
+            ]
+          },
+          teen: {
+            title: `${choreToUpgrade.title} - For Teens`,
+            description: `Complete guide for ${choreToUpgrade.title}`,
+            steps: [
+              {
+                id: 'step1',
+                title: 'Preparation',
+                description: 'Set up your workspace and gather materials',
+                estimatedTime: 3,
+                safetyWarnings: choreToUpgrade.difficulty === 'hard' ? ['Check safety requirements first'] : [],
+                media: []
+              },
+              {
+                id: 'step2',
+                title: 'Execute Task',
+                description: 'Complete the main task efficiently',
+                estimatedTime: choreToUpgrade.estimatedDuration || 15,
+                safetyWarnings: [],
+                media: []
+              },
+              {
+                id: 'step3',
+                title: 'Quality Check',
+                description: 'Review your work and make improvements',
+                estimatedTime: 5,
+                safetyWarnings: [],
+                media: []
+              }
+            ]
+          },
+          adult: {
+            title: `${choreToUpgrade.title} - Expert Level`,
+            description: `Professional approach to ${choreToUpgrade.title}`,
+            steps: [
+              {
+                id: 'step1',
+                title: 'Strategic Planning',
+                description: 'Plan the most efficient approach',
+                estimatedTime: 2,
+                safetyWarnings: [],
+                media: []
+              },
+              {
+                id: 'step2',
+                title: 'Implementation',
+                description: 'Execute with focus on quality and efficiency',
+                estimatedTime: choreToUpgrade.estimatedDuration || 20,
+                safetyWarnings: [],
+                media: []
+              },
+              {
+                id: 'step3',
+                title: 'Optimization',
+                description: 'Identify improvements for next time',
+                estimatedTime: 3,
+                safetyWarnings: [],
+                media: []
+              }
+            ]
+          }
+        },
+        
+        // Educational content
+        educationalContent: {
+          facts: [`Did you know? ${choreToUpgrade.title} helps maintain a healthy home environment!`],
+          quotes: ['A job well done gives you satisfaction and pride!'],
+          learningObjectives: [`Master the ${choreToUpgrade.title} technique`, 'Understand the importance of consistency', 'Develop quality standards']
+        },
+        
+        // Gamification
+        gamification: {
+          specialAchievements: [`${choreToUpgrade.title}_expert`],
+          qualityMultipliers: {
+            incomplete: 0,
+            partial: 0.5,
+            complete: 1.0,
+            excellent: choreToUpgrade.difficulty === 'hard' ? 1.5 : 1.2
+          },
+          learningRewards: {
+            instructionCompleted: 5,
+            factEngagement: 2,
+            certificationProgress: 10
+          },
+          certificationBonuses: {
+            basic: 10,
+            intermediate: 20,
+            advanced: 30
+          }
+        },
+        
+        // Metadata
+        isActive: true
+      };
+      
+      await choreCardService.createAdvancedCard(advancedCard);
+      Toast.success(`"${choreToUpgrade.title}" upgraded to Advanced Chore!`);
+      
+      // Close modal and reload chores
+      setShowAdvancedUpgradeModal(false);
+      setChorToUpgrade(null);
+      await loadChores();
+    } catch (error) {
+      console.error('Error upgrading chore:', error);
+      Toast.error('Failed to upgrade chore to advanced');
+    } finally {
+      setUpgradingChoreId(null);
     }
   };
 
@@ -652,6 +841,7 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
             >
               <Text style={styles.createButtonText}>+ Create New Chore</Text>
             </TouchableOpacity>
+            
 
             {/* Test Data Generator */}
             <View style={styles.testDataSection}>
@@ -682,6 +872,20 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                             onPress={() => handleEditChore(chore)}
                           >
                             <Text style={styles.editText}>Edit</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.choreActionButton, styles.upgradeButton]}
+                            onPress={() => handleUpgradeToAdvanced(chore)}
+                            disabled={upgradingChoreId === chore.id}
+                          >
+                            {upgradingChoreId === chore.id ? (
+                              <LoadingSpinner size="small" />
+                            ) : (
+                              <>
+                                <WebIcon name="star" size={14} color="#9333ea" style={{ marginRight: 4 }} />
+                                <Text style={styles.upgradeText}>Upgrade</Text>
+                              </>
+                            )}
                           </TouchableOpacity>
                           <TouchableOpacity
                             style={styles.choreActionButton}
@@ -759,6 +963,20 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
           onConfirm={performDelete}
           onCancel={() => setChoreToDelete(null)}
           icon="trash-outline"
+        />
+
+        <ConfirmDialog
+          visible={showAdvancedUpgradeModal}
+          title="Upgrade to Advanced Chore"
+          message={`Transform "${choreToUpgrade?.title}" into an Advanced Chore with:\n\n• Multi-level instructions (Kids, Teens, Adults)\n• Educational content and tips\n• Quality rating system\n• Performance tracking\n• Enhanced gamification\n\nThis will make the chore more engaging and educational for all family members.`}
+          confirmText="Upgrade"
+          confirmButtonStyle="primary"
+          onConfirm={confirmUpgradeToAdvanced}
+          onCancel={() => {
+            setShowAdvancedUpgradeModal(false);
+            setChorToUpgrade(null);
+          }}
+          icon="star"
         />
 
       </SafeAreaView>
@@ -898,6 +1116,18 @@ const styles = StyleSheet.create({
   editText: {
     color: '#be185d',
     fontSize: 14,
+  },
+  upgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f3e8ff',
+    borderWidth: 1,
+    borderColor: '#c4b5fd',
+  },
+  upgradeText: {
+    color: '#9333ea',
+    fontSize: 14,
+    fontWeight: '600',
   },
   deleteText: {
     color: '#ef4444',
