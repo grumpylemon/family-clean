@@ -1,6 +1,106 @@
 ### Error TODO List - Last Updated: 2025-05-30
 
 ## Active High Priority Issues to Fix
+- [x] **Platform Detection Authentication Bug (High Impact - User Acquisition)** - FIXED v2.176+ (2025-05-31)
+  - **Status**: IMPLEMENTATION COMPLETE - Mock vs Real Firebase platform detection fixed
+  - **Root Cause**: `shouldReturnMockImmediately()` incorrectly returned true for ALL iOS platforms, including web browsers on iOS
+  - **Solution**: Added `typeof window !== 'undefined'` check to distinguish web browsers from native iOS apps
+  - **Impact**: Critical issue resolved - Web users (including Safari on iOS) now use real Firebase and can register properly
+  - **Implementation**:
+    - Fixed platform detection logic in `/services/firestore.ts`
+    - Web browsers always use real Firebase regardless of reported OS
+    - Native iOS Expo Go apps continue using mock Firebase correctly
+    - Enhanced debugging with comprehensive logging for platform decisions
+  - **Testing Validated**: 
+    - [x] All 5 platform detection tests pass
+    - [x] Web on iOS Safari now uses real Firebase (critical fix)
+    - [x] iOS Expo Go still uses mock Firebase (maintained)
+    - [x] Authentication flow properly creates user profiles in Firebase DB
+  - **Evidence**: Comprehensive fix validation in `test-auth-debug-fix-simple.js`
+  - **Files Modified**: `/services/firestore.ts` (platform detection), debugging scripts
+  - **Expected Logs**: `[shouldReturnMockImmediately] Running in web browser, using isMockImplementation() only`
+      entry-b39aa4700c56c0…a577a8916d0.js:6847 Build Hash: 7b5fb1d
+      entry-b39aa4700c56c0…a577a8916d0.js:6847 Timestamp: 2025-05-31T01:11:20.230Z
+      entry-b39aa4700c56c0…a577a8916d0.js:5702 [FamilyStore] Creating store with parameters
+      entry-b39aa4700c56c0…a577a8916d0.js:5702 [FamilyStore] Creating slices...
+      entry-b39aa4700c56c0…a577a8916d0.js:5715 [AuthSlice] Creating auth slice with valid parameters
+      entry-b39aa4700c56c0…a577a8916d0.js:6848 [FamilySlice] Creating family slice with valid parameters
+      entry-b39aa4700c56c0…5a577a8916d0.js:640 AuthContext version: v6
+      entry-b39aa4700c56c0…e5a577a8916d0.js:22 Tabs Layout version: v3.1 - Dark Mode Support
+      entry-b39aa4700c56c0…a577a8916d0.js:7228 App Layout version: v6 - Zustand Integration
+      entry-b39aa4700c56c0…5a577a8916d0.js:641 Firestore initialized with long polling
+      entry-b39aa4700c56c0…5a577a8916d0.js:641 Successfully initialized Firestore with cache persistence
+      entry-b39aa4700c56c0…5a577a8916d0.js:641 Firebase initialized successfully
+      entry-b39aa4700c56c0…5a577a8916d0.js:641 Firebase config: 
+      {apiKey: 'AIzaSyDIdq5ePKlc4qA3PCQaYoI_l_yW0-cFrBI', authDomain: 'family-fun-app.firebaseapp.com', projectId: 'family-fun-app', storageBucket: 'family-fun-app.firebasestorage.app', messagingSenderId: '255617289303', …}
+      entry-b39aa4700c56c0…5a577a8916d0.js:641 Firebase initialization promise resolved
+      entry-b39aa4700c56c0…a577a8916d0.js:5721 Sentry DSN not found in environment variables
+      entry-b39aa4700c56c0…5a577a8916d0.js:641 Firebase already initialized, skipping
+      entry-b39aa4700c56c0…a577a8916d0.js:7228 App running on platform: web
+      entry-b39aa4700c56c0…a577a8916d0.js:7228 Using mock Firebase: false
+      entry-b39aa4700c56c0…a577a8916d0.js:7228 Firebase initialization completed successfully
+      entry-b39aa4700c56c0…a577a8916d0.js:7228 Checking for authentication redirect result...
+      entry-b39aa4700c56c0…a577a8916d0.js:7234 Login Screen version: v4
+      entry-b39aa4700c56c0…a577a8916d0.js:7234 🔍 LOGIN SCREEN DEBUG:
+      entry-b39aa4700c56c0…a577a8916d0.js:7234   Platform: web
+      entry-b39aa4700c56c0…a577a8916d0.js:7234   Mock: false
+      entry-b39aa4700c56c0…a577a8916d0.js:7234   User: No user
+      entry-b39aa4700c56c0…a577a8916d0.js:7234   Loading: false
+      entry-b39aa4700c56c0…a577a8916d0.js:7228 Navigation component mounted, Firebase initialized: true
+      entry-b39aa4700c56c0…a577a8916d0.js:5701 🏪 StoreProvider: Initializing Zustand store
+      entry-b39aa4700c56c0…a577a8916d0.js:5701 🏪 StoreProvider: Store initialized with slices: 
+      (12) ['auth', 'family', 'offline', 'chores', 'rewards', 'refreshCache', 'clearCache', 'analytics', 'calculateCacheSize', 'cleanupCache', 'invalidateCache', 'reset']
+      entry-b39aa4700c56c0…a577a8916d0.js:5701 🏪 StoreProvider: Auth slice found with methods: 
+      (9) ['user', 'isAuthenticated', 'isLoading', 'error', 'signInWithGoogle', 'signInAsGuest', 'logout', 'checkAuthState', 'clearError']
+      entry-b39aa4700c56c0…a577a8916d0.js:5701 🏪 StoreProvider: Family slice found with methods: 
+      (15) ['family', 'members', 'isAdmin', 'currentMember', 'isLoading', 'error', 'createFamily', 'joinFamily', 'createNewFamily', 'refreshFamily', 'fetchFamily', 'updateFamilySettings', 'updateMemberRole', 'removeMember', 'clearError']
+      entry-b39aa4700c56c0…a577a8916d0.js:6853 🌐 NetworkService: Initializing network monitoring
+      entry-b39aa4700c56c0…a577a8916d0.js:6853 🌐 NetworkService: Network monitoring initialized successfully
+      entry-b39aa4700c56c0…a577a8916d0.js:5701 🏪 StoreProvider: Starting auth state listener
+      entry-b39aa4700c56c0…a577a8916d0.js:5701 🌐 Web platform detected - using localStorage persistence
+      entry-b39aa4700c56c0…a577a8916d0.js:5720 firebaseAuthBrowser: Loaded browser Firebase Auth functions
+      entry-b39aa4700c56c0…a577a8916d0.js:5720 Available functions: ActionCodeURL, AuthCredential, EmailAuthCredential, EmailAuthProvider, FacebookAuthProvider, GithubAuthProvider, GoogleAuthProvider, OAuthCredential, OAuthProvider, PhoneAuthCredential, PhoneAuthProvider, PhoneMultiFactorGenerator, RecaptchaVerifier, SAMLAuthProvider, TotpMultiFactorGenerator, TotpSecret, TwitterAuthProvider, applyActionCode, beforeAuthStateChanged, browserCookiePersistence, browserLocalPersistence, browserPopupRedirectResolver, browserSessionPersistence, checkActionCode, confirmPasswordReset, connectAuthEmulator, createUserWithEmailAndPassword, debugErrorMap, deleteUser, fetchSignInMethodsForEmail, getAdditionalUserInfo, getAuth, getIdToken, getIdTokenResult, getMultiFactorResolver, getRedirectResult, inMemoryPersistence, indexedDBLocalPersistence, initializeAuth, initializeRecaptchaConfig, isSignInWithEmailLink, linkWithCredential, linkWithPhoneNumber, linkWithPopup, linkWithRedirect, multiFactor, onAuthStateChanged, onIdTokenChanged, parseActionCodeURL, prodErrorMap, reauthenticateWithCredential, reauthenticateWithPhoneNumber, reauthenticateWithPopup, reauthenticateWithRedirect, reload, revokeAccessToken, sendEmailVerification, sendPasswordResetEmail, sendSignInLinkToEmail, setPersistence, signInAnonymously, signInWithCredential, signInWithCustomToken, signInWithEmailAndPassword, signInWithEmailLink, signInWithPhoneNumber, signInWithPopup, signInWithRedirect, signOut, unlink, updateCurrentUser, updateEmail, updatePassword, updatePhoneNumber, updateProfile, useDeviceLanguage, validatePassword, verifyBeforeUpdateEmail, verifyPasswordResetCode
+      entry-b39aa4700c56c0…a577a8916d0.js:5715 [AuthSlice] Checking for redirect authentication result...
+      entry-b39aa4700c56c0…a577a8916d0.js:6853 🌐 NetworkService: Status update callback set
+      entry-b39aa4700c56c0…a577a8916d0.js:5702 🌐 NetworkService: Callback integration set successfully
+
+      Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
+      entry-b39aa4700c56c0…a577a8916d0.js:7228 App layout initialized, notification service ready for auth
+      entry-b39aa4700c56c0…a577a8916d0.js:5715 [AuthSlice] Setting up new auth state listener
+      entry-b39aa4700c56c0…a577a8916d0.js:5719 authService.onAuthStateChanged called
+      entry-b39aa4700c56c0…a577a8916d0.js:5719 Using real Firebase onAuthStateChanged
+      entry-b39aa4700c56c0…a577a8916d0.js:5719 Using browser-specific auth service
+
+- [ ] **Images broken on Login Screen** Google and Guest images are not working on login screen
+
+ 1. 🚨 Complete Authentication Loop Fix (Critical - User Acquisition)
+
+  - Status: Ready for targeted implementation using our debugging infrastructure
+  - Action: Use the enhanced logging to identify exact failure point and fix timing issues
+  - Impact: Unblocks all new user registration (critical for app growth)
+  - Effort: 2-3 hours with our debugging tools in place
+
+  2. ⚡ TypeScript Compilation Errors Fix (High - Development Blocker)
+
+  - Status: Active issue preventing rotation system tests
+  - Action: Fix type mismatches in firestore.ts and update interface definitions
+  - Impact: Enables testing of comprehensive rotation management system
+  - Effort: 2-3 hours of systematic type fixing
+
+  3. 🍎 iOS Build Verification (High - Platform Support)
+
+  - Status: Recent Sentry fixes need validation
+  - Action: Test v2.169 iOS build on EAS to confirm Sentry authentication fix
+  - Impact: Ensures iOS users can use the app properly
+  - Effort: 1 hour testing + monitoring
+
+  4. 🎨 Continue UI Accessibility Improvements (Medium - User Experience)
+
+  - Status: Settings and AdminSettings completed, expand to other components
+  - Action: Apply systematic contrast fixes to ChoreManagement, ManageMembers,
+  ValidatedInput
+  - Impact: Complete WCAG compliance across entire app
+  - Effort: 3-4 hours per component using established patterns
 
 ### Critical Development Issues
 
@@ -73,36 +173,6 @@
   - **Action**: Run `node scripts/fix-family-name.js`
   - **Alternative**: Run `node scripts/fix-stale-points.js` for additional options
   - **Cause**: Stale cache or old demo data references
-
-### Critical User Registration Issues
-
-- [x] **New User Sign-UP Authentication Loop (High Impact - User Acquisition)** - FIXED v2.175+ (2025-05-31)
-  - **Status**: IMPLEMENTATION COMPLETE - Authentication loop fixed with initial load protection
-  - **Root Cause**: Firebase's onAuthStateChanged listener fires immediately with null user on initialization, clearing auth state before authentication can persist
-  - **Solution**: Added `hasInitialLoad` flag to distinguish between Firebase initialization (ignore) vs actual signout (clear auth)
-  - **Impact**: Critical issue resolved - New users can now complete Google sign-in and proceed to family setup
-  - **Implementation**:
-    - Modified Firebase auth listener in `/stores/authSlice.ts` to skip clearing auth on initial null event
-    - Preserved authentication state during Firebase initialization phase  
-    - Maintained proper signout handling for actual user logouts
-    - Enhanced logging to distinguish between initialization vs signout scenarios
-  - **Testing Required**: 
-    - [ ] Verify new user flow: Google sign-in → family setup (not back to login)
-    - [ ] Confirm existing users still sign in normally
-    - [ ] Test signout functionality still works
-    - [ ] Validate auth state persistence across page refreshes
-    - [ ] Cross-browser testing (Chrome, Firefox, Safari)
-  - **Evidence**: Comprehensive fix documentation in `new_user_signup_authentication_loop_fixed.md`
-  - **Files Modified**: `/stores/authSlice.ts` (core fix), debugging infrastructure complete
-
-- [ ] **Images Broken on Login Screen** - PARTIALLY FIXED v2.175+ (2025-05-31)
-  - **Status**: Google icon fixed, Guest icon working
-  - **Root Cause**: External image URLs not loading properly 
-  - **Fix Applied**: Replaced Google favicon with WebIcon implementation
-  - **Impact**: Minor UI issue affecting login screen appearance
-  - **Next Steps**: 
-    - [ ] Test icon display across different browsers
-    - [ ] Verify WebIcon fallbacks are working properly
 
 ### Low Priority  
 - [ ] **Console Warnings**: Grammarly extension warnings

@@ -97,7 +97,7 @@ This document contains a comprehensive, reorganized project management roadmap f
   - Add search/filter bar with real-time search and status filtering
 - [ ] **Advanced User Profile Cards**
   - [ ] User puts in birthday in stead of age. System auto calculate age display and birthday count down in unique ways.
-  - [ ] Boy, Girl, Man, Woman, Non Binary, and all the other DEI options
+  - [ ] Boy, Girl, Man, Woman, Non Binary, and all the other 
   - Favorite Questionair of 10 questions based around users age group to get to know what they like which can later be used for awards generation. This option will unlock once they reach level 2, but can be set by admin to unlock for imidiate access. Generate questions
 
 ### ✅ Advanced Permissions System - Tested [x] ✅
@@ -118,27 +118,6 @@ This document contains a comprehensive, reorganized project management roadmap f
   - Smart next assignment and rotation index persistence
   - Cooldown integration during rotation
   - **Chore Takeover/Reassignment System** (Completed: 2025-05-29)
-- [x] **Rotation System Admin Panel Integration** (Completed: 2025-05-30)
-  - Complete admin interface for 7-strategy rotation system (Round Robin, Workload Balance, Skill-Based, Calendar-Aware, Random Fair, Preference-Based, Mixed Strategy)
-  - Real-time fairness engine dashboard with workload visualization and rebalancing recommendations
-  - Comprehensive member preferences management (chore preferences, skill certifications, capacity limits)
-  - Strategy configuration interface with mixed strategy weights and validation
-  - Rotation analytics and performance tracking with strategy effectiveness metrics
-  - Admin controls: testing tools, emergency overrides, force rebalancing, configuration backup
-  - Complete TypeScript service layer (rotationAdminService.ts) with full CRUD operations
-  - Beautiful pink-themed UI with accessibility support and responsive design
-  - Comprehensive test suite (25 passing tests) covering service functionality and data validation
-- [x] **Advanced Chore Cards Integration** (Completed: 2025-05-30)
-  - Comprehensive advanced chore card system with multi-level instructions, certification requirements, and educational content
-  - Age-appropriate instruction sets (Child 5-8, Teen 9-12, Adult 13+) with step-by-step guidance, safety warnings, and media assets
-  - Quality rating system (Incomplete, Partial, Complete, Excellent) with performance tracking and improvement analytics
-  - User satisfaction tracking with 1-5 emoji scale and preference-based smart assignment algorithms
-  - Educational content delivery: "Did You Know" facts, inspirational quotes, and learning objectives
-  - Certification system with training status, skill requirements, and assessment workflows
-  - Smart assignment engine calculating user scores based on satisfaction, performance, and certification status
-  - Complete service layer: choreCardService.ts and educationalContentService.ts with full CRUD operations
-  - Beautiful UI components: AdvancedChoreCard, InstructionViewer, PerformanceHistory, QualityRatingInput, EducationalContent, CertificationBadge
-  - Comprehensive test suite (12 passing tests) covering all advanced card functionality and error handling
 - [x] **Build chore completion flow** (Completed: 2025-05-28)
   - Update backend logic for points/XP/money gain, streak updates, achievement checks
   - Update UI for completion feedback and comprehensive rewards display
@@ -149,7 +128,8 @@ This document contains a comprehensive, reorganized project management roadmap f
   - Reordered dashboard layout with smart chore filtering and sorting
   - Created detailed chore view modal system with interactive completion flow
   - Enhanced chore card visual design with pink theme integration
-
+- [ ] **Advanced Chore Cards**
+  - [ ] Create Advanced score cards with more fields like Instructions, Certification, How many times the chore has been completed by user, how well user does at the chore. When user has gotten marked incomplete, or partial completion, complete, or excellent. Who the chore bounces to next, if user has training status, users like of chore 1-5 emoji scale, comments on each time completes it, inspirational random quote that fits the chore, gamification idea for the chore, Did you know cool education fact around the chore thats cool based on age.
 ---
 
 ## 🚀 Phase 2: Advanced Core Systems
