@@ -207,18 +207,79 @@ class RotationAdminService {
         return;
       }
 
-      const configRef = doc(safeCollection('rotationConfigurations'), config.familyId);
+      // Convert legacy config to new FamilyRotationSettings format
+      const { updateFamilyRotationSettings } = await import('./firestore');
       
-      await setDoc(configRef, {
-        ...config,
-        lastModified: new Date().toISOString(),
-      }, { merge: true });
+      const rotationSettings = {
+        defaultStrategy: config.activeStrategy || 'round_robin' as any,
+        fairnessWeight: config.mixedStrategyWeights?.fairness || 0.7,
+        preferenceWeight: config.mixedStrategyWeights?.preference || 0.5,
+        availabilityWeight: config.mixedStrategyWeights?.availability || 0.8,
+        enableIntelligentScheduling: config.enabledFeatures?.calendarIntegration || false,
+        maxChoresPerMember: 10,
+        rotationCooldownHours: 24,
+        seasonalAdjustments: false,
+        autoRebalancingEnabled: config.enabledFeatures?.automaticRebalancing || false,
+        emergencyFallbackEnabled: true,
+        strategyConfigs: this.createStrategyConfigs(config)
+      };
+      
+      const success = await updateFamilyRotationSettings(config.familyId, rotationSettings);
+      
+      if (!success) {
+        throw new Error('Failed to update family rotation settings');
+      }
 
       console.log('Rotation configuration updated successfully');
     } catch (error) {
       console.error('Error updating rotation configuration:', error);
       throw error;
     }
+  }
+  
+  /**
+   * Convert legacy configuration to strategy configs
+   */
+  private createStrategyConfigs(config: Partial<RotationConfiguration>): Record<string, any> {
+    const baseConfig = { enabled: false, weight: 0, parameters: {} };
+    
+    return {
+      'round_robin': { 
+        ...baseConfig, 
+        enabled: config.activeStrategy === 'round_robin',
+        weight: config.activeStrategy === 'round_robin' ? 1 : 0
+      },
+      'workload_balance': { 
+        ...baseConfig, 
+        enabled: config.activeStrategy === 'workload_balance',
+        weight: config.mixedStrategyWeights?.workload || 0
+      },
+      'skill_based': { 
+        ...baseConfig, 
+        enabled: config.enabledFeatures?.skillBasedAssignment || false,
+        weight: config.mixedStrategyWeights?.skill || 0
+      },
+      'calendar_aware': { 
+        ...baseConfig, 
+        enabled: config.enabledFeatures?.calendarIntegration || false,
+        weight: config.mixedStrategyWeights?.availability || 0
+      },
+      'random_fair': { 
+        ...baseConfig, 
+        enabled: config.activeStrategy === 'random_fair',
+        weight: config.mixedStrategyWeights?.fairness || 0
+      },
+      'preference_based': { 
+        ...baseConfig, 
+        enabled: config.enabledFeatures?.preferenceOptimization || false,
+        weight: config.mixedStrategyWeights?.preference || 0
+      },
+      'mixed_strategy': { 
+        ...baseConfig, 
+        enabled: config.activeStrategy === 'mixed_strategy',
+        weight: config.activeStrategy === 'mixed_strategy' ? 1 : 0
+      }
+    };
   }
 
   /**
@@ -351,15 +412,42 @@ class RotationAdminService {
         return;
       }
 
-      const prefsRef = doc(
-        safeCollection('memberPreferences'), 
-        `${preferences.familyId}_${preferences.userId}`
+      // Convert legacy preferences to new MemberRotationPreferences format
+      const { updateMemberRotationPreferences } = await import('./firestore');
+      
+      const rotationPreferences = {
+        preferredChoreTypes: Object.entries(preferences.chorePreferences)
+          .filter(([_, score]) => score > 0)
+          .map(([type, _]) => type as any),
+        dislikedChoreTypes: Object.entries(preferences.chorePreferences)
+          .filter(([_, score]) => score < 0)
+          .map(([type, _]) => type as any),
+        preferredDifficulties: ['medium'] as any[], // Default
+        skillCertifications: preferences.skillCertifications,
+        maxChoresPerDay: preferences.capacityLimits.maxDailyChores,
+        maxChoresPerWeek: Math.floor(preferences.capacityLimits.maxWeeklyPoints / 20), // Estimate based on points
+        preferredTimeSlots: preferences.capacityLimits.preferredTimeSlots.map(slot => ({
+          startHour: parseInt(slot.split('-')[0]),
+          endHour: parseInt(slot.split('-')[1]) || parseInt(slot.split('-')[0]) + 1,
+          daysOfWeek: [1, 2, 3, 4, 5], // Weekdays default
+          enabled: true
+        })),
+        unavailableTimeSlots: [], // Not directly mapped
+        requiresSupervision: preferences.specialSettings.requiresSupervision,
+        canTakeOverChores: preferences.specialSettings.canTakeOverChores,
+        prefersGroupTasks: preferences.specialSettings.preferGroupTasks,
+        skipWeekends: preferences.specialSettings.skipWeekends
+      };
+      
+      const success = await updateMemberRotationPreferences(
+        preferences.familyId, 
+        preferences.userId, 
+        rotationPreferences
       );
       
-      await setDoc(prefsRef, {
-        ...preferences,
-        lastUpdated: new Date().toISOString(),
-      });
+      if (!success) {
+        throw new Error('Failed to update member rotation preferences');
+      }
 
       console.log('Member preferences updated successfully');
     } catch (error) {

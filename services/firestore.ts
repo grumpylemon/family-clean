@@ -16,6 +16,10 @@ import {
   EnhancedStreak,
   RoomType
 } from '../types';
+import {
+  FamilyRotationSettings,
+  MemberRotationPreferences
+} from '../types/rotation';
 import { 
   processChoreCompletion, 
   applyCompletionRewards,
@@ -293,13 +297,64 @@ export const createChore = async (chore: Omit<Chore, 'id'>) => {
     console.log(`Creating chore with family ID: ${familyId}`);
     
     // Make sure to set the family ID and other required fields
-    const choreWithFamilyId = {
+    let choreWithFamilyId = {
       ...chore,
       familyId: familyId,
       createdAt: new Date(),
       // Explicitly set deleted flag to false to prevent filtering issues
       deleted: false
     };
+    
+    // Apply rotation logic for family/shared chores that don't have an assignee
+    if ((chore.type === 'family' || chore.type === 'shared') && !chore.assignedTo) {
+      try {
+        console.log(`Applying rotation logic for new ${chore.type} chore: ${chore.title}`);
+        
+        // Get family data for rotation
+        const family = await getFamily(familyId);
+        if (family && family.rotationSettings) {
+          // Import rotation service and apply assignment logic
+          const { rotationService } = await import('./rotationService');
+          
+          const activeMembers = family.members.filter(m => m.isActive);
+          if (activeMembers.length > 0) {
+            const rotationContext = {
+              familyId: family.id!,
+              choreId: '', // Will be set after creation
+              currentAssignee: undefined,
+              availableMembers: activeMembers,
+              familySettings: family.rotationSettings,
+              currentWorkloads: [], // Will be calculated by rotation service
+              scheduleConstraints: [],
+              emergencyMode: false
+            };
+
+            const rotationResult = await rotationService.determineNextAssignee(
+              choreWithFamilyId as Chore, // Cast since we don't have ID yet
+              family,
+              rotationContext
+            );
+
+            if (rotationResult.success && rotationResult.assignedMemberId) {
+              choreWithFamilyId = {
+                ...choreWithFamilyId,
+                assignedTo: rotationResult.assignedMemberId,
+                assignedToName: rotationResult.assignedMemberName || '',
+                lastRotationStrategy: rotationResult.strategy,
+                lastRotationScore: rotationResult.fairnessScore,
+              };
+              
+              console.log(`Rotation assignment successful: ${chore.title} assigned to ${rotationResult.assignedMemberName} using ${rotationResult.strategy} strategy`);
+            } else {
+              console.warn(`Rotation assignment failed for chore ${chore.title}: ${rotationResult.errorMessage || 'Unknown error'}`);
+            }
+          }
+        }
+      } catch (rotationError) {
+        console.error('Error applying rotation logic to new chore:', rotationError);
+        // Continue with chore creation without rotation assignment
+      }
+    }
     
     console.log(`Adding chore: ${chore.title}, using mock: ${isMockImplementation()}, family: ${familyId}`);
     
@@ -1485,6 +1540,264 @@ export const updateFamilyMember = async (familyId: string, userId: string, updat
     console.error('Error updating family member:', error);
     return false;
   }
+};
+
+// Family rotation settings management
+export const updateFamilyRotationSettings = async (familyId: string, rotationSettings: FamilyRotationSettings) => {
+  if (shouldReturnMockImmediately()) {
+    return true;
+  }
+  
+  try {
+    console.log(`Updating rotation settings for family ${familyId}:`, rotationSettings);
+    
+    const success = await updateFamily(familyId, { rotationSettings });
+    
+    if (success) {
+      console.log(`Successfully updated rotation settings for family ${familyId}`);
+    }
+    
+    return success;
+  } catch (error) {
+    console.error('Error updating family rotation settings:', error);
+    return false;
+  }
+};
+
+export const getFamilyRotationSettings = async (familyId: string): Promise<FamilyRotationSettings | null> => {
+  if (shouldReturnMockImmediately()) {
+    // Return default settings for mock
+    return {
+      defaultStrategy: 'round_robin' as any,
+      fairnessWeight: 0.7,
+      preferenceWeight: 0.5,
+      availabilityWeight: 0.8,
+      enableIntelligentScheduling: false,
+      maxChoresPerMember: 10,
+      rotationCooldownHours: 24,
+      seasonalAdjustments: false,
+      autoRebalancingEnabled: false,
+      emergencyFallbackEnabled: true,
+      strategyConfigs: {}
+    };
+  }
+  
+  try {
+    const family = await getFamily(familyId);
+    return family?.rotationSettings || null;
+  } catch (error) {
+    console.error('Error getting family rotation settings:', error);
+    return null;
+  }
+};
+
+// Member rotation preferences management  
+export const updateMemberRotationPreferences = async (
+  familyId: string, 
+  memberId: string, 
+  preferences: MemberRotationPreferences
+) => {
+  if (shouldReturnMockImmediately()) {
+    return true;
+  }
+  
+  try {
+    console.log(`Updating rotation preferences for member ${memberId} in family ${familyId}:`, preferences);
+    
+    const success = await updateFamilyMember(familyId, memberId, { 
+      rotationPreferences: preferences 
+    });
+    
+    if (success) {
+      console.log(`Successfully updated rotation preferences for member ${memberId}`);
+    }
+    
+    return success;
+  } catch (error) {
+    console.error('Error updating member rotation preferences:', error);
+    return false;
+  }
+};
+
+export const getMemberRotationPreferences = async (
+  familyId: string, 
+  memberId: string
+): Promise<MemberRotationPreferences | null> => {
+  if (shouldReturnMockImmediately()) {
+    // Return default preferences for mock
+    return {
+      preferredChoreTypes: [],
+      dislikedChoreTypes: [],
+      preferredDifficulties: ['medium'],
+      skillCertifications: [],
+      maxChoresPerDay: 3,
+      maxChoresPerWeek: 10,
+      preferredTimeSlots: [],
+      unavailableTimeSlots: [],
+      requiresSupervision: false,
+      canTakeOverChores: true,
+      prefersGroupTasks: false,
+      skipWeekends: false
+    };
+  }
+  
+  try {
+    const family = await getFamily(familyId);
+    const member = family?.members.find(m => m.uid === memberId);
+    return member?.rotationPreferences || null;
+  } catch (error) {
+    console.error('Error getting member rotation preferences:', error);
+    return null;
+  }
+};
+
+// Bulk assignment function for unassigned chores
+export const assignUnassignedChores = async (familyId: string): Promise<{ assigned: number; failed: number; errors: string[] }> => {
+  if (shouldReturnMockImmediately()) {
+    return { assigned: 3, failed: 0, errors: [] };
+  }
+  
+  try {
+    console.log(`Starting bulk assignment of unassigned chores for family ${familyId}`);
+    
+    // Get family data
+    const family = await getFamily(familyId);
+    if (!family) {
+      throw new Error(`Family ${familyId} not found`);
+    }
+    
+    // Get all unassigned family/shared chores
+    const allChores = await getChores(familyId);
+    const unassignedChores = allChores.filter(chore => 
+      (chore.type === 'family' || chore.type === 'shared') && 
+      (!chore.assignedTo || chore.assignedTo === '') &&
+      chore.status === 'open'
+    );
+    
+    console.log(`Found ${unassignedChores.length} unassigned chores to process`);
+    
+    if (unassignedChores.length === 0) {
+      return { assigned: 0, failed: 0, errors: [] };
+    }
+    
+    // Check if family has rotation settings
+    if (!family.rotationSettings) {
+      console.log('Family has no rotation settings, using basic round-robin assignment');
+      return await assignChoresBasicRotation(familyId, family, unassignedChores);
+    }
+    
+    // Use advanced rotation service for assignment
+    const { rotationService } = await import('./rotationService');
+    const activeMembers = family.members.filter(m => m.isActive);
+    
+    if (activeMembers.length === 0) {
+      return { assigned: 0, failed: unassignedChores.length, errors: ['No active family members available'] };
+    }
+    
+    let assigned = 0;
+    let failed = 0;
+    const errors: string[] = [];
+    
+    for (const chore of unassignedChores) {
+      try {
+        const rotationContext = {
+          familyId: family.id!,
+          choreId: chore.id!,
+          currentAssignee: undefined,
+          availableMembers: activeMembers,
+          familySettings: family.rotationSettings,
+          currentWorkloads: [], // Will be calculated by rotation service
+          scheduleConstraints: [],
+          emergencyMode: false
+        };
+
+        const rotationResult = await rotationService.determineNextAssignee(
+          chore,
+          family,
+          rotationContext
+        );
+
+        if (rotationResult.success && rotationResult.assignedMemberId) {
+          const updateSuccess = await updateChore(chore.id!, {
+            assignedTo: rotationResult.assignedMemberId,
+            assignedToName: rotationResult.assignedMemberName || '',
+            lastRotationStrategy: rotationResult.strategy,
+            lastRotationScore: rotationResult.fairnessScore,
+          });
+          
+          if (updateSuccess) {
+            assigned++;
+            console.log(`Assigned chore ${chore.title} to ${rotationResult.assignedMemberName} using ${rotationResult.strategy}`);
+          } else {
+            failed++;
+            errors.push(`Failed to update chore ${chore.title} in database`);
+          }
+        } else {
+          failed++;
+          errors.push(`Rotation failed for chore ${chore.title}: ${rotationResult.errorMessage || 'Unknown error'}`);
+        }
+      } catch (error) {
+        failed++;
+        errors.push(`Error assigning chore ${chore.title}: ${error}`);
+        console.error(`Error assigning chore ${chore.id}:`, error);
+      }
+    }
+    
+    console.log(`Bulk assignment completed: ${assigned} assigned, ${failed} failed`);
+    
+    return { assigned, failed, errors };
+    
+  } catch (error) {
+    console.error('Error in bulk assignment:', error);
+    return { assigned: 0, failed: 0, errors: [`Bulk assignment error: ${error}`] };
+  }
+};
+
+// Helper function for basic rotation assignment (fallback)
+const assignChoresBasicRotation = async (
+  familyId: string, 
+  family: Family, 
+  unassignedChores: Chore[]
+): Promise<{ assigned: number; failed: number; errors: string[] }> => {
+  const activeMembers = family.members.filter(m => m.isActive);
+  
+  if (activeMembers.length === 0) {
+    return { assigned: 0, failed: unassignedChores.length, errors: ['No active family members available'] };
+  }
+  
+  let assigned = 0;
+  let failed = 0;
+  const errors: string[] = [];
+  let memberIndex = family.nextFamilyChoreAssigneeIndex || 0;
+  
+  for (const chore of unassignedChores) {
+    try {
+      const member = activeMembers[memberIndex % activeMembers.length];
+      
+      const updateSuccess = await updateChore(chore.id!, {
+        assignedTo: member.uid,
+        assignedToName: member.name,
+      });
+      
+      if (updateSuccess) {
+        assigned++;
+        console.log(`Basic rotation: Assigned chore ${chore.title} to ${member.name}`);
+        memberIndex = (memberIndex + 1) % activeMembers.length;
+      } else {
+        failed++;
+        errors.push(`Failed to update chore ${chore.title} in database`);
+      }
+    } catch (error) {
+      failed++;
+      errors.push(`Error assigning chore ${chore.title}: ${error}`);
+      console.error(`Error in basic rotation for chore ${chore.id}:`, error);
+    }
+  }
+  
+  // Update family rotation index
+  await updateFamily(familyId, { nextFamilyChoreAssigneeIndex: memberIndex });
+  
+  return { assigned, failed, errors };
 };
 
 // Generate a unique join code for families

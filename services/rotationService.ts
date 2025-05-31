@@ -667,8 +667,18 @@ class RotationService {
   }
 
   private async getFamilyById(familyId: string): Promise<Family> {
-    // This would typically fetch from Firestore - simplified for now
-    throw new Error('Not implemented - would fetch family from database');
+    try {
+      // Import firestore functions to get family data
+      const { getFamily } = await import('./firestore');
+      const family = await getFamily(familyId);
+      if (!family) {
+        throw new Error(`Family with ID ${familyId} not found`);
+      }
+      return family;
+    } catch (error) {
+      console.error(`Error fetching family ${familyId}:`, error);
+      throw error;
+    }
   }
 
   private createFailureResult(strategy: RotationStrategy, errorMessage: string): RotationResult {
