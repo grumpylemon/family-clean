@@ -143,6 +143,7 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
             }
 
             // Update auth state with the complete user profile
+            console.log('[AuthSlice] SignInWithGoogle - Setting user in store:', user);
             set((state) => ({
               auth: {
                 ...state.auth,
@@ -152,6 +153,14 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
                 error: null
               }
             }));
+            
+            // Verify the state was set correctly
+            const verifyState = get();
+            console.log('[AuthSlice] SignInWithGoogle - Verification after set:', {
+              user: verifyState.auth?.user,
+              isAuthenticated: verifyState.auth?.isAuthenticated,
+              isLoading: verifyState.auth?.isLoading
+            });
 
             // Set Sentry user context
             if (user) {
@@ -530,8 +539,21 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
 
             // Use Firebase auth state listener from centralized service
             console.log('[AuthSlice] Setting up new auth state listener');
+            
+            // Add flag to prevent clearing auth state on initial null
+            let hasInitialLoad = false;
+            
             const unsubscribe = authService.onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+              console.log('[AuthSlice] Auth state change triggered:', {
+                hasUser: !!firebaseUser,
+                userEmail: firebaseUser?.email,
+                hasInitialLoad,
+                timestamp: new Date().toISOString().slice(11, 23)
+              });
+              
               if (firebaseUser) {
+                hasInitialLoad = true;
+                
                 try {
                   // Try to get existing user profile
                   const profile = await getUserProfile(firebaseUser.uid);
@@ -625,17 +647,33 @@ function createAuthSliceFactory(): StateCreator<FamilyStore, [], [], AuthSlice> 
                   }));
                 }
               } else {
-                // Clear Sentry user context
-                clearUserContext();
-                
-                set((state) => ({
-                  auth: {
-                    ...state.auth,
-                    user: null,
-                    isAuthenticated: false,
-                    isLoading: false
-                  }
-                }));
+                // Only clear auth state if this is not the initial null event
+                if (hasInitialLoad) {
+                  console.log('[AuthSlice] Auth state change - User is null after initial load, clearing auth state');
+                  
+                  // Clear Sentry user context
+                  clearUserContext();
+                  
+                  set((state) => ({
+                    auth: {
+                      ...state.auth,
+                      user: null,
+                      isAuthenticated: false,
+                      isLoading: false
+                    }
+                  }));
+                } else {
+                  console.log('[AuthSlice] Auth state change - Initial null user, skipping auth clear to prevent loop');
+                  hasInitialLoad = true; // Mark that we've seen the initial event
+                  
+                  // Just clear loading state but don't clear auth
+                  set((state) => ({
+                    auth: {
+                      ...state.auth,
+                      isLoading: false
+                    }
+                  }));
+                }
               }
             });
 
