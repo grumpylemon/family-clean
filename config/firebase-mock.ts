@@ -63,6 +63,44 @@ const mockData: { [collection: string]: { [id: string]: any } } = {
         }
       ]
     }
+  },
+  'rooms': {
+    'mock-room-1': {
+      name: 'Master Bedroom',
+      type: 'bedroom',
+      sharingType: 'private',
+      description: 'Main bedroom with ensuite bathroom',
+      familyId: 'mock-family-id',
+      assignedMembers: ['mock-user-id'],
+      primaryAssignee: 'mock-user-id',
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    'mock-room-2': {
+      name: 'Kitchen',
+      type: 'kitchen',
+      sharingType: 'common',
+      description: 'Main kitchen and cooking area',
+      familyId: 'mock-family-id',
+      assignedMembers: ['mock-user-id'],
+      primaryAssignee: null,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    'mock-room-3': {
+      name: 'Living Room',
+      type: 'living_room',
+      sharingType: 'common',
+      description: 'Family living and entertainment space',
+      familyId: 'mock-family-id',
+      assignedMembers: ['mock-user-id'],
+      primaryAssignee: null,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
   }
 };
 

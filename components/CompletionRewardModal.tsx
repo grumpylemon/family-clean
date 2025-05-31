@@ -411,4 +411,32 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
+  multiplierText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#9f1239',
+  },
+  satisfactionEmoji: {
+    fontSize: 24,
+  },
+  commentsSection: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    padding: 16,
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  commentsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#831843',
+    marginBottom: 8,
+  },
+  commentsText: {
+    fontSize: 14,
+    color: '#6b7280',
+    lineHeight: 20,
+    fontStyle: 'italic',
+  },
 });

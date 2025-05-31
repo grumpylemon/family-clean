@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   Modal,
   SafeAreaView,
-  StatusBar
+  StatusBar,
+  Platform
 } from 'react-native';
 import { WebIcon } from './ui/WebIcon';
 import { useAccessControl } from '../hooks/useAccessControl';
@@ -185,12 +186,27 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
       color: colors.text,
       marginLeft: 12,
     },
+    modalContainer: {
+      flex: 1,
+      backgroundColor: theme === 'dark' ? colors.background : colors.background,
+    },
     modalHeader: {
-      position: 'absolute',
-      top: 0,
-      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       padding: 20,
-      zIndex: 1000,
+      paddingTop: Platform.OS === 'ios' ? 50 : 30,
+      backgroundColor: theme === 'dark' ? colors.background : colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: theme === 'dark' ? colors.border : colors.accent,
+    },
+    modalTitle: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: theme === 'dark' ? colors.text : colors.primaryDark,
+    },
+    modalContent: {
+      flex: 1,
     },
     modalCloseButton: {
       width: 44,
@@ -511,14 +527,19 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
           animationType="slide"
           onRequestClose={() => setShowRoomManagement(false)}
         >
-          <RoomManagement />
-          <View style={styles.modalHeader}>
-            <TouchableOpacity 
-              onPress={() => setShowRoomManagement(false)}
-              style={styles.modalCloseButton}
-            >
-              <WebIcon name="close" size={24} color={theme === 'dark' ? colors.text : colors.primaryDark} />
-            </TouchableOpacity>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Room & Space Management</Text>
+              <TouchableOpacity 
+                onPress={() => setShowRoomManagement(false)}
+                style={styles.modalCloseButton}
+              >
+                <WebIcon name="close" size={24} color={theme === 'dark' ? colors.text : colors.primaryDark} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.modalContent}>
+              <RoomManagement />
+            </View>
           </View>
         </Modal>
 
