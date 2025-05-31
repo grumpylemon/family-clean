@@ -22,7 +22,7 @@ import {
   getTemplatesForPetType,
   checkUrgentCareNeeded
 } from '../services/petService';
-import { addChore } from '../services/firestore';
+import { createPetChore } from '../services/firestore';
 import { LoadingSpinner } from './ui/LoadingSpinner';
 import { ConfirmDialog } from './ui/ConfirmDialog';
 import { Toast } from './ui/Toast';
@@ -192,7 +192,7 @@ const PetManagement: React.FC<PetManagementProps> = () => {
       
       // Create the first set of chores
       for (const choreData of choreTemplates.slice(0, 3)) { // Start with first 3 chores
-        await addChore({
+        await createPetChore({
           ...choreData,
           createdAt: new Date().toISOString(),
         });
@@ -201,6 +201,7 @@ const PetManagement: React.FC<PetManagementProps> = () => {
       Toast.show(`Generated ${choreTemplates.slice(0, 3).length} initial chores for ${petData.name}`, 'success');
     } catch (error) {
       console.error('Error generating initial chores:', error);
+      Toast.show(`Failed to generate chores for ${petData.name}. Please try creating them manually.`, 'error');
     }
   };
 
@@ -230,7 +231,7 @@ const PetManagement: React.FC<PetManagementProps> = () => {
       
       let createdCount = 0;
       for (const choreData of choreTemplates) {
-        await addChore({
+        await createPetChore({
           ...choreData,
           createdAt: new Date().toISOString(),
         });
@@ -241,7 +242,7 @@ const PetManagement: React.FC<PetManagementProps> = () => {
       await refreshFamily();
     } catch (error) {
       console.error('Error generating chores:', error);
-      Toast.show('Error generating chores', 'error');
+      Toast.show(`Failed to generate chores for ${pet.name}. ${createdCount > 0 ? `${createdCount} chores were created.` : 'Please try again.'}`, 'error');
     } finally {
       setGenerating(null);
     }

@@ -10,8 +10,9 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Chore, AdvancedChoreCard as AdvancedChoreCardType, QualityRating } from '../../types';
+import { Chore, AdvancedChoreCard as AdvancedChoreCardType, QualityRating, EducationalFact, InspirationalQuote, AgeGroup } from '../../types';
 import { choreCardService } from '../../services/choreCardService';
+import { educationalContentService } from '../../services/educationalContentService';
 import { UniversalIcon } from '../ui/UniversalIcon';
 import QualityRatingInput from './QualityRatingInput';
 import EducationalContent from './EducationalContent';
@@ -52,10 +53,13 @@ const ChoreDetailModal: React.FC<Props> = ({
   const [advancedCard, setAdvancedCard] = useState<AdvancedChoreCardType | null>(null);
   const [loading, setLoading] = useState(false);
   const [showQualityRating, setShowQualityRating] = useState(false);
+  const [educationalFact, setEducationalFact] = useState<EducationalFact | null>(null);
+  const [inspirationalQuote, setInspirationalQuote] = useState<InspirationalQuote | null>(null);
 
   useEffect(() => {
     if (visible && chore?.id) {
       loadAdvancedCard();
+      loadEducationalContent();
     }
   }, [visible, chore?.id]);
 
@@ -70,6 +74,27 @@ const ChoreDetailModal: React.FC<Props> = ({
       console.error('Error loading advanced card:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadEducationalContent = async () => {
+    if (!chore) return;
+    
+    try {
+      // Determine age group from userAge prop
+      const ageGroup: AgeGroup = userAge && userAge <= 8 ? 'child' : 
+                                 userAge && userAge <= 12 ? 'teen' : 'adult';
+
+      // Load educational content for basic chores
+      const [fact, quote] = await Promise.all([
+        educationalContentService.getRandomFact(ageGroup, chore.type),
+        educationalContentService.getRandomQuote(ageGroup, chore.type, 'encouraging')
+      ]);
+
+      setEducationalFact(fact);
+      setInspirationalQuote(quote);
+    } catch (error) {
+      console.error('Error loading educational content:', error);
     }
   };
 
@@ -231,6 +256,18 @@ const ChoreDetailModal: React.FC<Props> = ({
                   </View>
                 )}
               </View>
+
+              {/* Educational Content for Basic Chores */}
+              <EducationalContent 
+                fact={educationalFact}
+                quote={inspirationalQuote}
+                onFactEngagement={() => educationalContentService.trackContentEngagement(
+                  educationalFact?.id || '', 'fact', currentUserId
+                )}
+                onQuoteEngagement={() => educationalContentService.trackContentEngagement(
+                  inspirationalQuote?.id || '', 'quote', currentUserId
+                )}
+              />
 
               {/* Quality Rating Section for Basic Chores */}
               {showQualityRating && !advancedCard && (

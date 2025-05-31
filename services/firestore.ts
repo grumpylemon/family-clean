@@ -447,7 +447,14 @@ export const deleteChore = async (choreId: string) => {
   }
 };
 
-export const completeChore = async (choreId: string): Promise<{ success: boolean; reward?: CompletionReward; error?: string }> => {
+export const completeChore = async (
+  choreId: string, 
+  qualityData?: {
+    qualityRating?: 'incomplete' | 'partial' | 'complete' | 'excellent';
+    satisfactionRating?: number;
+    comments?: string;
+  }
+): Promise<{ success: boolean; reward?: CompletionReward; error?: string }> => {
   try {
     const currentUser = auth.currentUser;
     if (!currentUser) throw new Error('User not authenticated');
@@ -588,10 +595,33 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
     
     const advancedPoints = calculateAdvancedPoints(pointFactors);
     
+    // Apply quality multiplier if quality data is provided
+    let qualityMultiplier = 1.0;
+    if (qualityData?.qualityRating) {
+      switch (qualityData.qualityRating) {
+        case 'incomplete':
+          qualityMultiplier = 0.0;
+          break;
+        case 'partial':
+          qualityMultiplier = 0.5;
+          break;
+        case 'complete':
+          qualityMultiplier = 1.0;
+          break;
+        case 'excellent':
+          qualityMultiplier = chore.difficulty === 'hard' ? 1.5 : 1.2;
+          break;
+        default:
+          qualityMultiplier = 1.0;
+      }
+    }
+    
+    const qualityAdjustedPoints = Math.round(advancedPoints * qualityMultiplier);
+    
     // 4. Process gamification rewards (XP, achievements, levels)
     const reward = await processChoreCompletion(
       currentUser.uid,
-      advancedPoints, // Use enhanced point calculation
+      qualityAdjustedPoints, // Use quality-adjusted point calculation
       chore.difficulty,
       completionCount,
       getUserProfile,
@@ -760,6 +790,11 @@ export const completeChore = async (choreId: string): Promise<{ success: boolean
         streakBonus: streakBonus > 1 ? streakBonus : undefined,
         compoundStreakMultiplier: compoundStreakMultiplier > 1 ? compoundStreakMultiplier : undefined,
         milestonesAchieved: achievedMilestones,
+        // Include quality data for display in completion modal
+        qualityRating: qualityData?.qualityRating,
+        qualityMultiplier: qualityData?.qualityRating ? qualityMultiplier : undefined,
+        satisfactionRating: qualityData?.satisfactionRating,
+        comments: qualityData?.comments,
         enhancedStreaks: {
           overallStreak: enhancedStreaks.overall.current,
           longestStreak: enhancedStreaks.overall.longest,
@@ -2563,8 +2598,36 @@ const getMockFamilyWeeklyProgress = () => {
 const getPetsCollection = () => safeCollection('pets');
 const getPetCareRecordsCollection = () => safeCollection('petCareRecords');
 
+// Pet Chore Creation Function
+export const createPetChore = async (petChoreData: Omit<PetChore, 'id'>): Promise<string> => {
+  try {
+    if (shouldReturnMockImmediately()) {
+      const mockId = `pet-chore-${Date.now()}`;
+      const newPetChore = { ...petChoreData, id: mockId };
+      mockChores.push(newPetChore as any); // Add to mock chores list
+      console.log(`Mock pet chore created: ${newPetChore.title}`);
+      return mockId;
+    }
+
+    // Create pet chore with all pet-specific fields
+    const choreDoc = await addDoc(getChoresCollection(), formatForFirestore({
+      ...petChoreData,
+      type: 'pet', // Ensure it's marked as pet chore
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+    
+    console.log(`Pet chore created: ${petChoreData.title} for pet ${petChoreData.petName}`);
+    return choreDoc.id;
+  } catch (error) {
+    console.error('Error creating pet chore:', error);
+    throw new Error('Failed to create pet chore');
+  }
+};
+
 // Add support for pet chores in the existing addChore function
 // This extends the current chore system to handle pet-specific chores
+export const addPetChore = createPetChore;
 
 // Room-based Chore Management Functions
 export const getChoresByRoom = async (familyId: string, roomId: string): Promise<Chore[]> => {

@@ -8,10 +8,11 @@ import WeeklyProgress from '../../components/WeeklyProgress';
 import WeeklyComparison from '../../components/WeeklyComparison';
 import { XPProgressBar } from '../../components/ui/XPProgressBar';
 import { OfflineStatusIndicator } from '../../components/OfflineStatusIndicator';
+import { PetCareWidget } from '../../components/PetCareWidget';
 import { useAuth, useFamily } from '../../hooks/useZustandHooks';
 import { VERSION_STRING, VERSION_DISPLAY } from '../../constants/Version';
 import { getChores, shouldResetWeeklyPoints, resetWeeklyPoints, completeChore } from '../../services/firestore';
-import { Chore, CompletionReward } from '../../types';
+import { Chore, CompletionReward, Pet } from '../../types';
 import { UniversalIcon } from '../../components/ui/UniversalIcon';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -886,6 +887,9 @@ export default function DashboardScreen() {
             />
           </View>
         </View>
+
+        {/* Pet Care Widget */}
+        <PetCareWidget colors={safeColors} />
 
         {/* My Chores Section - Moved above weekly progress for better visibility */}
         <View style={styles.section}>

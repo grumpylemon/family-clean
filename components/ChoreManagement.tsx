@@ -1088,95 +1088,98 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
                 hint="Hours before chore can be completed again"
               />
 
-              {/* Advanced Chore Card Features */}
-              <View style={styles.advancedFeaturesSection}>
-                <Text style={styles.sectionTitle}>
-                  🚀 Advanced Chore Features
-                </Text>
-                <Text style={styles.sectionSubtitle}>
-                  Transform this into a smart, interactive chore card with enhanced features
-                </Text>
-                
-                <ToggleSwitch
-                  label="Enable Advanced Chore Card"
-                  value={enableAdvancedCard}
-                  onToggle={setEnableAdvancedCard}
-                  description="Add interactive features to make this chore more engaging and educational"
-                />
+              {/* Advanced Chore Card Features - Only show if family has it enabled */}
+              {family?.settings?.enableAdvancedChoreCards && (
+                <View style={styles.advancedFeaturesSection}>
+                  <Text style={styles.sectionTitle}>
+                    🚀 Advanced Chore Features
+                  </Text>
+                  <Text style={styles.sectionSubtitle}>
+                    Transform this into a smart, interactive chore card with enhanced features
+                  </Text>
+                  
+                  <ToggleSwitch
+                    label="Enable Advanced Chore Card"
+                    value={enableAdvancedCard}
+                    onToggle={setEnableAdvancedCard}
+                    description="Add interactive features to make this chore more engaging and educational"
+                  />
 
-                {enableAdvancedCard && (
-                  <View style={styles.advancedOptionsContainer}>
-                    <ToggleSwitch
-                      label="Step-by-Step Instructions"
-                      value={enableInstructions}
-                      onToggle={setEnableInstructions}
-                      description="Age-appropriate instructions for kids, teens, and adults"
-                    />
+                  {enableAdvancedCard && (
+                    <View style={styles.advancedOptionsContainer}>
+                      <ToggleSwitch
+                        label="Step-by-Step Instructions"
+                        value={enableInstructions}
+                        onToggle={setEnableInstructions}
+                        description="Age-appropriate instructions for kids, teens, and adults"
+                      />
 
-                    <ToggleSwitch
-                      label="Educational Content"
-                      value={enableEducationalContent}
-                      onToggle={setEnableEducationalContent}
-                      description="Fun facts, tips, and learning opportunities"
-                    />
+                      <ToggleSwitch
+                        label="Educational Content"
+                        value={enableEducationalContent}
+                        onToggle={setEnableEducationalContent}
+                        description="Fun facts, tips, and learning opportunities"
+                      />
 
-                    <ToggleSwitch
-                      label="Quality Rating System"
-                      value={enableQualityRating}
-                      onToggle={setEnableQualityRating}
-                      description="Rate completion quality (incomplete, partial, complete, excellent)"
-                    />
+                      <ToggleSwitch
+                        label="Quality Rating System"
+                        value={enableQualityRating}
+                        onToggle={setEnableQualityRating}
+                        description="Rate completion quality (incomplete, partial, complete, excellent)"
+                      />
 
-                    <ToggleSwitch
-                      label="Enhanced Gamification"
-                      value={enableGamification}
-                      onToggle={setEnableGamification}
-                      description="Special achievements, streak bonuses, and quality multipliers"
-                    />
+                      <ToggleSwitch
+                        label="Enhanced Gamification"
+                        value={enableGamification}
+                        onToggle={setEnableGamification}
+                        description="Special achievements, streak bonuses, and quality multipliers"
+                      />
 
-                    <ToggleSwitch
-                      label="Certification System"
-                      value={enableCertification}
-                      onToggle={setEnableCertification}
-                      description="Progressive skill certification from basic to advanced levels"
-                      disabled={!enableInstructions}
-                    />
+                      <ToggleSwitch
+                        label="Certification System"
+                        value={enableCertification}
+                        onToggle={setEnableCertification}
+                        description="Progressive skill certification from basic to advanced levels"
+                        disabled={!enableInstructions}
+                      />
 
-                    {(enableInstructions || enableEducationalContent || enableQualityRating || enableGamification || enableCertification) && (
-                      <View style={styles.advancedPreview}>
-                        <Text style={styles.advancedPreviewTitle}>
-                          ✨ Your chore will include:
-                        </Text>
-                        {enableInstructions && (
-                          <Text style={styles.advancedPreviewItem}>
-                            📋 Interactive step-by-step guides
+                      {(enableInstructions || enableEducationalContent || enableQualityRating || enableGamification || enableCertification) && (
+                        <View style={styles.advancedPreview}>
+                          <Text style={styles.advancedPreviewTitle}>
+                            ✨ Your chore will include:
                           </Text>
-                        )}
-                        {enableEducationalContent && (
-                          <Text style={styles.advancedPreviewItem}>
-                            🧠 Educational facts and tips
-                          </Text>
-                        )}
-                        {enableQualityRating && (
-                          <Text style={styles.advancedPreviewItem}>
-                            ⭐ Quality rating and feedback system
-                          </Text>
-                        )}
-                        {enableGamification && (
-                          <Text style={styles.advancedPreviewItem}>
-                            🎮 Enhanced rewards and achievements
-                          </Text>
-                        )}
-                        {enableCertification && (
-                          <Text style={styles.advancedPreviewItem}>
-                            🏆 Progressive skill certification
-                          </Text>
-                        )}
-                      </View>
-                    )}
-                  </View>
-                )}
-              </View>
+                          {enableInstructions && (
+                            <Text style={styles.advancedPreviewItem}>
+                              📋 Interactive step-by-step guides
+                            </Text>
+                          )}
+                          {enableEducationalContent && (
+                            <Text style={styles.advancedPreviewItem}>
+                              🧠 Educational facts and tips
+                            </Text>
+                          )}
+                          {enableQualityRating && (
+                            <Text style={styles.advancedPreviewItem}>
+                              ⭐ Quality rating and feedback system
+                            </Text>
+                          )}
+                          {enableGamification && (
+                            <Text style={styles.advancedPreviewItem}>
+                              🎮 Enhanced rewards and achievements
+                            </Text>
+                          )}
+                          {enableCertification && (
+                            <Text style={styles.advancedPreviewItem}>
+                              🏆 Progressive skill certification
+                            </Text>
+                          )}
+                        </View>
+                      )}
+                    </View>
+                  )}
+                </View>
+              )}
+
 
               <View style={styles.formActions}>
                 <TouchableOpacity

@@ -237,7 +237,7 @@ const AdvancedChoreCard: React.FC<Props> = ({
             choreCardService.trackInstructionUsage(chore.id!, currentUserId, stepId);
           }}
         />
-      )}}
+      )}
 
       {/* Performance History Modal */}
       {showPerformance && (
@@ -248,7 +248,7 @@ const AdvancedChoreCard: React.FC<Props> = ({
           visible={showPerformance}
           onClose={() => setShowPerformance(false)}
         />
-      )}}
+      )}
     </View>
   );
 };

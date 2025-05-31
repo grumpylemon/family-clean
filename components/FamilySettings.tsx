@@ -36,6 +36,7 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
   const [defaultUrgencyMinutes, setDefaultUrgencyMinutes] = useState('30');
   const [allowPointTransfers, setAllowPointTransfers] = useState(false);
   const [enableMonetarySystem, setEnableMonetarySystem] = useState(false);
+  const [enableAdvancedChoreCards, setEnableAdvancedChoreCards] = useState(false);
   const [weekStartDay, setWeekStartDay] = useState('0');
   const [showDangerZone, setShowDangerZone] = useState(false);
   const [showTransferPoints, setShowTransferPoints] = useState(false);
@@ -57,6 +58,7 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
       setDefaultChorePoints(family.settings.defaultChorePoints.toString());
       setDefaultChoreCooldownHours(family.settings.defaultChoreCooldownHours.toString());
       setAllowPointTransfers(family.settings.allowPointTransfers);
+      setEnableAdvancedChoreCards(family.settings.enableAdvancedChoreCards || false);
       setWeekStartDay(family.settings.weekStartDay.toString());
       
       // Initialize collaboration settings
@@ -93,6 +95,7 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
           defaultUrgencyMinutes: parseInt(defaultUrgencyMinutes) || 30,
           allowPointTransfers,
           enableMonetarySystem,
+          enableAdvancedChoreCards,
           weekStartDay: parseInt(weekStartDay) || 0,
         },
       };
@@ -347,6 +350,37 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
                 Chores can have real money value
               </Text>
             </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Advanced Features</Text>
+            
+            <View style={styles.inputGroup}>
+              <View style={styles.switchRow}>
+                <Text style={styles.label}>Enable Advanced Chore Cards</Text>
+                <Switch
+                  value={enableAdvancedChoreCards}
+                  onValueChange={setEnableAdvancedChoreCards}
+                  trackColor={{ false: '#f1f5f9', true: '#f9a8d4' }}
+                  thumbColor={enableAdvancedChoreCards ? '#be185d' : '#9ca3af'}
+                />
+              </View>
+              <Text style={styles.helperText}>
+                Transform chores into interactive experiences with step-by-step instructions, educational content, quality ratings, and certification systems
+              </Text>
+            </View>
+
+            {enableAdvancedChoreCards && (
+              <View style={styles.advancedFeaturesPreview}>
+                <Text style={styles.previewTitle}>✨ Advanced Features Include:</Text>
+                <Text style={styles.previewItem}>📋 Multi-level instructions (Kids, Teens, Adults)</Text>
+                <Text style={styles.previewItem}>🧠 Educational facts and motivational quotes</Text>
+                <Text style={styles.previewItem}>⭐ Quality rating system with multipliers</Text>
+                <Text style={styles.previewItem}>🏆 Progressive skill certification</Text>
+                <Text style={styles.previewItem}>📊 Performance tracking and history</Text>
+                <Text style={styles.previewItem}>🎮 Enhanced gamification and achievements</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.section}>
@@ -968,6 +1002,26 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 12,
     color: '#831843',
+  },
+  advancedFeaturesPreview: {
+    backgroundColor: '#f0fdf4',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    marginTop: 12,
+  },
+  previewTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#166534',
+    marginBottom: 8,
+  },
+  previewItem: {
+    fontSize: 13,
+    color: '#15803d',
+    marginBottom: 4,
+    paddingLeft: 8,
   },
 });
 

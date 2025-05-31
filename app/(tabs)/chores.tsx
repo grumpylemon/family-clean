@@ -60,8 +60,13 @@ export default function ChoresScreen() {
       const familyChores = await getChores(family.id!);
       setChores(familyChores);
       
-      // Load advanced cards for chores
-      await loadAdvancedCards(familyChores);
+      // Load advanced cards for chores if family has advanced features enabled
+      if (family.settings?.enableAdvancedChoreCards) {
+        await loadAdvancedCards(familyChores);
+      } else {
+        console.log('Advanced chore cards disabled for this family');
+        setAdvancedCards(new Map()); // Clear any existing advanced cards
+      }
     } catch (error) {
       console.error('Error loading chores:', error);
     } finally {
@@ -126,7 +131,8 @@ export default function ChoresScreen() {
       const chore = chores.find(c => c.id === choreId);
       if (!chore) return;
 
-      const result = await completeChore(choreId);
+      // Pass quality data to completeChore for proper point calculation
+      const result = await completeChore(choreId, qualityData);
       
       if (result.success && result.reward) {
         // Update chores list
@@ -138,16 +144,9 @@ export default function ChoresScreen() {
           )
         );
 
-        // Show reward modal with quality data if available
+        // Show reward modal - quality data is now included in result.reward
         setCompletedChoreTitle(chore.title);
-        const enhancedReward = qualityData ? {
-          ...result.reward,
-          qualityRating: qualityData.qualityRating,
-          satisfactionRating: qualityData.satisfactionRating,
-          comments: qualityData.comments
-        } : result.reward;
-        
-        setCompletionReward(enhancedReward);
+        setCompletionReward(result.reward);
         setShowRewardModal(true);
 
         // Close detail modal
@@ -233,8 +232,12 @@ export default function ChoresScreen() {
       const chore = chores.find(c => c.id === completingChoreId);
       if (!chore) return;
 
-      // Complete the chore with regular system
-      const result = await completeChore(completingChoreId);
+      // Complete the chore with quality data for proper point calculation
+      const result = await completeChore(completingChoreId, {
+        qualityRating,
+        satisfactionRating,
+        comments
+      });
       
       if (result.success && result.reward) {
         // Update chores list
@@ -246,14 +249,9 @@ export default function ChoresScreen() {
           )
         );
 
-        // Show enhanced reward modal
+        // Show enhanced reward modal - quality data is now included in result.reward
         setCompletedChoreTitle(chore.title);
-        setCompletionReward({
-          ...result.reward,
-          qualityRating,
-          satisfactionRating,
-          comments
-        });
+        setCompletionReward(result.reward);
         setShowRewardModal(true);
 
         // Reload chores and refresh family data
@@ -599,7 +597,21 @@ export default function ChoresScreen() {
                         />
                       </View>
                       <View style={styles.choreHeaderInfo}>
-                        <Text style={styles.choreTitle}>{chore.title}</Text>
+                        <View style={styles.titleRow}>
+                          <Text style={styles.choreTitle}>{chore.title}</Text>
+                          <View style={styles.hintContainer}>
+                            {family?.settings?.enableAdvancedChoreCards && (
+                              <View style={styles.upgradeHint}>
+                                <UniversalIcon name="star-outline" size={14} color="#f59e0b" />
+                                <Text style={styles.upgradeHintText}>Advanced</Text>
+                              </View>
+                            )}
+                            <View style={styles.educationalHint}>
+                              <UniversalIcon name="school-outline" size={14} color="#10b981" />
+                              <Text style={styles.educationalHintText}>Learn</Text>
+                            </View>
+                          </View>
+                        </View>
                         {chore.description && (
                           <Text style={styles.choreDescription}>{chore.description}</Text>
                         )}
@@ -926,11 +938,51 @@ const styles = StyleSheet.create({
   choreHeaderInfo: {
     flex: 1,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
   choreTitle: {
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 4,
     color: '#831843',
+    flex: 1,
+  },
+  hintContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 8,
+  },
+  upgradeHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  upgradeHintText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#f59e0b',
+    marginLeft: 2,
+  },
+  educationalHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  educationalHintText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#10b981',
+    marginLeft: 2,
   },
   choreDescription: {
     fontSize: 14,
