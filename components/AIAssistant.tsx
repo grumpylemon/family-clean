@@ -23,6 +23,7 @@ import { naturalLanguageProcessor } from '../services/naturalLanguageProcessor';
 import { conflictDetectionService } from '../services/conflictDetectionService';
 import { familyImpactAnalyzer } from '../services/familyImpactAnalyzer';
 import { executeBulkOperation } from '../services/templateService';
+import { geminiAIService } from '../services/geminiAIService';
 import { useFamily, useAuth } from '../hooks/useZustandHooks';
 import { 
   NLPParseResult, 
@@ -69,15 +70,23 @@ export function AIAssistant({
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentOperation, setCurrentOperation] = useState<EnhancedBulkOperation | null>(null);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [aiAvailable, setAiAvailable] = useState<boolean | null>(null);
+  const [isCheckingAI, setIsCheckingAI] = useState(true);
   
   const scrollViewRef = useRef<ScrollView>(null);
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     if (visible) {
+      checkAIAvailability();
+    }
+  }, [visible, family?.id]);
+
+  useEffect(() => {
+    if (visible && aiAvailable !== null) {
       initializeConversation();
     }
-  }, [visible, selectedChores.length]);
+  }, [visible, selectedChores.length, aiAvailable]);
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages are added
@@ -86,15 +95,44 @@ export function AIAssistant({
     }, 100);
   }, [messages]);
 
+  const checkAIAvailability = async () => {
+    if (!family?.id) {
+      setAiAvailable(false);
+      setIsCheckingAI(false);
+      return;
+    }
+
+    try {
+      const available = await geminiAIService.isAvailable(family.id);
+      setAiAvailable(available);
+    } catch (error) {
+      console.error('Error checking AI availability:', error);
+      setAiAvailable(false);
+    } finally {
+      setIsCheckingAI(false);
+    }
+  };
+
   const initializeConversation = () => {
-    const welcomeMessage: ConversationMessage = {
-      id: generateMessageId(),
-      type: 'assistant',
-      content: selectedChores.length > 0 
-        ? `Hello! I can help you manage your ${selectedChores.length} selected chore${selectedChores.length === 1 ? '' : 's'}. What would you like to do?\n\nTry saying things like:\n• "Assign all kitchen chores to Sarah"\n• "Move these to tomorrow morning"\n• "Increase points by 25%"\n• "Reschedule to weekend"`
-        : `Hello! I'm your AI assistant for bulk chore operations. What would you like to do today?\n\nYou can ask me to:\n• Create multiple chores\n• Modify existing chores\n• Reassign responsibilities\n• Optimize your family's schedule`,
-      timestamp: new Date()
-    };
+    let welcomeMessage: ConversationMessage;
+
+    if (aiAvailable === false) {
+      welcomeMessage = {
+        id: generateMessageId(),
+        type: 'system',
+        content: `🤖 AI Assistant Not Available\n\nThe AI assistant requires your family to configure Google Gemini API access in Settings → Admin Panel → AI Integration.\n\nFor now, I can help with basic bulk operations using our built-in automation.`,
+        timestamp: new Date()
+      };
+    } else {
+      welcomeMessage = {
+        id: generateMessageId(),
+        type: 'assistant',
+        content: selectedChores.length > 0 
+          ? `🤖 Hello! I can help you manage your ${selectedChores.length} selected chore${selectedChores.length === 1 ? '' : 's'} using AI-powered natural language processing.\n\nTry saying things like:\n• "Assign all kitchen chores to Sarah"\n• "Move these to tomorrow morning"\n• "Increase points by 25%"\n• "Reschedule to weekend"\n\n✨ Powered by your family's Google Gemini AI`
+          : `🤖 Hello! I'm your AI assistant for bulk chore operations. What would you like to do today?\n\nYou can ask me to:\n• Create multiple chores\n• Modify existing chores\n• Reassign responsibilities\n• Optimize your family's schedule\n\n✨ Powered by your family's Google Gemini AI`,
+        timestamp: new Date()
+      };
+    }
     
     setMessages([welcomeMessage]);
     setCurrentOperation(null);
@@ -176,8 +214,42 @@ export function AIAssistant({
       }
     };
 
-    // Parse the natural language request
-    const parseResult = await naturalLanguageProcessor.parseRequest(request, family.id, context);
+    let parseResult: NLPParseResult;
+    
+    // Use AI-powered parsing if available, otherwise fallback to basic parsing
+    if (aiAvailable) {
+      try {
+        addAssistantMessage('🤖 Processing your request with AI...');
+        
+        const aiResponse = await geminiAIService.processNaturalLanguageRequest(
+          request,
+          family.id,
+          context
+        );
+        
+        if (aiResponse.success && aiResponse.bulkOperation) {
+          parseResult = {
+            operation: aiResponse.bulkOperation.operation as any,
+            suggestedOperation: aiResponse.bulkOperation,
+            confidence: aiResponse.confidence,
+            clarificationNeeded: false,
+            reasoning: aiResponse.reasoning || '',
+            supportingArguments: [],
+            potentialIssues: [],
+            metadata: {}
+          };
+        } else {
+          throw new Error(aiResponse.reasoning || 'AI parsing failed');
+        }
+      } catch (error) {
+        console.error('AI parsing failed, falling back to basic parsing:', error);
+        addAssistantMessage('🔄 AI processing failed, using basic automation...');
+        parseResult = await naturalLanguageProcessor.parseRequest(request, family.id, context);
+      }
+    } else {
+      // Use basic natural language processing
+      parseResult = await naturalLanguageProcessor.parseRequest(request, family.id, context);
+    }
     
     if (parseResult.clarificationNeeded) {
       const clarificationQuestions = naturalLanguageProcessor.generateClarificationQuestions(parseResult);
@@ -389,9 +461,20 @@ export function AIAssistant({
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <UniversalIcon name="close" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.text }]}>AI Assistant</Text>
+        <Text style={[styles.title, { color: colors.text }]}>
+          AI Assistant {aiAvailable && '✨'}
+        </Text>
         <View style={styles.headerSpacer} />
       </View>
+
+      {isCheckingAI ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+            Checking AI availability...
+          </Text>
+        </View>
+      ) : (
 
       <ScrollView 
         ref={scrollViewRef}
@@ -443,6 +526,7 @@ export function AIAssistant({
           </TouchableOpacity>
         </View>
       </View>
+      )}
     </View>
   );
 }
@@ -468,6 +552,17 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    marginTop: 16,
+    textAlign: 'center',
   },
   messagesContainer: {
     flex: 1,

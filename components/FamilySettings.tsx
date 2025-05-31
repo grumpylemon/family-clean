@@ -18,6 +18,8 @@ import { useFamily , useAuth } from '../hooks/useZustandHooks';
 import { Toast } from './ui/Toast';
 import { DEFAULT_COLLABORATION_SETTINGS, updateCollaborationSettings } from '../services/collaborationService';
 import { CollaborationSettings } from '../types';
+import { useFormValidation, validationRules, createCustomValidationRules } from '../hooks/useFormValidation';
+import { useValidationConfig } from '../hooks/useValidationConfig';
 
 interface FamilySettingsProps {
   visible: boolean;
@@ -27,7 +29,27 @@ interface FamilySettingsProps {
 export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
   const { family, isAdmin, updateFamilySettings } = useFamily();
   const { user } = useAuth();
+  const { config: validationConfig } = useValidationConfig();
   const [loading, setLoading] = useState(false);
+
+  // Create family-configured validation rules
+  const customRules = createCustomValidationRules(validationConfig);
+  
+  // Form validation
+  const { 
+    errors, 
+    handleFieldChange, 
+    handleFieldBlur, 
+    validateAll, 
+    resetValidation,
+    hasErrors,
+    getFieldError 
+  } = useFormValidation({
+    familyName: [customRules.displayName()],
+    defaultChorePoints: [validationRules.positiveInteger('Must be a positive number'), validationRules.max(1000, 'Maximum 1000 points')],
+    defaultChoreCooldownHours: [validationRules.positiveInteger('Must be a positive number'), validationRules.max(168, 'Maximum 1 week')],
+    defaultUrgencyMinutes: [validationRules.positiveInteger('Must be a positive number'), validationRules.max(1440, 'Maximum 24 hours')],
+  });
   
   // Form state
   const [familyName, setFamilyName] = useState('');
@@ -79,8 +101,16 @@ export function FamilySettings({ visible, onClose }: FamilySettingsProps) {
   const handleSaveSettings = async () => {
     if (!family || !isAdmin) return;
 
-    if (!familyName.trim()) {
-      Alert.alert('Error', 'Family name cannot be empty');
+    // Validate all fields
+    const isValid = validateAll({
+      familyName,
+      defaultChorePoints,
+      defaultChoreCooldownHours,
+      defaultUrgencyMinutes
+    });
+
+    if (!isValid) {
+      Alert.alert('Validation Error', 'Please correct the highlighted errors before saving');
       return;
     }
 

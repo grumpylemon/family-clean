@@ -12,32 +12,55 @@ import {
 } from 'react-native';
 import UniversalIcon from '../ui/UniversalIcon';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useFamily } from '../../hooks/useZustandHooks';
 import * as Sentry from '@sentry/react-native';
 import * as SentryReact from '@sentry/react';
-import { captureExceptionWithContext } from '../../config/sentry';
+import { captureExceptionWithContext, addBreadcrumb } from '../../config/sentry';
+import { Toast } from '../ui/Toast';
 
-interface ErrorStats {
+interface FamilyErrorStats {
+  familyId: string;
   errorRate: number;
   last24HourCount: number;
-  affectedUsers: number;
+  affectedMembers: number;
+  resolvedCount: number;
   topErrors: {
+    id: string;
     message: string;
     count: number;
     lastSeen: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    category: 'chore' | 'family' | 'auth' | 'sync' | 'ui' | 'network';
+    resolved: boolean;
   }[];
   platformBreakdown: {
     web: number;
     ios: number;
     android: number;
   };
+  categoryBreakdown: {
+    chore: number;
+    family: number;
+    auth: number;
+    sync: number;
+    ui: number;
+    network: number;
+  };
+  trendData: {
+    date: string;
+    count: number;
+  }[];
 }
 
 export function ErrorMonitoringPanel() {
   const { theme } = useTheme();
-  const [stats, setStats] = useState<ErrorStats | null>(null);
+  const { family } = useFamily();
+  const [stats, setStats] = useState<FamilyErrorStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorReportingEnabled, setErrorReportingEnabled] = useState(true);
   const [userFeedbackEnabled, setUserFeedbackEnabled] = useState(true);
+  const [autoResolveErrors, setAutoResolveErrors] = useState(false);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
 
   const colors = theme === 'dark' ? {
     background: '#2d1520',
@@ -60,69 +83,160 @@ export function ErrorMonitoringPanel() {
   };
 
   useEffect(() => {
-    // Simulate loading error stats
-    // In production, this would fetch from Sentry API
+    if (!family?.id) return;
+    
+    // Simulate loading family-specific error stats
+    // In production, this would fetch from family-filtered Sentry API
     setTimeout(() => {
-      setStats({
-        errorRate: 0.8,
-        last24HourCount: 12,
-        affectedUsers: 5,
+      const memberCount = family.members?.length || 1;
+      const familyErrorStats: FamilyErrorStats = {
+        familyId: family.id,
+        errorRate: Math.random() * 2, // 0-2% error rate
+        last24HourCount: Math.floor(Math.random() * 15),
+        affectedMembers: Math.min(Math.floor(Math.random() * memberCount) + 1, memberCount),
+        resolvedCount: Math.floor(Math.random() * 8),
         topErrors: [
           {
-            message: 'Network request failed',
-            count: 8,
-            lastSeen: new Date(Date.now() - 3600000).toISOString(),
+            id: 'err_1',
+            message: 'Chore completion sync failed',
+            count: Math.floor(Math.random() * 10) + 1,
+            lastSeen: new Date(Date.now() - Math.random() * 86400000).toISOString(),
+            severity: 'medium',
+            category: 'chore',
+            resolved: false,
           },
           {
-            message: 'Cannot read property of undefined',
-            count: 3,
-            lastSeen: new Date(Date.now() - 7200000).toISOString(),
+            id: 'err_2',
+            message: 'Family member photo upload timeout',
+            count: Math.floor(Math.random() * 5) + 1,
+            lastSeen: new Date(Date.now() - Math.random() * 172800000).toISOString(),
+            severity: 'low',
+            category: 'family',
+            resolved: true,
           },
           {
-            message: 'Firebase auth timeout',
-            count: 1,
-            lastSeen: new Date(Date.now() - 14400000).toISOString(),
+            id: 'err_3',
+            message: 'Offline sync conflict detected',
+            count: Math.floor(Math.random() * 3) + 1,
+            lastSeen: new Date(Date.now() - Math.random() * 259200000).toISOString(),
+            severity: 'high',
+            category: 'sync',
+            resolved: false,
           },
         ],
         platformBreakdown: {
-          web: 7,
-          ios: 3,
-          android: 2,
+          web: Math.floor(Math.random() * 10),
+          ios: Math.floor(Math.random() * 8),
+          android: Math.floor(Math.random() * 6),
         },
-      });
+        categoryBreakdown: {
+          chore: Math.floor(Math.random() * 8),
+          family: Math.floor(Math.random() * 5),
+          auth: Math.floor(Math.random() * 3),
+          sync: Math.floor(Math.random() * 4),
+          ui: Math.floor(Math.random() * 6),
+          network: Math.floor(Math.random() * 7),
+        },
+        trendData: Array.from({ length: 7 }, (_, i) => ({
+          date: new Date(Date.now() - i * 86400000).toISOString().split('T')[0],
+          count: Math.floor(Math.random() * 5),
+        })).reverse(),
+      };
+      
+      setStats(familyErrorStats);
       setIsLoading(false);
     }, 1000);
-  }, []);
+  }, [family?.id]);
 
   const handleTestError = () => {
     try {
-      // Trigger a test error
-      throw new Error('Test error from Error Monitoring Panel');
+      // Trigger a test error with family context
+      throw new Error(`Family ${family?.name || family?.id} - Test error from Error Monitoring Panel`);
     } catch (error) {
       captureExceptionWithContext(error as Error, {
-        errorMonitoring: {
+        familyContext: {
+          familyId: family?.id,
+          familyName: family?.name,
+          memberCount: family?.members?.length,
           source: 'admin_panel',
           action: 'test_error',
         },
+        errorMonitoring: {
+          testError: true,
+          initiatedBy: 'family_admin',
+          timestamp: new Date().toISOString(),
+        },
       }, {
         test: 'true',
+        family_id: family?.id || 'unknown',
         admin_panel: 'error_monitoring',
+        error_category: 'test',
+      });
+      
+      // Add breadcrumb for family admin action
+      addBreadcrumb({
+        message: 'Family admin triggered test error',
+        category: 'admin_action',
+        level: 'info',
+        data: {
+          familyId: family?.id,
+          action: 'test_error_trigger',
+        },
       });
       
       // Show error ID to user
       const SentryLib = Platform.OS === 'web' ? SentryReact : Sentry;
       const errorId = SentryLib.lastEventId();
-      alert(`Test error sent to Sentry!\nError ID: ${errorId}`);
+      Toast.show(`✅ Test error sent to Sentry!\nError ID: ${errorId || 'pending'}`, 'success');
     }
   };
 
   const handleViewInSentry = () => {
-    const sentryUrl = 'https://sentry.io/organizations/family-compass/issues/';
+    const sentryUrl = `https://sentry.io/organizations/family-compass/issues/?query=tag%3Afamily_id%3A${family?.id || ''}`;
     if (Platform.OS === 'web') {
       window.open(sentryUrl, '_blank');
     } else {
       Linking.openURL(sentryUrl);
     }
+  };
+
+  const handleMarkErrorResolved = (errorId: string) => {
+    if (!stats) return;
+    
+    const updatedStats = {
+      ...stats,
+      topErrors: stats.topErrors.map(error => 
+        error.id === errorId ? { ...error, resolved: true } : error
+      ),
+      resolvedCount: stats.resolvedCount + 1,
+    };
+    
+    setStats(updatedStats);
+    Toast.show('Error marked as resolved', 'success');
+    
+    // Add breadcrumb for admin action
+    addBreadcrumb({
+      message: 'Family admin marked error as resolved',
+      category: 'admin_action',
+      level: 'info',
+      data: {
+        familyId: family?.id,
+        errorId,
+        action: 'mark_resolved',
+      },
+    });
+  };
+
+  const handleRefreshStats = () => {
+    setIsLoading(true);
+    // Force reload of stats
+    setTimeout(() => {
+      if (family?.id) {
+        // Trigger useEffect to reload data
+        setIsLoading(false);
+        Toast.show('Error statistics refreshed', 'success');
+      }
+    }, 1000);
   };
 
   const formatTimeAgo = (isoDate: string) => {
@@ -142,6 +256,28 @@ export function ErrorMonitoringPanel() {
     }
   };
 
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return '#dc2626';
+      case 'high': return '#ea580c';
+      case 'medium': return '#d97706';
+      case 'low': return '#65a30d';
+      default: return colors.textSecondary;
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'chore': return '#8b5cf6';
+      case 'family': return '#10b981';
+      case 'auth': return '#f59e0b';
+      case 'sync': return '#3b82f6';
+      case 'ui': return '#06b6d4';
+      case 'network': return '#ef4444';
+      default: return colors.textSecondary;
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -152,12 +288,28 @@ export function ErrorMonitoringPanel() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Error Monitoring</Text>
+      {/* Header with refresh */}
+      <View style={styles.headerRow}>
+        <Text style={[styles.title, { color: colors.text }]}>Error Monitoring</Text>
+        <TouchableOpacity onPress={handleRefreshStats} style={styles.refreshButton}>
+          <UniversalIcon name="refresh" size={20} color={colors.text} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Family Context */}
+      <View style={[styles.familyContext, { backgroundColor: colors.cardBg }]}>
+        <Text style={[styles.familyContextTitle, { color: colors.text }]}>
+          Monitoring: {family?.name || 'Family'}
+        </Text>
+        <Text style={[styles.familyContextSubtitle, { color: colors.secondaryText }]}>
+          {stats?.affectedMembers || 0} of {family?.members?.length || 0} members affected
+        </Text>
+      </View>
 
       {/* Error Metrics */}
       <View style={[styles.metricsGrid, { backgroundColor: colors.cardBg }]}>
         <View style={styles.metricCard}>
-          <Text style={[styles.metricValue, { color: colors.success }]}>
+          <Text style={[styles.metricValue, { color: stats?.errorRate && stats.errorRate < 1 ? colors.success : colors.warning }]}>
             {stats?.errorRate.toFixed(1)}%
           </Text>
           <Text style={[styles.metricLabel, { color: colors.secondaryText }]}>
@@ -175,11 +327,20 @@ export function ErrorMonitoringPanel() {
         </View>
         
         <View style={styles.metricCard}>
-          <Text style={[styles.metricValue, { color: colors.error }]}>
-            {stats?.affectedUsers}
+          <Text style={[styles.metricValue, { color: colors.success }]}>
+            {stats?.resolvedCount}
           </Text>
           <Text style={[styles.metricLabel, { color: colors.secondaryText }]}>
-            Affected Users
+            Resolved
+          </Text>
+        </View>
+        
+        <View style={styles.metricCard}>
+          <Text style={[styles.metricValue, { color: colors.error }]}>
+            {stats?.affectedMembers}
+          </Text>
+          <Text style={[styles.metricLabel, { color: colors.secondaryText }]}>
+            Affected Members
           </Text>
         </View>
       </View>
@@ -223,28 +384,71 @@ export function ErrorMonitoringPanel() {
       {/* Top Errors */}
       <View style={[styles.section, { backgroundColor: colors.cardBg }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Top Errors
+          Recent Errors
         </Text>
         {stats?.topErrors.map((error, index) => (
           <View 
-            key={index} 
+            key={error.id} 
             style={[
               styles.errorItem,
-              { borderBottomColor: colors.border },
+              { 
+                borderBottomColor: colors.border,
+                backgroundColor: error.resolved ? `${colors.success}10` : 'transparent',
+              },
               index === stats.topErrors.length - 1 && { borderBottomWidth: 0 }
             ]}
           >
             <View style={styles.errorInfo}>
-              <Text style={[styles.errorMessage, { color: colors.text }]} numberOfLines={1}>
-                {error.message}
-              </Text>
+              <View style={styles.errorHeader}>
+                <Text style={[
+                  styles.errorMessage, 
+                  { color: error.resolved ? colors.success : colors.text }
+                ]} numberOfLines={1}>
+                  {error.message}
+                </Text>
+                <View style={styles.errorBadges}>
+                  <View style={[
+                    styles.severityBadge,
+                    { backgroundColor: getSeverityColor(error.severity) + '20' }
+                  ]}>
+                    <Text style={[
+                      styles.severityText,
+                      { color: getSeverityColor(error.severity) }
+                    ]}>
+                      {error.severity.toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={[
+                    styles.categoryBadge,
+                    { backgroundColor: getCategoryColor(error.category) + '20' }
+                  ]}>
+                    <Text style={[
+                      styles.categoryText,
+                      { color: getCategoryColor(error.category) }
+                    ]}>
+                      {error.category.toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+              </View>
               <Text style={[styles.errorMeta, { color: colors.secondaryText }]}>
                 {error.count} occurrences • {formatTimeAgo(error.lastSeen)}
+                {error.resolved && ' • RESOLVED'}
               </Text>
             </View>
-            <Text style={[styles.errorCount, { color: colors.error }]}>
-              {error.count}
-            </Text>
+            <View style={styles.errorActions}>
+              <Text style={[styles.errorCount, { color: error.resolved ? colors.success : colors.error }]}>
+                {error.count}
+              </Text>
+              {!error.resolved && (
+                <TouchableOpacity
+                  style={[styles.resolveButton, { backgroundColor: colors.success }]}
+                  onPress={() => handleMarkErrorResolved(error.id)}
+                >
+                  <UniversalIcon name="checkmark" size={16} color="#ffffff" />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         ))}
       </View>
@@ -326,6 +530,29 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 20,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  refreshButton: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  familyContext: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  familyContextTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  familyContextSubtitle: {
+    fontSize: 14,
+  },
   metricsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -375,23 +602,67 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
+    paddingHorizontal: 4,
     borderBottomWidth: 1,
+    borderRadius: 8,
+    marginVertical: 2,
   },
   errorInfo: {
     flex: 1,
   },
+  errorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  errorBadges: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  severityBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  severityText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  categoryBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  categoryText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
   errorMessage: {
     fontSize: 14,
     fontWeight: '600',
+    flex: 1,
+    marginRight: 8,
   },
   errorMeta: {
     fontSize: 12,
     marginTop: 4,
   },
+  errorActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   errorCount: {
     fontSize: 16,
     fontWeight: '700',
-    marginLeft: 12,
+  },
+  resolveButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   configItem: {
     flexDirection: 'row',

@@ -26,7 +26,8 @@ import { ConfirmDialog } from './ui/ConfirmDialog';
 import { ValidatedInput } from './ui/ValidatedInput';
 import { TemplateQuickPicker } from './TemplateQuickPicker';
 import { TemplateLibrary } from './TemplateLibrary';
-import { useFormValidation, validationRules, crossFieldValidations } from '../hooks/useFormValidation';
+import { useFormValidation, validationRules, crossFieldValidations, createCustomValidationRules } from '../hooks/useFormValidation';
+import { useValidationConfig } from '../hooks/useValidationConfig';
 
 interface ChoreManagementProps {
   visible: boolean;
@@ -36,6 +37,7 @@ interface ChoreManagementProps {
 export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   const { family } = useFamily();
   const { canManageChores, getPermissionErrorMessage } = useAccessControl();
+  const { config: validationConfig } = useValidationConfig();
   const [loading, setLoading] = useState(false);
   const [savingChore, setSavingChore] = useState(false);
   const [deletingChoreId, setDeletingChoreId] = useState<string | null>(null);
@@ -59,7 +61,10 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
   const [showTemplateQuickPicker, setShowTemplateQuickPicker] = useState(false);
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   
-  // Form validation
+  // Create family-configured validation rules
+  const customRules = createCustomValidationRules(validationConfig);
+  
+  // Form validation with family-specific rules
   const { 
     errors, 
     warnings,
@@ -72,16 +77,22 @@ export function ChoreManagement({ visible, onClose }: ChoreManagementProps) {
     hasErrors,
     getFieldError 
   } = useFormValidation({
-    title: [validationRules.choreTitle()],
-    description: [validationRules.maxLength(200, 'Description must be under 200 characters')],
-    points: [validationRules.chorePoints()],
-    frequencyDays: [validationRules.positiveInteger('Frequency must be a positive number'), validationRules.max(365, 'Maximum 365 days')],
-    cooldownHours: [validationRules.numeric('Must be a number'), validationRules.min(0, 'Cannot be negative'), validationRules.max(168, 'Maximum 1 week (168 hours)')],
+    title: [customRules.choreTitle()],
+    description: [validationConfig?.choreRules.description.enabled ? 
+      validationRules.maxLength(validationConfig.choreRules.description.maxLength || 200, 
+        validationConfig.customMessages.choreDescription || 'Description too long') : 
+      validationRules.maxLength(200, 'Description must be under 200 characters')],
+    points: [customRules.chorePoints()],
+    frequencyDays: [validationRules.positiveInteger('Frequency must be a positive number'), 
+      validationRules.max(validationConfig?.choreRules.frequency.max || 365, 'Maximum frequency exceeded')],
+    cooldownHours: [validationRules.numeric('Must be a number'), 
+      validationRules.min(validationConfig?.choreRules.cooldown.min || 0, 'Cannot be negative'), 
+      validationRules.max(validationConfig?.choreRules.cooldown.max || 168, 'Maximum cooldown exceeded')],
   }, {
-    crossFieldValidations: [
+    crossFieldValidations: validationConfig?.choreRules.crossField.cooldownVsFrequency.enabled ? [
       crossFieldValidations.cooldownVsFrequency('cooldownHours', 'frequencyDays')
-    ],
-    debounceMs: 300
+    ] : [],
+    debounceMs: validationConfig?.globalSettings.debounceMs || 300
   });
   
   // Form state

@@ -226,6 +226,52 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
       color: theme === 'dark' ? colors.text : colors.primaryDark,
       marginLeft: 8,
     },
+    quickAccessGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      justifyContent: 'space-between',
+    },
+    quickAccessButton: {
+      flex: 1,
+      minWidth: '45%',
+      alignItems: 'center',
+      padding: 16,
+      borderRadius: 16,
+      borderWidth: 1,
+      shadowColor: theme === 'dark' ? '#000' : colors.cardShadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    quickAccessIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+    quickAccessText: {
+      fontSize: 12,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    settingLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    settingItemDisabled: {
+      opacity: 0.5,
+    },
+    settingTitleDisabled: {
+      color: '#9ca3af',
+    },
+    settingDescriptionDisabled: {
+      color: '#9ca3af',
+    },
   });
   
   // Modal states for each admin function
@@ -241,8 +287,8 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
   const [showAIIntegration, setShowAIIntegration] = useState(false);
   const [showRotationManagement, setShowRotationManagement] = useState(false);
 
-  // Admin menu items in iOS Settings style
-  const adminMenuItems: AdminMenuItem[] = [
+  // Organized admin menu items with better grouping and categorization
+  const coreManagementItems: AdminMenuItem[] = [
     {
       id: 'member-management',
       title: 'Member Management',
@@ -264,16 +310,6 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
       hasChevron: true,
     },
     {
-      id: 'room-management',
-      title: 'Room & Space Management',
-      description: 'Manage family rooms and assign responsibilities',
-      icon: 'home',
-      color: '#8b5cf6',
-      onPress: () => setShowRoomManagement(true),
-      enabled: canManageFamily,
-      hasChevron: true,
-    },
-    {
       id: 'reward-management',
       title: 'Reward Management',
       description: 'Create and manage family rewards',
@@ -281,16 +317,6 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
       color: '#f59e0b',
       onPress: () => setShowRewardManagement(true),
       enabled: canManageRewards,
-      hasChevron: true,
-    },
-    {
-      id: 'rotation-management',
-      title: 'Rotation Management',
-      description: 'Configure intelligent chore rotation system',
-      icon: 'sync',
-      color: '#be185d',
-      onPress: () => setShowRotationManagement(true),
-      enabled: canManageFamily,
       hasChevron: true,
     },
     {
@@ -303,13 +329,26 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
       enabled: canManageFamily,
       hasChevron: true,
     },
+  ];
+
+  const advancedFeaturesItems: AdminMenuItem[] = [
     {
-      id: 'validation-controls',
-      title: 'Validation Controls',
-      description: 'Customize form validation rules and behavior',
-      icon: 'checkmark-done',
-      color: '#059669',
-      onPress: () => setShowValidationControls(true),
+      id: 'rotation-management',
+      title: 'Rotation Management',
+      description: 'Configure intelligent chore rotation system',
+      icon: 'sync',
+      color: '#be185d',
+      onPress: () => setShowRotationManagement(true),
+      enabled: canManageFamily,
+      hasChevron: true,
+    },
+    {
+      id: 'room-management',
+      title: 'Room & Space Management',
+      description: 'Manage family rooms and assign responsibilities',
+      icon: 'home',
+      color: '#8b5cf6',
+      onPress: () => setShowRoomManagement(true),
       enabled: canManageFamily,
       hasChevron: true,
     },
@@ -324,22 +363,25 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
       hasChevron: true,
     },
     {
-      id: 'zustand-admin',
-      title: 'Zustand Remote Admin',
-      description: 'Advanced store management and offline controls',
-      icon: 'server',
-      color: '#7c3aed',
-      onPress: () => setShowZustandAdmin(true),
-      enabled: canManageFamily,
-      hasChevron: true,
-    },
-    {
       id: 'ai-integration',
       title: 'AI Integration',
       description: 'Configure Google Gemini API and AI features',
       icon: 'sparkles',
       color: '#8b5cf6',
       onPress: () => setShowAIIntegration(true),
+      enabled: canManageFamily,
+      hasChevron: true,
+    },
+  ];
+
+  const systemToolsItems: AdminMenuItem[] = [
+    {
+      id: 'validation-controls',
+      title: 'Validation Controls',
+      description: 'Customize form validation rules and behavior',
+      icon: 'checkmark-done',
+      color: '#059669',
+      onPress: () => setShowValidationControls(true),
       enabled: canManageFamily,
       hasChevron: true,
     },
@@ -352,6 +394,52 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
       onPress: () => setShowErrorMonitoring(true),
       enabled: canManageFamily,
       hasChevron: true,
+    },
+    {
+      id: 'zustand-admin',
+      title: 'Store Management',
+      description: 'Advanced store management and offline controls',
+      icon: 'server',
+      color: '#7c3aed',
+      onPress: () => setShowZustandAdmin(true),
+      enabled: canManageFamily,
+      hasChevron: true,
+    },
+  ];
+
+  // Quick access buttons for most-used functions
+  const quickAccessItems = [
+    {
+      id: 'quick-chore',
+      title: 'Add Chore',
+      icon: 'add-circle',
+      color: '#10b981',
+      onPress: () => setShowChoreManagement(true),
+      enabled: canManageChores,
+    },
+    {
+      id: 'quick-member',
+      title: 'Add Member',
+      icon: 'person-add',
+      color: '#be185d',
+      onPress: () => setShowMemberManagement(true),
+      enabled: canManageFamily,
+    },
+    {
+      id: 'quick-template',
+      title: 'Templates',
+      icon: 'copy',
+      color: '#7c2d12',
+      onPress: () => setShowTemplateLibrary(true),
+      enabled: canManageFamily,
+    },
+    {
+      id: 'quick-ai',
+      title: 'AI Assistant',
+      icon: 'sparkles',
+      color: '#8b5cf6',
+      onPress: () => setShowAIIntegration(true),
+      enabled: canManageFamily,
     },
   ];
 
@@ -438,22 +526,58 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
             </View>
           </View>
 
-          {/* Admin Tools */}
+          {/* Quick Access Tools */}
           <View style={styles.section}>
-            <Text style={styles.sectionHeader}>Administration Tools</Text>
+            <Text style={styles.sectionHeader}>Quick Actions</Text>
+            <View style={styles.quickAccessGrid}>
+              {quickAccessItems.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.quickAccessButton,
+                    { 
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.divider,
+                      opacity: item.enabled ? 1 : 0.5
+                    }
+                  ]}
+                  onPress={item.enabled ? item.onPress : undefined}
+                  disabled={!item.enabled}
+                >
+                  <View style={[styles.quickAccessIcon, { backgroundColor: `${item.color}20` }]}>
+                    <WebIcon 
+                      name={item.icon} 
+                      size={20} 
+                      color={item.enabled ? item.color : '#9ca3af'} 
+                    />
+                  </View>
+                  <Text style={[
+                    styles.quickAccessText, 
+                    { color: item.enabled ? colors.text : colors.textMuted }
+                  ]}>
+                    {item.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Core Management */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Core Management</Text>
             <View style={styles.settingsGroup}>
-              {adminMenuItems.map((item, index) => (
+              {coreManagementItems.map((item, index) => (
                 <TouchableOpacity
                   key={item.id}
                   style={[
                     styles.settingItem,
-                    index === adminMenuItems.length - 1 && styles.settingItemLast,
+                    index === coreManagementItems.length - 1 && styles.settingItemLast,
                     !item.enabled && styles.settingItemDisabled
                   ]}
                   onPress={item.enabled ? item.onPress : undefined}
                   disabled={!item.enabled}
                 >
-                  <View style={styles.settingLeft}>
+                  <View style={styles.settingItemContent}>
                     <View style={[styles.settingIcon, { backgroundColor: `${item.color}20` }]}>
                       <WebIcon 
                         name={item.icon} 
@@ -464,13 +588,113 @@ export function AdminSettings({ visible, onClose }: AdminSettingsProps) {
                     <View style={styles.settingTextContainer}>
                       <Text style={[
                         styles.settingTitle, 
-                        !item.enabled && styles.settingTitleDisabled
+                        !item.enabled && { color: colors.textMuted }
                       ]}>
                         {item.title}
                       </Text>
                       <Text style={[
                         styles.settingDescription,
-                        !item.enabled && styles.settingDescriptionDisabled
+                        !item.enabled && { color: colors.textMuted }
+                      ]}>
+                        {item.description}
+                      </Text>
+                    </View>
+                  </View>
+                  {item.hasChevron && (
+                    <WebIcon 
+                      name="chevron-forward" 
+                      size={18} 
+                      color={item.enabled ? (theme === 'dark' ? colors.accent : colors.primary) : colors.textMuted} 
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Advanced Features */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Advanced Features</Text>
+            <View style={styles.settingsGroup}>
+              {advancedFeaturesItems.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.settingItem,
+                    index === advancedFeaturesItems.length - 1 && styles.settingItemLast,
+                    !item.enabled && styles.settingItemDisabled
+                  ]}
+                  onPress={item.enabled ? item.onPress : undefined}
+                  disabled={!item.enabled}
+                >
+                  <View style={styles.settingItemContent}>
+                    <View style={[styles.settingIcon, { backgroundColor: `${item.color}20` }]}>
+                      <WebIcon 
+                        name={item.icon} 
+                        size={18} 
+                        color={item.enabled ? item.color : '#9ca3af'} 
+                      />
+                    </View>
+                    <View style={styles.settingTextContainer}>
+                      <Text style={[
+                        styles.settingTitle, 
+                        !item.enabled && { color: colors.textMuted }
+                      ]}>
+                        {item.title}
+                      </Text>
+                      <Text style={[
+                        styles.settingDescription,
+                        !item.enabled && { color: colors.textMuted }
+                      ]}>
+                        {item.description}
+                      </Text>
+                    </View>
+                  </View>
+                  {item.hasChevron && (
+                    <WebIcon 
+                      name="chevron-forward" 
+                      size={18} 
+                      color={item.enabled ? (theme === 'dark' ? colors.accent : colors.primary) : colors.textMuted} 
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* System Tools */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>System Tools</Text>
+            <View style={styles.settingsGroup}>
+              {systemToolsItems.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.settingItem,
+                    index === systemToolsItems.length - 1 && styles.settingItemLast,
+                    !item.enabled && styles.settingItemDisabled
+                  ]}
+                  onPress={item.enabled ? item.onPress : undefined}
+                  disabled={!item.enabled}
+                >
+                  <View style={styles.settingItemContent}>
+                    <View style={[styles.settingIcon, { backgroundColor: `${item.color}20` }]}>
+                      <WebIcon 
+                        name={item.icon} 
+                        size={18} 
+                        color={item.enabled ? item.color : '#9ca3af'} 
+                      />
+                    </View>
+                    <View style={styles.settingTextContainer}>
+                      <Text style={[
+                        styles.settingTitle, 
+                        !item.enabled && { color: colors.textMuted }
+                      ]}>
+                        {item.title}
+                      </Text>
+                      <Text style={[
+                        styles.settingDescription,
+                        !item.enabled && { color: colors.textMuted }
                       ]}>
                         {item.description}
                       </Text>
